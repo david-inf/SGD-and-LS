@@ -1,0 +1,171 @@
+% !TeX TS-program = pdflatex
+% !TeX encoding = UTF-8
+% !TeX spellcheck = en_GB
+% !TeX root = optarticle.tex
+\documentclass[10pt,a4paper,fleqn]{article}
+% -------------------------------- %
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[utf8]{inputenc}
+\usepackage[UKenglish]{babel}
+%\hyphenation{}
+\usepackage{microtype}
+\usepackage{indentfirst}
+\usepackage[heightrounded]{geometry}
+\usepackage{lipsum}
+% -------------------------------- %
+% Math
+% -------------------------------- %
+\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{mathtools}
+%\usepackage{amsthm}
+% -------------------------------- %
+%\newcommand{\numberset}{\mathbb}
+%\newcommand{\N}{\numberset{N}}
+%\newcommand{\R}{\numberset{R}}
+% -------------------------------- %
+%\renewcommand{\epsilon}{\varepsilon}
+%\renewcommand{\theta}{\vartheta}
+%\renewcommand{\rho}{\varrho}
+%\renewcommand{\phi}{\varphi}
+% -------------------------------- %
+%\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+%\DeclarePairedDelimiter{\norma}{\lVert}{\rVert}
+%\DeclarePairedDelimiter{\set}{\{}{\}}
+% -------------------------------- %
+%\DeclareMathOperator{\sgn}{sgn}
+%\DeclareMathOperator{\Realpart}{Re}
+%\renewcommand{\Re}{\Realpart}
+%\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator*{\argmin}{arg\,min}
+%\DeclareMathOperator{\Loss}{\mathit{L}}
+%\DeclareMathOperator{\loss}{\ell}
+%\DeclareMathOperator{\regul}{\Omega}
+%\DeclareMathOperator*{\func}{\mathit{f}}
+%\DeclareMathOperator*{\gradF}{\nabla\mathit{f}} % check if it works fine
+%\DeclareMathOperator*{\hessF}{\nabla^2\mathit{f}}
+%\DeclareMathOperator*{\Var}{Var}
+%\DeclareMathOperator*{\bigO}{\mathcal{O}}
+% -------------------------------- %
+% Definitions
+%\theoremstyle{definition}
+%\newtheorem{defs}{Definition}
+%\newtheorem{propts}{Property}
+% Theorems
+%\theoremstyle{plain}
+%\newtheorem{thm}{Theorem}
+%\newtheorem{cor}[thm]{Corollary}
+%\newtheorem{prop}{Proposition}
+%\newtheorem{lem}[thm]{Lemma}
+% Remarks
+%\theoremstyle{remark}
+%\newtheorem{rmk}{Remark}
+% -------------------------------- %
+% Numbers
+% -------------------------------- %
+%\usepackage{siunitx}
+%\sisetup{%
+%	output-decimal-marker={,},group-separator={\,},%
+%	round-mode=places%
+%}
+% -------------------------------- %
+% Tikz and colors
+% -------------------------------- %
+%\usepackage{pgfplots} % + tikz
+%\pgfplotsset{/pgf/number format/use comma,compat=newest}
+%%\usepackage{tikz} % + graphicx,keyval,xcolor
+%%\definecolor{Maroon}{cmyk}{0,0.87,0.68,0.32}
+%\definecolor{RoyalBlue}{cmyk}{1,0.50,0,0}
+%%\definecolor{halfgray}{gray}{0.55}
+%\definecolor{webgreen}{rgb}{0,0.5,0}
+%\definecolor{webbrown}{rgb}{0.6,0,0}
+%\definecolor{lightergray}{gray}{0.99}
+% -------------------------------- %
+% Floating objects
+% -------------------------------- %
+%\usepackage{booktabs}
+%\usepackage{tabularx}
+%\usepackage{multirow}
+%\usepackage{subfig}
+%\usepackage{wrapfig}
+%\usepackage{caption}
+%\captionsetup{format=hang,labelsep=colon,font={small,rm},labelfont={sf,bf}}
+%\captionsetup[table]{skip=0.2\medskipamount,position=top}
+%\captionsetup[figure]{position=bottom}
+%\usepackage{flafter}
+%\usepackage[english,nospace]{varioref}
+%\usepackage{enumitem}
+% -------------------------------- %
+% Code
+% -------------------------------- %
+%%% ToDo: get the 4everyone
+% -------------------------------- %
+% My stuff
+% -------------------------------- %
+\newcommand{\myTitle}{Stochastic Gradient Descent with Momentum and Line Searches}
+\newcommand{\mySubject}{Project work in Optimization Techniques for Machine Learning}
+\newcommand{\myName}{David Nardi}
+\newcommand{\myNameShort}{D. Nardi}
+\newcommand{\mySummary}{MSc student in Artificial Intelligence, Univeristy of Florence}
+\newcommand{\omissis}{[\textellipsis\unkern]}
+\newcommand{\inToc}[1]%
+	{\addcontentsline{toc}{section}{\texorpdfstring{\protect\numberline{}#1}{#1}}}
+% -------------------------------- %
+\title{\myTitle}
+\author{\myName\\ \mySummary}
+%\date{}
+% -------------------------------- %
+% Page styles
+% -------------------------------- %
+\usepackage{titleps}
+\newpagestyle{main}{% oneside mainmatter
+	\sethead[][][]%
+	{\slshape\myNameShort}{}{\slshape\myTitle}%
+	\setfoot[][][]%
+	{}{\thepage}{}}
+% -------------------------------- %
+% Bibliography
+% -------------------------------- %
+% Activate bibliography when you are ready
+%\usepackage[autostyle,italian=guillemets,babel]{csquotes}
+%\usepackage[backend=biber,useprefix,style=ieee,backref,hyperref,defernumbers=true]{biblatex}
+%\usepackage[backend=biber,useprefix,style=authoryear-comp,hyperref,defernumbers=true]{biblatex}
+%\addbibresource{optarticle-bib.bib}
+% -------------------------------- %
+\usepackage{hyperref}
+\hypersetup{%
+%	colorlinks,urlcolor=webbrown,linkcolor=RoyalBlue,citecolor=webgreen,%
+	linktocpage,pdfstartpage=1,bookmarksnumbered,bookmarksopen,bookmarksopenlevel=2,%
+	pdftitle={\myTitle},pdfauthor={\myName},pdfsubject={\mySubject}%
+}
+% -------------------------------- %
+%\usepackage{showframe}
+\begin{document}
+\frenchspacing
+% ************************************************************************************* %
+% FRONTMATTER
+% ************************************************************************************* %
+\cleardoublepage
+\pdfbookmark[1]{Title page}{fronte}
+\maketitle
+
+\begin{abstract}
+\lipsum[1]
+\end{abstract}
+
+\setcounter{tocdepth}{2}
+\tableofcontents\cleardoublepage
+\pagestyle{main}
+% ************************************************************************************* %
+% MAINMATTER %
+% ************************************************************************************* %
+\input{./Sections/sec1.tex}
+% ************************************************************************************* %
+% BACKMATTER %
+% ************************************************************************************* %
+%\phantomsection
+%\inToc{\refname}
+%\printbibliography
+\end{document}
