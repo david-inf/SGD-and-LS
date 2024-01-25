@@ -1,0 +1,51 @@
+\usepackage{listings}
+% -------------------------------- %
+%% R programming language
+\definecolor{Rkwd}{rgb}{0.737,0.353,0.396}
+\definecolor{Rparam}{rgb}{0.333,0.667,0.333}
+\definecolor{Rnum}{rgb}{0.686,0.059,0.569}
+\definecolor{Rstr}{rgb}{0.192,0.494,0.8}
+\definecolor{Rcomm}{rgb}{0.678,0.584,0.686}
+\lstdefinestyle{Rlang}{language=R,%
+	keywordstyle=\color{Rkwd},basicstyle=\small\ttfamily,%
+	commentstyle=\color{Rcomm}\ttfamily\em,%
+	stringstyle=\color{Rstr}\rmfamily,%
+	numbers=left,numberstyle=\tiny,stepnumber=1,numbersep=5pt,%
+	showstringspaces=false,breaklines=true,frameround=ftff,%
+	frame=lines,backgroundcolor=\color{lightergray},firstnumber=last%
+	%	deletekeywords={}
+}
+% -------------------------------- %
+% Python programming language
+\lstdefinestyle{Pylang}{language=Python,%
+	basicstyle=\small\ttfamily,%
+	keywordstyle=,commentstyle=,stringstyle=,%
+	numbers=left,numberstyle=\tiny,stepnumber=1,numbersep=5pt,%
+	showstringspaces=false,breaklines=true,%
+	frameround=ftff,frame=lines,%
+	backgroundcolor=\color{lightergray},%
+%	firstnumber=last,%
+}
+% -------------------------------- %
+% Code output
+\lstdefinestyle{output}{%
+	basicstyle=\scriptsize\ttfamily,%
+	showstringspaces=false,breaklines=true,frameround=ftff,%
+	frame=lines,backgroundcolor=\color{lightergray},%
+	%	deletekeywords={}
+}
+% -------------------------------- %
+% Pseudo-code
+\lstdefinestyle{simple}{%
+	basicstyle=\small\ttfamily,%
+	keywordstyle=\color{black}\bfseries,%
+	commentstyle=\color{darkgray},%
+	stringstyle=\color{black},%
+	numbers=left,numberstyle=\tiny,stepnumber=1,numbersep=5pt,%
+	showstringspaces=false,breaklines=true,frameround=ftff,%
+	frame=lines,backgroundcolor=\color{lightergray},%
+	escapeinside={£!}{!£},%
+	morekeywords={while,end while,poni,dati,return},%
+	%	comment={//},%
+}
+% -------------------------------- %
