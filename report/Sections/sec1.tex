@@ -12,8 +12,17 @@
 
 \subsection{Fixed step-size}
 
-\begin{lstlisting}[style=simple,title={}]
-
+\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed step-size}]
+dati £!$w^0\in\R^n$!£, £!$\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\norma{w}^2$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha$!£
+while (£!$\norma{\nabla\func(w^k)}>\epsilon$!£)
+ shuffle £!$\set{1,\dots,N}$!£ in £!$N/M$!£ blocchi £!$B_1,\dots,B_{N/M}$!£ di dimensione £!$1<\abs{B_t}=M\ll N$!£
+ £!$y_0=w^k$!£
+ for £!$t=1,\dots,N/M$!£
+  £!$y_t=y_{t-1}-\alpha_k\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+ end for
+ £!$w^{k+1}=y_{N/M}$!£
+ £!$k=k+1$!£ fine epoca
+end while
 \end{lstlisting}
 
 %\subsection{Decreasing step-size}
