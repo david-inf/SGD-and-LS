@@ -28,10 +28,21 @@ breast = load_breast_cancer()
 X, y = breast.data, breast.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 0)
 
-w0 = np.ones(X.shape[1])
+# w0 = np.ones(X.shape[1])
+rng = np.random.default_rng(1)
+w0 = (5 + 5) * rng.random(X.shape[1]) - 5
 
-model1 = myLogRegr(epochs=3).fit(X_train, y_train, w0)
-model2 = myLogRegr(epochs=200, solver="miniGD-decreasing").fit(X_train, y_train, w0)
+model1 = myLogRegr(12, epochs=100)
+model1.fit(X_train, y_train, w0, 0.7)
+model1.plotDiagnostic()
+
+model2 = myLogRegr(12, epochs=100)
+model2.fit(X_train, y_train, w0, 0.5)
+model2.plotDiagnostic()
+
+model3 = myLogRegr(8, epochs=100, solver="miniGD-decreasing")
+model3.fit(X_train, y_train, w0, alpha=10)
+model3.plotDiagnostic()
 
 # M, alpha, lam = 5, 1, 0.5
 # compare1 = []

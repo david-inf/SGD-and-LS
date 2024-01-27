@@ -20,7 +20,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{mathtools}
-%\usepackage{amsthm}
+\usepackage{amsthm}
 % -------------------------------- %
 \newcommand{\numberset}{\mathbb}
 %\newcommand{\N}{\numberset{N}}
@@ -41,7 +41,7 @@
 %\DeclareMathOperator*{\argmax}{arg\,max}
 %\DeclareMathOperator*{\argmin}{arg\,min}
 %\DeclareMathOperator{\Loss}{\mathit{L}}
-%\DeclareMathOperator{\loss}{\ell}
+\DeclareMathOperator{\loss}{\ell}
 %\DeclareMathOperator{\regul}{\Omega}
 \DeclareMathOperator*{\func}{\mathit{f}}
 %\DeclareMathOperator*{\gradF}{\nabla\mathit{f}} % check if it works fine
@@ -54,10 +54,10 @@
 %\newtheorem{defs}{Definition}
 %\newtheorem{propts}{Property}
 % Theorems
-%\theoremstyle{plain}
+\theoremstyle{plain}
 %\newtheorem{thm}{Theorem}
 %\newtheorem{cor}[thm]{Corollary}
-%\newtheorem{prop}{Proposition}
+\newtheorem{prop}{Proposition}
 %\newtheorem{lem}[thm]{Lemma}
 % Remarks
 %\theoremstyle{remark}
@@ -73,9 +73,9 @@
 % -------------------------------- %
 % Tikz and colors
 % -------------------------------- %
-\usepackage{xcolor}
-%\usepackage{pgfplots} % + tikz
-%\pgfplotsset{/pgf/number format/use comma,compat=newest}
+%\usepackage{xcolor}
+\usepackage{pgfplots} % + tikz
+\pgfplotsset{/pgf/number format/use comma,compat=newest}
 %%\usepackage{tikz} % + graphicx,keyval,xcolor
 %%\definecolor{Maroon}{cmyk}{0,0.87,0.68,0.32}
 %\definecolor{RoyalBlue}{cmyk}{1,0.50,0,0}
@@ -89,14 +89,14 @@
 %\usepackage{booktabs}
 %\usepackage{tabularx}
 %\usepackage{multirow}
-%\usepackage{subfig}
+\usepackage{subfig}
 %\usepackage{wrapfig}
-%\usepackage{caption}
-%\captionsetup{format=hang,labelsep=colon,font={small,rm},labelfont={sf,bf}}
+\usepackage{caption}
+\captionsetup{format=hang,labelsep=colon,font={small,rm},labelfont={sf,bf}}
 %\captionsetup[table]{skip=0.2\medskipamount,position=top}
-%\captionsetup[figure]{position=bottom}
-%\usepackage{flafter}
-%\usepackage[english,nospace]{varioref}
+\captionsetup[figure]{position=bottom}
+\usepackage{flafter}
+\usepackage[english,nospace]{varioref}
 %\usepackage{enumitem}
 % -------------------------------- %
 % Code

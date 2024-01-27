@@ -23,6 +23,9 @@ Logistic regression - python
     - get objective function
     - get gradient
 
-Metrics
+Metrics/diagnostic
+- training loss against epochs
+    - su un numero fissato di epoche: while k<k*
 - training loss against iterations
-    - su un numero fissato di iterazioni: while k<k*
+    - per iterations si intende quelle interne ad una epoca
+    - le iterations sono fissate una volta assegnata la dimensione del minibatch
