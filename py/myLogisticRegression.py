@@ -7,7 +7,7 @@ Created on Fri Jan 26 16:10:31 2024
 
 import numpy as np
 import matplotlib.pyplot as plt
-from MinibatchGD1 import miniGD_fixed, miniGD_decreasing
+from MinibatchGD1 import miniGD_fixed, miniGD_decreasing, miniGD_armijo, optimalSolver
 
 
 def sigmoid(x):
@@ -32,9 +32,18 @@ def logistic_der(X, y, w, lam=0.5):
     return loss_der + regul_der
 
 
+def logistic_hess(X, y, w, lam=0.5):
+    D = np.zeros((X.shape[0], X.shape[0]))
+    for i in range(X.shape[0]):
+        D[i,i] = sigmoid(y[i] * np.dot(w, X[i,:])) * sigmoid(-y[i] * np.dot(w, X[i,:]))
+    loss_hess = np.matmul(np.matmul(np.transpose(X), D), X)
+    regul_hess = 2 * lam * np.eye(X.shape[1])
+    return loss_hess + regul_hess
+
+
 class myLogRegr():
-    def __init__(self, minibatch_size, tol=1e-3, bias=False,
-                 solver="miniGD-fixed", epochs=100, regul_coef=0.5):
+    def __init__(self, minibatch_size=1, tol=1e-3, bias=True,
+                 solver="miniGD-fixed", epochs=300, regul_coef=0.5):
         self.minibatch_size = minibatch_size
         self.tol = tol
         self.bias = bias
@@ -48,19 +57,26 @@ class myLogRegr():
         self.obj_seq = None
         self.grad = None
         self.grad_seq = None
+        self.benchmark = None
 
-    def fit(self, X, y, w0, alpha):
-        if self.solver == "miniGD-fixed":
+    def fit(self, X, y, w0, alpha=0.7):
+        if self.solver == "scipy":
+            self.benchmark = optimalSolver(logistic, logistic_der,
+                                    logistic_hess, X, y, w0)
+            return self
+        elif self.solver == "miniGD-fixed":
             self.coef_seq, self.obj_seq, self.grad_seq = miniGD_fixed(
-                logistic, logistic_der, X, y, self.minibatch_size,
-                self.regul_coef, w0, alpha=alpha, epochs=self.epochs)
+                logistic, logistic_der, X, y, self.minibatch_size, w0,
+                self.regul_coef, alpha, self.tol, self.epochs, self.bias)
             return self
         elif self.solver == "miniGD-decreasing":
             self.coef_seq, self.obj_seq, self.grad_seq = miniGD_decreasing(
-                logistic, logistic_der, X, y, self.minibatch_size,
-                self.regul_coef, w0, alpha0=alpha, epochs=self.epochs)
+                    logistic, logistic_der, X, y, self.minibatch_size,
+                    self.regul_coef, w0, alpha0=alpha, epochs=self.epochs)
             return self
         elif self.solver == "miniGD-armijo":
+            self.coef_seq, self.obj_seq, self.grad_seq = miniGD_armijo(
+                logistic, logistic_der, X, y, self.minibatch_size, w0)
             return self
 
     def plotDiagnostic(self):
@@ -70,10 +86,8 @@ class myLogRegr():
         ax1.set_title("Training loss against epochs")
         ax1.set_xlabel("Epochs")
         ax1.set_ylabel("Training loss")
-        grad_norm_seq = []
-        for grad_k in self.grad_seq:
-            grad_norm_seq.append(np.linalg.norm(grad_k))
-        ax2.plot(grad_norm_seq)
+        ax1.set_yscale("log")
+        ax2.plot(self.grad_seq)
         ax2.set_title("Gradient norm against epochs")
         ax2.set_xlabel("Epochs")
         ax2.set_ylabel("Gradient norm")

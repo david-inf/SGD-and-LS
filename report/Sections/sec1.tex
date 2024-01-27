@@ -97,12 +97,13 @@ Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 
 \subsection{Fixed step-size}
 
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed step-size}]
-dati £!$w^0\in\R^n$!£, £!$\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\norma{w}^2$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha$!£
+\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed or decreasing step-size}]
+dati £!$w^0\in\R^n$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon$!£)
  shuffle £!$\set{1,\dots,N}$!£ in £!$N/M$!£ blocchi £!$B_1,\dots,B_{N/M}$!£ di dimensione £!$1<\abs{B_t}=M\ll N$!£
  £!$y_0=w^k$!£
  for £!$t=1,\dots,N/M$!£
+  get mini-batch indices from £!$B_t$!£
   £!$y_t=y_{t-1}-\alpha_k\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
  end for
  £!$w^{k+1}=y_{N/M}$!£
@@ -112,8 +113,47 @@ end while
 
 %\subsection{Decreasing step-size}
 
-%\subsection{Stochastic line search}
+\subsection{Stochastic line search}
+
+%compute true gradient approximation £!$\nabla f_{i_t}(w)$!£ with examples from £!$B_t$!£
+\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search}]
+dati £!$w^0\in\R^n$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$k=0$!£, £!$\gamma\in(0,1),\,\delta\in(0,1)$!£
+while (£!$\norma{\nabla\func(w^k)}>\epsilon$!£)
+ shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+ £!$y_0=w^k$!£
+ for £!$t=1,\dots,N/M$!£
+  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+  £!$\alpha=\mathtt{reset()}$!£, £!$q=0$!£
+  while (£!$f_{i_t}\bigl(y_{t-1}-\alpha\nabla f_{i_t}(w)\bigr)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
+   £!$\alpha=\delta\alpha$!£
+   £!$q=q+1$!£
+  end while
+  £!$\alpha_t=\alpha$!£
+  £!$y_t=y_{t-1}-\alpha_t\nabla f_{i_t}(y_{t-1})$!£
+ end for
+ £!$w^{k+1}=y_{N/M}$!£
+ £!$k=k+1$!£
+end while
+\end{lstlisting}
 
 %\subsection{Fixed momentum term}
 
 %\subsection{Corrected/restart momentum}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
