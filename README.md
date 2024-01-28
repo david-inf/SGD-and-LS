@@ -3,7 +3,7 @@
 ## Contents
 
 - [ ] Introduction
-- Core sections
+- The logistic regression problem
 - [ ] Implementation
 
 ## To do

@@ -41,7 +41,11 @@ from scipy.optimize import minimize
 #     return fun(X, y, w)
 
 # fun e jac devono avere un solo argomento
-def optimalSolver(fun, grad, X, y, w0):
+def optimalSolver(fun, grad, X, y, w0, bias=True):
+    N = X.shape[0]
+    if bias:
+        X = np.hstack((np.ones((N,1)), X))  # add constant feature
+        w0 = np.insert(w0, 0, 1)  # add initial guess for intercept
     res = minimize(fun, w0, method="L-BFGS-B", jac=grad,
                    bounds=None, options={"disp": True})
     return res

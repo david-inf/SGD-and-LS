@@ -87,8 +87,8 @@ w0 = (4 - 1) * rng.random(X_train.shape[1]) + 1
 # model5.fit(X_train, y_train, w0, alpha=0.3)
 # model5.plotDiagnostic()
 
-model_benchmark = myLogRegr()
-model_benchmark.fit(X, y, w0)
+# model_benchmark = myLogRegr(solver="scipy")
+# model_benchmark.fit(X_train, y_train, w0)
 
 
 
