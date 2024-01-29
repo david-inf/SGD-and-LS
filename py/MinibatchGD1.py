@@ -14,7 +14,10 @@ Mini-batch Gradient Descent:
 
 import numpy as np
 from scipy.optimize import minimize
-# from numba import jit#, cuda
+from numba import jit#, cuda
+
+# class myOptResult():
+    # def __init__(self):
 
 # def sigmoid(x):
 #     return 1 / (1 + np.exp(-x))
@@ -40,14 +43,15 @@ from scipy.optimize import minimize
 # def prova(fun, X, y, w):
 #     return fun(X, y, w)
 
-# fun e jac devono avere un solo argomento
 def optimalSolver(fun, grad, w0, X, y):
-    res = minimize(fun, w0, args=(X, y), method="L-BFGS-B", jac=grad, bounds=None)
+    res = minimize(fun, w0, args=(X, y), method="L-BFGS-B", jac=grad,
+                   bounds=None, options={"gtol":1e-4})
     return res
 
-# @jit(target_backend="cuda", nopython=True)
+@jit(target_backend="cuda", nopython=True)
 def miniGD_fixed(fun, grad, X, y, M, w0, lam, tol, epochs, alpha):
     # fun and grad are callable
+    # TODO: return an object
     # TODO: generate docstring
     # number of examples and features
     N, p = X.shape
@@ -75,11 +79,11 @@ def miniGD_fixed(fun, grad, X, y, M, w0, lam, tol, epochs, alpha):
         grad_seq.append(np.linalg.norm(grad(y_tnext, X, y)))
         k += 1
     # return f"Value: {w_seq[-1]}\nIterations: {k}"
-    if grad_seq[-1] <= tol * (1 + np.absolute(fun_seq[-1])):
-        message = "Gradient under tolerance"
-    elif k > epochs:
-        message = "Max epochs exceeded"
-    return w_seq, fun_seq, grad_seq, message
+    # if grad_seq[-1] <= tol * (1 + np.absolute(fun_seq[-1])):
+    #     message = "Gradient under tolerance"
+    # elif k > epochs:
+    #     message = "Max epochs exceeded"
+    return w_seq, fun_seq, grad_seq#, message, k
 
 
 # @jit(target="cuda", nopython=True)

@@ -29,6 +29,30 @@ where $i=\,\dots,N$ are the dataset indices, $y^{i}\in\set{-1,1}$ is the respons
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \end{prop}
 
+\[
+X^T=
+\begin{pmatrix}
+1 & x_1^{(1)} & x_2^{(1)} & \dots & x_p^{(1)} \\
+1 & x_1^{(2)} & x_2^{(2)} & \dots & x_p^{(2)} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & x_1^{(N)} & x_2^{(N)} & \dots & x_p^{(N)}
+\end{pmatrix}\in\R^{N\times(p+1)}
+\]
+
+\[
+w=
+\begin{pmatrix}
+b \\ w_1 \\ w_2 \\ \vdots \\ w_p
+\end{pmatrix}\in\R^{p+1}
+\]
+
+\[
+y=
+\begin{pmatrix}
+y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
+\end{pmatrix}\in\set{-1,1}
+\]
+
 \cleardoublepage
 
 %\begin{figure}

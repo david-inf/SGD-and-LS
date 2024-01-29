@@ -29,7 +29,8 @@ class myLogRegr():
         self.grad_ = None
         self.grad_seq = None
         self.benchmark_solver = None
-        self.solver_message = None
+        self.solver_message = ""
+        self.opt_epochs = 0
 
     def logistic(self, w, X, y):
         # w : vector
@@ -50,10 +51,11 @@ class myLogRegr():
         # w : vector
         # X : matrix or vector
         # y : vector or scalar
-        if X.ndim == 1:
+        if X.ndim == 1:  # evaluate on a single example
+            # y should be a scalar
             r_i = - y * sigmoid(- y * np.dot(w.T, X))
             loss_der = np.dot(X.T, r_i)
-        elif X.ndim == 2:
+        elif X.ndim == 2:  # evaluate on the entire dataset
             N = X.shape[0]
             r = np.zeros(N)
             for i in range(N):
@@ -62,27 +64,39 @@ class myLogRegr():
         regul_der = self.regul_coef * 2 * w
         return loss_der + regul_der
 
-    # def logistic_hess(self, X, y, w, lam=0.5):
-    #     D = np.zeros((X.shape[0], X.shape[0]))
-    #     for i in range(X.shape[0]):
-    #         D[i, i] = sigmoid(y[i] * np.dot(w, X[i, :])) * \
-    #             sigmoid(-y[i] * np.dot(w, X[i, :]))
-    #     loss_hess = np.matmul(np.matmul(np.transpose(X), D), X)
-    #     regul_hess = 2 * lam * np.eye(X.shape[1])
-    #     return loss_hess + regul_hess
+    def logistic_hess(self, w, X, y):
+        # w : vector
+        # X : matrix or vector
+        # y : vector or scalar
+        if X.ndim == 1:  # evaluate on a single example
+            # y should be a scalar
+            sigma1 = sigmoid(y * np.dot(w.T, X))
+            sigma2 = sigmoid(- y * np.dot(w.T, X))
+            d_ii = sigma1 * sigma2
+            loss_hess = d_ii * np.outer(X.T, X)
+        elif X.ndim == 2:  # evaluate on the entire dataset
+            D = np.zeros((X.shape[0], X.shape[0]))
+            for i in range(X.shape[0]):
+                sigma1 = sigmoid(y[i] * np.dot(w.T, X[i,:]))
+                sigma2 = sigmoid(- y[i] * np.dot(w.T, X[i,:]))
+                D[i,i] = sigma1 * sigma2
+            loss_hess = np.matmul(np.matmul(X.T, D), X)
+        regul_hess = 2 * self.regul_coef * np.eye(w.shape[0])
+        return loss_hess + regul_hess
 
     def fit(self, X, y, w0, learning_rate=0.09):
         if self.bias:
-            N = X.shape[0]  # dataset examples
-            X = np.hstack((np.ones((N,1)),X))  # add constant column
-            if X.shape[1] != w0.shape:  # initial guess for bias not given
-                w0 = np.insert(w0, 0, 0)  # add initial guess for bias
-        elif self.solver == "scipy":
-            self.benchmark_solver = optimalSolver(
-                self.logistic, self.logistic_der, w0, X, y)
+            w0, X = self.checkBias(w0, X)
+        if self.solver == "scipy":
+            res = optimalSolver(self.logistic, self.logistic_der, w0, X, y)
+            self.benchmark_solver = res
+            self.coef_ = res.x
+            self.solver_message = res.message
+            self.obj_ = res.fun
+            self.grad_ = res.jac
             return self
         elif self.solver == "miniGD-fixed":
-            self.coef_seq, self.obj_seq, self.grad_seq, self.solver_message = miniGD_fixed(
+            self.coef_seq, self.obj_seq, self.grad_seq = miniGD_fixed(
                 self.logistic, self.logistic_der, X, y, self.minibatch_size,
                 w0, self.regul_coef, self.tol, self.epochs, learning_rate)
             self.coef_ = self.coef_seq[-1]
@@ -99,6 +113,15 @@ class myLogRegr():
         #         logistic, logistic_der, X, y, self.minibatch_size, w0)
         #     return self
 
+    def predict(self, X, thresh=0.5):
+        N = X.shape[0]  # dataset examples
+        if self.bias:
+            X = np.hstack((np.ones((N,1)), X))  # add constant column
+        y_proba = sigmoid(np.dot(self.coef_, X.T))
+        y_proba[y_proba > thresh] = 1
+        y_proba[y_proba <= thresh] = -1
+        return y_proba
+
     def plotDiagnostic(self):
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(7, 2.5),
                                        layout="constrained")
@@ -113,3 +136,20 @@ class myLogRegr():
         ax2.set_ylabel("Gradient norm")
         # ax2.set_ylim([0, 100])  # function goes out of range
         plt.show()
+        return self
+
+    def checkBias(self, w, X):
+        N = X.shape[0]  # dataset examples
+        X = np.hstack((np.ones((N,1)), X))  # add constant column
+        if X.shape[1] != w.shape[0]:  # check for bias initial guess
+            w = np.insert(w, 0, 0)  # add initial guess for bias
+        return w, X
+
+
+
+
+
+
+
+
+

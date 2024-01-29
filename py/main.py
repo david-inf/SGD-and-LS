@@ -5,52 +5,18 @@ Created on Thu Jan 25 21:20:04 2024
 @author: Utente
 """
 
+#%%
 import numpy as np
-import matplotlib.pyplot as plt
-# np.linalg.norm()
-# import scipy.linalg as la
-# la.norm()
+# import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score
 from myLogisticRegression import myLogRegr
 
 rng = np.random.default_rng(42)
-# from scipy.optimize import minimize
 
-# class myLogistic():
-    # def __init__(self, ):
-
-#### Breast cancer dataset
-# N=569, p=30
-# from sklearn.datasets import load_breast_cancer
-
-# breast = load_breast_cancer()
-
-# X, y = breast.data, breast.target
-# y[y == 0] = -1
-# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 0)
-
-# w0 = np.ones(X.shape[1])
-
-# w0 = (4 - 1) * rng.random(X.shape[1]) + 1
-
-# model1 = myLogRegr(6)
-# model1.fit(X_train, y_train, w0)
-# model1.plotDiagnostic()
-
-# model2 = myLogRegr(12, epochs=100)
-# model2.fit(X_train, y_train, w0, 0.5)
-# model2.plotDiagnostic()
-
-# model3 = myLogRegr(8, epochs=100, solver="miniGD-decreasing")
-# model3.fit(X_train, y_train, w0, alpha=10)
-# model3.plotDiagnostic()
-
-# model4 = myLogRegr(6, solver="miniGD-armijo")
-# model4.fit(X_train, y_train, w0)
-# model4.plotDiagnostic()
-
+#%%
 #### Apple quality
 
 appleDF = pd.read_csv("./datasets/apple_quality.csv", nrows=400)
@@ -68,21 +34,53 @@ X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, random_state = 42)
 X_train = X_train.values
 y_train = y_train.values
+X_test = X_test.values
+y_test = y_test.values
 
-### One-dimensional attempt
+w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 
-X_train1 = X_train[:,0]  # one feature
-X_train1 = np.vstack((np.ones_like(X_train1), X_train1)).T
+#%%
+### Benchmark
 
-w0_1 = np.array([5, 6])
+model1_opt = myLogRegr(solver="scipy", regul_coef=0.1)
+model1_opt.fit(X_train, y_train, w0)
+
+model1_pred = model1_opt.predict(X_test)
+model1_accuracy = accuracy_score(y_test, model1_pred)
+print(f"Model1 accuracy: {model1_accuracy:.6f}\nSolution: {model1_opt.coef_}" +
+      f"\nLoss: {model1_opt.obj_}\nGradient: {model1_opt.grad_}")
+
+#%%
+### Minibatch GD with constant step-size
+
+model2_opt = myLogRegr(minibatch_size=5, solver="miniGD-fixed", regul_coef=0.1, epochs=350)
+model2_opt.fit(X_train, y_train, w0, learning_rate=0.001)
+
+model2_pred = model2_opt.predict(X_test)
+model2_accuracy = accuracy_score(y_test, model2_pred)
+print(f"Model2 accuracy: {model2_accuracy:.6f}\nSolution: {model2_opt.coef_}" +
+      f"\nLoss: {model2_opt.obj_}\nGradient: {model2_opt.grad_}")
+      # f"\nEpochs: {model2_opt.opt_epochs}" +
+      # "\nSolver message: " + model2_opt.solver_message)
+
+#%%
+### Two-dimensional attempt
+
+# X_train2 = X_train[:,:2]  # two features
+
+# w0_2 = np.array([5, 6, -1])
 
 # model1 = myLogRegr(minibatch_size=4, bias=False, regul_coef=0.1)
 # model1.fit(X_train1, y_train, w0_1)
 
 ## Optimal solver
 
-model1_opt = myLogRegr(bias=False, regul_coef=0.1, solver="scipy")
-model1_opt.fit(X_train1, y_train, w0_1)
+# model1_opt = myLogRegr(solver="scipy", regul_coef=0.1)
+# model1_opt.fit(X_train2, y_train, w0_2)
+
+# X_test2 = X_test[:,:2]
+# y_pred2 = model1_opt.predict(X_test2)
+# print(accuracy_score(y_test, y_pred2))
 
 # w0 = (4 - 1) * rng.random(X_train.shape[1]) + 1
 
