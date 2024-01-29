@@ -27,3 +27,10 @@ def plotDiagnostic(lrs, labels):
     ax1.legend()
     ax2.legend()
     plt.show()
+
+# def printDiagnostic(model):
+#     # TODO: add accuracy
+#     print(f"{model.solver} accuracy: {model2_accuracy1:.6f}" +
+#           f"\nSolution: {model.coef_}" + f"\nLoss: {model.obj_}" +
+#           f"\nGradient: {model.grad_}" +
+#           "\nSolver message: " + model.solver_message)

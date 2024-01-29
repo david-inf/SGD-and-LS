@@ -54,7 +54,7 @@ class myLogRegr():
         if X.ndim == 1:  # evaluate on a single example
             # y should be a scalar
             r_i = - y * sigmoid(- y * np.dot(w.T, X))
-            loss_der = np.dot(X.T, r_i)
+            loss_der = X * r_i  # multiplication by a scalar
         elif X.ndim == 2:  # evaluate on the entire dataset
             N = X.shape[0]
             r = np.zeros(N)
@@ -85,18 +85,18 @@ class myLogRegr():
         return loss_hess + regul_hess
 
     def fit(self, X, y, w0, learning_rate=0.09):
-        if self.bias:
-            w0, X = self.checkBias(w0, X)
+        # if self.bias:
+        #     w0, X = self.checkBias(w0, X)
         if self.solver == "scipy":
             res = optimalSolver(self.logistic, self.logistic_der, w0, X, y)
             self.benchmark_solver = res
             self.coef_ = res.x
             self.solver_message = res.message
             self.obj_ = res.fun
-            self.grad_ = res.jac
+            self.grad_ = np.linalg.norm(res.jac)
             return self
         elif self.solver == "miniGD-fixed":
-            self.coef_seq, self.obj_seq, self.grad_seq = miniGD_fixed(
+            self.coef_ = miniGD_fixed(
                 self.logistic, self.logistic_der, X, y, self.minibatch_size,
                 w0, self.regul_coef, self.tol, self.epochs, learning_rate)
             self.coef_ = self.coef_seq[-1]
@@ -115,9 +115,9 @@ class myLogRegr():
         #     return self
 
     def predict(self, X, thresh=0.5):
-        N = X.shape[0]  # dataset examples
-        if self.bias:
-            X = np.hstack((np.ones((N,1)), X))  # add constant column
+        # N = X.shape[0]  # dataset examples
+        # if self.bias:
+        #     X = np.hstack((np.ones((N,1)), X))  # add constant column
         y_proba = sigmoid(np.dot(self.coef_, X.T))
         y_proba[y_proba > thresh] = 1
         y_proba[y_proba <= thresh] = -1

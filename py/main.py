@@ -9,8 +9,6 @@ Created on Thu Jan 25 21:20:04 2024
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
 
 from myLogisticRegression import myLogRegr
@@ -20,43 +18,30 @@ rng = np.random.default_rng(42)
 
 #%% Apple quality dataset
 
-appleDF = pd.read_csv("./datasets/apple_quality.csv", nrows=400)
-appleDF = appleDF.drop(columns={"A_id"})
-# ReType
-appleDF["Acidity"] = appleDF['Acidity'].astype(float)
-appleDF['Quality'] = appleDF['Quality'].map({'bad': -1, 'good': 1})
+X_train = pd.read_csv("datasets/apple_quality/apple_X_train.csv").values
+y_train = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values
+X_test = pd.read_csv("datasets/apple_quality/apple_X_test.csv").values
+y_test = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values
 
-X = appleDF.drop("Quality", axis=1)
-y = appleDF["Quality"]
-
-scaler = MinMaxScaler(feature_range=(0, 1))
-X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
-
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, random_state = 42)
-X_train = X_train.values
-y_train = y_train.values
-X_test = X_test.values
-y_test = y_test.values
+X_train = np.hstack((np.ones((X_train.shape[0],1)), X_train))
+X_test = np.hstack((np.ones((X_test.shape[0],1)), X_test))
 
 w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
-
-#%%% Benchmark solver
-
-#%%% miniGD-fixed
-
 
 #%% Benchmark solver
 
 # Apple quality
 
-model1_opt = myLogRegr(solver="scipy", regul_coef=0.1)
-model1_opt.fit(X_train, y_train, w0)
+model1_opt = myLogRegr(
+    solver="scipy", regul_coef=0.1)
+model1_opt.fit(
+    X_train, y_train, w0)
 
 model1_pred = model1_opt.predict(X_test)
 model1_accuracy = accuracy_score(y_test, model1_pred)
 print(f"{model1_opt.solver} accuracy: {model1_accuracy:.6f}" +
-      "\nSolution: {model1_opt.coef_}" + f"\nLoss: {model1_opt.obj_}" +
-      "\nGradient: {model1_opt.grad_}" +
+      f"\nSolution: {model1_opt.coef_}" + f"\nLoss: {model1_opt.obj_}" +
+      f"\nGradient: {model1_opt.grad_}" +
       "\nSolver message: " + model1_opt.solver_message)
 
 #%% miniGD-fixed
@@ -67,7 +52,7 @@ print(f"{model1_opt.solver} accuracy: {model1_accuracy:.6f}" +
 
 lam = 0.05
 M = 4
-k = 700
+k = 250
 
 model2_opt1 = myLogRegr(
     minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
@@ -76,7 +61,12 @@ model2_opt1.fit(
 
 model2_pred1 = model2_opt1.predict(X_test)
 model2_accuracy1 = accuracy_score(y_test, model2_pred1)
-print(f"{model2_accuracy1:.6f}")
+print(f"{model2_opt1.solver} accuracy: {model2_accuracy1:.6f}" +
+      f"\nSolution: {model2_opt1.coef_}" + f"\nLoss: {model2_opt1.obj_}" +
+      f"\nGradient: {model2_opt1.grad_}")
+      # "\nSolver message: " + model2_opt1.solver_message)
+
+plotDiagnostic([model2_opt1], [r"$\alpha=1e-3$"])
 
 
 model2_opt2 = myLogRegr(
