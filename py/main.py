@@ -5,19 +5,20 @@ Created on Thu Jan 25 21:20:04 2024
 @author: Utente
 """
 
-#%%
+#%% Packages
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
+
 from myLogisticRegression import myLogRegr
+from myUtils import plotDiagnostic
 
 rng = np.random.default_rng(42)
 
-#%%
-#### Apple quality
+#%% Apple quality dataset
 
 appleDF = pd.read_csv("./datasets/apple_quality.csv", nrows=400)
 appleDF = appleDF.drop(columns={"A_id"})
@@ -39,29 +40,85 @@ y_test = y_test.values
 
 w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 
-#%%
-### Benchmark
+#%%% Benchmark solver
+
+#%%% miniGD-fixed
+
+
+#%% Benchmark solver
+
+# Apple quality
 
 model1_opt = myLogRegr(solver="scipy", regul_coef=0.1)
 model1_opt.fit(X_train, y_train, w0)
 
 model1_pred = model1_opt.predict(X_test)
 model1_accuracy = accuracy_score(y_test, model1_pred)
-print(f"Model1 accuracy: {model1_accuracy:.6f}\nSolution: {model1_opt.coef_}" +
-      f"\nLoss: {model1_opt.obj_}\nGradient: {model1_opt.grad_}")
+print(f"{model1_opt.solver} accuracy: {model1_accuracy:.6f}" +
+      "\nSolution: {model1_opt.coef_}" + f"\nLoss: {model1_opt.obj_}" +
+      "\nGradient: {model1_opt.grad_}" +
+      "\nSolver message: " + model1_opt.solver_message)
 
-#%%
-### Minibatch GD with constant step-size
+#%% miniGD-fixed
 
-model2_opt = myLogRegr(minibatch_size=5, solver="miniGD-fixed", regul_coef=0.1, epochs=350)
-model2_opt.fit(X_train, y_train, w0, learning_rate=0.001)
+# Apple quality
 
-model2_pred = model2_opt.predict(X_test)
-model2_accuracy = accuracy_score(y_test, model2_pred)
-print(f"Model2 accuracy: {model2_accuracy:.6f}\nSolution: {model2_opt.coef_}" +
-      f"\nLoss: {model2_opt.obj_}\nGradient: {model2_opt.grad_}")
-      # f"\nEpochs: {model2_opt.opt_epochs}" +
-      # "\nSolver message: " + model2_opt.solver_message)
+# al diminuire della dimensione del minibatch si riduce il learning rate e viceversa
+
+lam = 0.05
+M = 4
+k = 700
+
+model2_opt1 = myLogRegr(
+    minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
+model2_opt1.fit(
+    X_train, y_train, w0, learning_rate=1e-3)
+
+model2_pred1 = model2_opt1.predict(X_test)
+model2_accuracy1 = accuracy_score(y_test, model2_pred1)
+print(f"{model2_accuracy1:.6f}")
+
+
+model2_opt2 = myLogRegr(
+    minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
+model2_opt2.fit(
+    X_train, y_train, w0, learning_rate=5e-4)
+
+model2_pred2 = model2_opt2.predict(X_test)
+model2_accuracy2 = accuracy_score(y_test, model2_pred2)
+print(f"{model2_accuracy2:.6f}")
+
+
+model2_opt3 = myLogRegr(
+    minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
+model2_opt3.fit(
+    X_train, y_train, w0, learning_rate=1e-5)
+
+model2_pred3 = model2_opt3.predict(X_test)
+model2_accuracy3 = accuracy_score(y_test, model2_pred3)
+print(f"{model2_accuracy3:.6f}")
+
+
+model2_opt4 = myLogRegr(
+    minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
+model2_opt4.fit(
+    X_train, y_train, w0, learning_rate=1e-4)
+
+model2_pred4 = model2_opt4.predict(X_test)
+model2_accuracy4 = accuracy_score(y_test, model2_pred4)
+print(f"{model2_accuracy4:.6f}")
+
+
+plotDiagnostic(
+    [model2_opt1, model2_opt2, model2_opt3, model2_opt4],
+    [r"$\alpha=1e-3$", r"$\alpha=5e-4$", r"$\alpha=1e-5$", r"$\alpha=1e-4$"])
+
+#%% miniGD-decreasing
+
+# Apple quality
+
+model3_opt = myLogRegr()
+model3_opt.fit(X_train, y_train, w0)
 
 #%%
 ### Two-dimensional attempt

@@ -14,45 +14,22 @@ Mini-batch Gradient Descent:
 
 import numpy as np
 from scipy.optimize import minimize
-from numba import jit#, cuda
+# from numba import jit#, cuda
 
 # class myOptResult():
     # def __init__(self):
-
-# def sigmoid(x):
-#     return 1 / (1 + np.exp(-x))
-
-
-# def logistic(X, y, w, lam=0.5):
-#     # TODO: add bias
-#     loss = np.sum(np.log(1 + np.exp(- y * np.dot(X, w))))
-#     regul = lam * np.linalg.norm(w)
-#     return loss + regul
-
-
-# def logistic_der(X, y, w, lam=0.5):
-#     # TODO: add bias
-#     r = - y * sigmoid(-y * np.dot(X, w))
-#     if X.ndim == 2: # full gradient
-#         loss_der = np.matmul(np.transpose(X), r)
-#     else: # single example gradient
-#         loss_der = np.dot(X, r)
-#     regul_der = lam * 2 * w
-#     return loss_der + regul_der
-
-# def prova(fun, X, y, w):
-#     return fun(X, y, w)
 
 def optimalSolver(fun, grad, w0, X, y):
     res = minimize(fun, w0, args=(X, y), method="L-BFGS-B", jac=grad,
                    bounds=None, options={"gtol":1e-4})
     return res
 
-@jit(target_backend="cuda", nopython=True)
+# @jit(nopython=True)
 def miniGD_fixed(fun, grad, X, y, M, w0, lam, tol, epochs, alpha):
     # fun and grad are callable
     # TODO: return an object
     # TODO: generate docstring
+    # TODO: time counter
     # number of examples and features
     N, p = X.shape
     w_seq = [w0]  # weigth sequence, w\in\R^p
@@ -79,16 +56,16 @@ def miniGD_fixed(fun, grad, X, y, M, w0, lam, tol, epochs, alpha):
         grad_seq.append(np.linalg.norm(grad(y_tnext, X, y)))
         k += 1
     # return f"Value: {w_seq[-1]}\nIterations: {k}"
+    # message = None
     # if grad_seq[-1] <= tol * (1 + np.absolute(fun_seq[-1])):
     #     message = "Gradient under tolerance"
-    # elif k > epochs:
+    # if k > epochs:
     #     message = "Max epochs exceeded"
     return w_seq, fun_seq, grad_seq#, message, k
 
 
-# @jit(target="cuda", nopython=True)
-def miniGD_decreasing(fun, grad, X, y, M, lam, w0,
-                      alpha0=5, tol=0.001, epochs=100):
+# @jit(nopython=True)
+def miniGD_decreasing(fun, grad, X, y, M, w0, lam, tol, epochs, alpha0):
     # fun and grad are callable
     N = X.shape[0]  # number of examples
     p = X.shape[1]  # number of features
@@ -97,9 +74,7 @@ def miniGD_decreasing(fun, grad, X, y, M, lam, w0,
     grad_seq = [grad(X, y, w0, lam)]
     alpha_seq = alpha0 / (1 + np.arange(epochs - 1))
     k = 0
-    # while np.linalg.norm(logistic_der(X, y, w_seq[k], lam)) > tol and k <= epochs:
-    # while np.linalg.norm(grad(X, y, w_seq[k], lam)) > tol and k <= epochs:
-    while k < epochs - 1:  # for performance evaluations
+    while grad_seq[-1] > tol * (1 + np.absolute(fun_seq[-1])) and k <= epochs:
         batch = np.arange(N)  # dataset indices
         rng = np.random.default_rng(k)
         rng.shuffle(batch)  # shuffle dataset indices
@@ -117,8 +92,11 @@ def miniGD_decreasing(fun, grad, X, y, M, lam, w0,
         fun_seq.append(fun(X, y, y_tnext, lam))
         grad_seq.append(grad(X, y, y_tnext, lam))
         k += 1
-    # return f"Value: {w_seq[-1]}\nIterations: {k}"
-    return w_seq, fun_seq, grad_seq
+    if grad_seq[-1] <= tol * (1 + np.absolute(fun_seq[-1])):
+        message = "Gradient under tolerance"
+    if k > epochs:
+        message = "Max epochs exceeded"
+    return w_seq, fun_seq, grad_seq, message, k
 
 
 def resetStep(N, alpha, alpha0, M, a, t, opt):

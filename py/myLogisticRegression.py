@@ -29,7 +29,7 @@ class myLogRegr():
         self.grad_ = None
         self.grad_seq = None
         self.benchmark_solver = None
-        self.solver_message = ""
+        self.solver_message = None
         self.opt_epochs = 0
 
     def logistic(self, w, X, y):
@@ -104,9 +104,10 @@ class myLogRegr():
             self.grad_ = self.grad_seq[-1]
             return self
         # elif self.solver == "miniGD-decreasing":
-        #     self.coef_seq, self.obj_seq, self.grad_seq = miniGD_decreasing(
-        #         logistic, logistic_der, X, y, self.minibatch_size,
-        #         self.regul_coef, w0, alpha0=alpha, epochs=self.epochs)
+        #     self.coef_seq, self.obj_seq, self.grad_seq, self.solver_message,
+        #     self.opt_epochs= miniGD_decreasing(
+        #         self.logistic, self.logistic_der, X, y, self.minibatch_size,
+        #         w0, self.regul_coef, self.tol, self.epochs, learning_rate)
         #     return self
         # elif self.solver == "miniGD-armijo":
         #     self.coef_seq, self.obj_seq, self.grad_seq = miniGD_armijo(
@@ -123,8 +124,7 @@ class myLogRegr():
         return y_proba
 
     def plotDiagnostic(self):
-        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(7, 2.5),
-                                       layout="constrained")
+        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(7, 2.5), layout="constrained")
         ax1.plot(self.obj_seq)
         ax1.set_title("Training loss against epochs")
         ax1.set_xlabel("Epochs")
@@ -136,7 +136,7 @@ class myLogRegr():
         ax2.set_ylabel("Gradient norm")
         # ax2.set_ylim([0, 100])  # function goes out of range
         plt.show()
-        return self
+        # return self
 
     def checkBias(self, w, X):
         N = X.shape[0]  # dataset examples
