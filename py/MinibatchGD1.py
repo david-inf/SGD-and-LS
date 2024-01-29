@@ -41,29 +41,19 @@ from scipy.optimize import minimize
 #     return fun(X, y, w)
 
 # fun e jac devono avere un solo argomento
-def optimalSolver(fun, grad, X, y, w0, bias=True):
-    N = X.shape[0]
-    if bias:
-        X = np.hstack((np.ones((N,1)), X))  # add constant feature
-        w0 = np.insert(w0, 0, 1)  # add initial guess for intercept
-    res = minimize(fun, w0, method="L-BFGS-B", jac=grad,
-                   bounds=None, options={"disp": True})
+def optimalSolver(fun, grad, w0, X, y):
+    res = minimize(fun, w0, args=(X, y), method="L-BFGS-B", jac=grad, bounds=None)
     return res
 
 # @jit(target_backend="cuda", nopython=True)
-def miniGD_fixed(fun, grad, X, y, M, w0, lam=0.5,
-                 alpha=0.7, tol=0.001, epochs=300, bias=True):
+def miniGD_fixed(fun, grad, X, y, M, w0, lam, tol, epochs, alpha):
     # fun and grad are callable
     # TODO: generate docstring
-    N = X.shape[0]  # number of examples
-    p = X.shape[1]  # number of features
-    if bias:
-        X = np.hstack((np.ones((N,1)), X))  # add constant feature
-        w0 = np.insert(w0, 0, 1)  # add initial guess for intercept
-        p += 1
+    # number of examples and features
+    N, p = X.shape
     w_seq = [w0]  # weigth sequence, w\in\R^p
-    fun_seq = [fun(X, y, w0, lam)]
-    grad_seq = [np.linalg.norm(grad(X, y, w0, lam))]
+    fun_seq = [fun(w0, X, y)]  # full loss
+    grad_seq = [np.linalg.norm(grad(w0, X, y))]  # full gradient
     k = 0
     while grad_seq[-1] > tol * (1 + np.absolute(fun_seq[-1])) and k <= epochs:
         batch = np.arange(N)  # dataset indices, reset every epoch
@@ -76,16 +66,20 @@ def miniGD_fixed(fun, grad, X, y, M, w0, lam=0.5,
             for j in minibatches[t]:  # for index in minibatch indeces
                 # evaluate gradient on a single example j at weight t
                 # mini_grad += logistic_der(X[j,:], y[j], y_seq[t], lam)
-                mini_grad += grad(X[j,:], y[j], y_seq[t], lam)
+                mini_grad += grad(y_seq[t], X[j,:], y[j])
             mini_grad = mini_grad / M
             y_tnext = y_seq[t] - alpha * mini_grad  # model internal update
             y_seq.append(y_tnext)  # internal weights update
         w_seq.append(y_tnext)  # weights update
-        fun_seq.append(fun(X, y, y_tnext, lam))
-        grad_seq.append(np.linalg.norm(grad(X, y, y_tnext, lam)))
+        fun_seq.append(fun(y_tnext, X, y))
+        grad_seq.append(np.linalg.norm(grad(y_tnext, X, y)))
         k += 1
     # return f"Value: {w_seq[-1]}\nIterations: {k}"
-    return w_seq, fun_seq, grad_seq
+    if grad_seq[-1] <= tol * (1 + np.absolute(fun_seq[-1])):
+        message = "Gradient under tolerance"
+    elif k > epochs:
+        message = "Max epochs exceeded"
+    return w_seq, fun_seq, grad_seq, message
 
 
 # @jit(target="cuda", nopython=True)

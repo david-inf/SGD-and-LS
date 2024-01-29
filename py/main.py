@@ -6,12 +6,13 @@ Created on Thu Jan 25 21:20:04 2024
 """
 
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # np.linalg.norm()
 # import scipy.linalg as la
 # la.norm()
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 from myLogisticRegression import myLogRegr
 
 rng = np.random.default_rng(42)
@@ -53,7 +54,7 @@ rng = np.random.default_rng(42)
 #### Apple quality
 
 appleDF = pd.read_csv("./datasets/apple_quality.csv", nrows=400)
-appleDF.drop("A_id", axis=1, inplace=True)
+appleDF = appleDF.drop(columns={"A_id"})
 # ReType
 appleDF["Acidity"] = appleDF['Acidity'].astype(float)
 appleDF['Quality'] = appleDF['Quality'].map({'bad': -1, 'good': 1})
@@ -61,11 +62,29 @@ appleDF['Quality'] = appleDF['Quality'].map({'bad': -1, 'good': 1})
 X = appleDF.drop("Quality", axis=1)
 y = appleDF["Quality"]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 42)
+scaler = MinMaxScaler(feature_range=(0, 1))
+X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, random_state = 42)
 X_train = X_train.values
 y_train = y_train.values
 
-w0 = (4 - 1) * rng.random(X_train.shape[1]) + 1
+### One-dimensional attempt
+
+X_train1 = X_train[:,0]  # one feature
+X_train1 = np.vstack((np.ones_like(X_train1), X_train1)).T
+
+w0_1 = np.array([5, 6])
+
+# model1 = myLogRegr(minibatch_size=4, bias=False, regul_coef=0.1)
+# model1.fit(X_train1, y_train, w0_1)
+
+## Optimal solver
+
+model1_opt = myLogRegr(bias=False, regul_coef=0.1, solver="scipy")
+model1_opt.fit(X_train1, y_train, w0_1)
+
+# w0 = (4 - 1) * rng.random(X_train.shape[1]) + 1
 
 # model1 = myLogRegr(minibatch_size=5, epochs=20)
 # model1.fit(X_train, y_train, w0, alpha=0.9)

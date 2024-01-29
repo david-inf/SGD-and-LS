@@ -13,8 +13,8 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 class myLogRegr():
-    def __init__(self, minibatch_size=1, tol=1e-3, bias=True,
-                 solver="miniGD-fixed", epochs=300, regul_coef=0.5):
+    def __init__(self, minibatch_size=1, tol=1e-4, bias=True,
+                 solver="miniGD-fixed", epochs=100, regul_coef=1):
         self.minibatch_size = minibatch_size
         self.tol = tol
         self.bias = bias
@@ -24,31 +24,41 @@ class myLogRegr():
         self.bias = bias
         self.coef_ = None
         self.coef_seq = None
-        self.obj = None
+        self.obj_ = None
         self.obj_seq = None
-        self.grad = None
+        self.grad_ = None
         self.grad_seq = None
-        self.benchmark = None
+        self.benchmark_solver = None
+        self.solver_message = None
 
     def logistic(self, w, X, y):
-        N = X.shape[0]
-        loss = 0  # sum of loss over singles dataset examples
-        for i in range(N):
-            loss += np.log(1 + np.exp(- y[i] * np.dot(np.transpose(w), X[i,:])))
+        # w : vector
+        # X : matrix or vector
+        # y : vector or scalar
+        if X.ndim == 1:  # vector, a single example of the dataset
+            # y should be a scalar
+            loss = np.log(1 + np.exp(- y * np.dot(w.T, X)))
+        elif X.ndim == 2: # matrix, N dataset examples
+            N = X.shape[0]  # number of examples
+            loss = 0  # sum of loss over singles dataset examples
+            for i in range(N):
+                loss += np.log(1 + np.exp(- y[i] * np.dot(w.T, X[i,:])))
         regul = self.regul_coef * np.linalg.norm(w) ** 2
         return loss + regul
 
     def logistic_der(self, w, X, y):
-        N = X.shape[0]
-        r = np.zeros(N)
-        for i in range(N):
-            r[i] = - y[i] * sigmoid(- y[i] * np.dot(np.transpose(w), X[i,:]))
-        loss_der = np.dot(np.transpose(X), r)
-        # r = - y * sigmoid(-y * np.dot(X, w))
-        # if X.ndim == 2:  # full gradient
-        #     loss_der = np.matmul(np.transpose(X), r)
-        # else:  # single example gradient
-        #     loss_der = np.dot(X, r)
+        # w : vector
+        # X : matrix or vector
+        # y : vector or scalar
+        if X.ndim == 1:
+            r_i = - y * sigmoid(- y * np.dot(w.T, X))
+            loss_der = np.dot(X.T, r_i)
+        elif X.ndim == 2:
+            N = X.shape[0]
+            r = np.zeros(N)
+            for i in range(N):
+                r[i] = - y[i] * sigmoid(- y[i] * np.dot(w.T, X[i,:]))
+            loss_der = np.dot(np.transpose(X), r)
         regul_der = self.regul_coef * 2 * w
         return loss_der + regul_der
 
@@ -61,16 +71,23 @@ class myLogRegr():
     #     regul_hess = 2 * lam * np.eye(X.shape[1])
     #     return loss_hess + regul_hess
 
-    def fit(self, X, y, w0, alpha=0.7):
-        N = X.shape[0]  # dataset examples
-        X = np.hstack((np.ones((N,1)),X.values))  # add constant column
-        if self.solver == "scipy":
-            # self.benchmark = optimalSolver(self.logistic, self.logistic_der, X, y, w0)
+    def fit(self, X, y, w0, learning_rate=0.09):
+        if self.bias:
+            N = X.shape[0]  # dataset examples
+            X = np.hstack((np.ones((N,1)),X))  # add constant column
+            if X.shape[1] != w0.shape:  # initial guess for bias not given
+                w0 = np.insert(w0, 0, 0)  # add initial guess for bias
+        elif self.solver == "scipy":
+            self.benchmark_solver = optimalSolver(
+                self.logistic, self.logistic_der, w0, X, y)
             return self
         elif self.solver == "miniGD-fixed":
-            self.coef_seq, self.obj_seq, self.grad_seq = miniGD_fixed(
-                self.logistic, self.logistic_der, X, y, self.minibatch_size, w0,
-                self.regul_coef, alpha, self.tol, self.epochs, self.bias)
+            self.coef_seq, self.obj_seq, self.grad_seq, self.solver_message = miniGD_fixed(
+                self.logistic, self.logistic_der, X, y, self.minibatch_size,
+                w0, self.regul_coef, self.tol, self.epochs, learning_rate)
+            self.coef_ = self.coef_seq[-1]
+            self.obj_ = self.obj_seq[-1]
+            self.grad_ = self.grad_seq[-1]
             return self
         # elif self.solver == "miniGD-decreasing":
         #     self.coef_seq, self.obj_seq, self.grad_seq = miniGD_decreasing(
