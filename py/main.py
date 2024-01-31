@@ -6,13 +6,14 @@ Created on Thu Jan 25 21:20:04 2024
 """
 
 #%% Packages
+import time
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
-import solvers
+from solvers import l_bfgs_b, predict, minibatch_gd_fixed, minibatch_gd_decreasing, minibatch_gd_armijo
 
 # rng = np.random.default_rng(42)
 
@@ -35,18 +36,18 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 # Apple quality
 
 # Train dataset
-model1 = solvers.l_bfgs_b(w0, X_train, y_train, 5e-3)
+model1 = l_bfgs_b(w0, X_train, y_train, 5e-3)
 # model1_opt = myLogRegr(
 #     solver="scipy", regul_coef=0.1)
 # model1_opt.fit(
 #     X_train, y_train, w0)
 
 # Train accuracy
-model1_accuracy_train = accuracy_score(y_train, solvers.predict(X_train, model1.x))
+model1_accuracy_train = accuracy_score(y_train, predict(X_train, model1.x))
 # model1_accuracy_train = model1_opt.getAccuracy(X_train, y_train)
 
 # Test accuracy
-model1_accuracy_test = accuracy_score(y_test, solvers.predict(X_test, model1.x))
+model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 # model1_accuracy_test = model1_opt.getAccuracy(X_test, y_test)
 
 # Results
@@ -69,8 +70,12 @@ model1_accuracy_test = accuracy_score(y_test, solvers.predict(X_test, model1.x))
 # k = 250
 
 # Train dataset
-print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
-print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
+# print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
+# print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
+start = time.time()
+print(minibatch_gd_armijo(w0, 1e-10, M=8, X=X_train, y=y_train, coeff=5e-3))
+end = time.time()
+print(f"seconds: {end - start}")
 # model2_opt1 = myLogRegr(
 #     minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
 # model2_opt1.fit(
