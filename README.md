@@ -27,6 +27,7 @@ Logistic regression - python
 Metrics/diagnostic
 - training loss against epochs
     - su un numero fissato di epoche: while k<k*
+- timer per esecuzione
 - training loss against iterations
     - per iterations si intende quelle interne ad una epoca
     - le iterations sono fissate una volta assegnata la dimensione del minibatch

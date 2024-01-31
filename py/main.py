@@ -9,7 +9,7 @@ Created on Thu Jan 25 21:20:04 2024
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
-
+from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
 import solvers
@@ -30,35 +30,33 @@ X_test = np.hstack((np.ones((X_test.shape[0],1)), X_test))
 # intercept initial guess already added
 w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 
-#%% 
-
-lam = 0.001
-print(solvers.logistic_hess(w0, X_train, y_train, lam).shape)
-
 #%% Benchmark solver
 
 # Apple quality
 
 # Train dataset
-model1_opt = myLogRegr(
-    solver="scipy", regul_coef=0.1)
-model1_opt.fit(
-    X_train, y_train, w0)
+model1 = solvers.l_bfgs_b(w0, X_train, y_train, 5e-3)
+# model1_opt = myLogRegr(
+#     solver="scipy", regul_coef=0.1)
+# model1_opt.fit(
+#     X_train, y_train, w0)
 
 # Train accuracy
-model1_accuracy_train = model1_opt.getAccuracy(X_train, y_train)
+model1_accuracy_train = accuracy_score(y_train, solvers.predict(X_train, model1.x))
+# model1_accuracy_train = model1_opt.getAccuracy(X_train, y_train)
 
 # Test accuracy
-model1_accuracy_test = model1_opt.getAccuracy(X_test, y_test)
+model1_accuracy_test = accuracy_score(y_test, solvers.predict(X_test, model1.x))
+# model1_accuracy_test = model1_opt.getAccuracy(X_test, y_test)
 
 # Results
-print(f"Solver: {model1_opt.solver}" +
-      f"\nTrain accuracy: {model1_accuracy_train:.4f}" +
-      f"\nTest accuracy: {model1_accuracy_test:.4f}" +
-      f"\nSolution: {model1_opt.coef_}" +
-      f"\nLoss: {model1_opt.obj_:.4f}" +
-      f"\nGradient: {model1_opt.grad_:.8f}" +
-      "\nMessage: " + model1_opt.solver_message)
+# print(f"Solver: {model1_opt.solver}" +
+#       f"\nTrain accuracy: {model1_accuracy_train:.4f}" +
+#       f"\nTest accuracy: {model1_accuracy_test:.4f}" +
+#       f"\nSolution: {model1_opt.coef_}" +
+#       f"\nLoss: {model1_opt.obj_:.4f}" +
+#       f"\nGradient: {model1_opt.grad_:.8f}" +
+#       "\nMessage: " + model1_opt.solver_message)
 
 #%% miniGD-fixed
 
@@ -66,30 +64,34 @@ print(f"Solver: {model1_opt.solver}" +
 
 # al diminuire della dimensione del minibatch si riduce il learning rate e viceversa
 
-lam = 5e-3
-M = 4
-k = 250
+# lam = 5e-3
+# M = 4
+# k = 250
 
 # Train dataset
-model2_opt1 = myLogRegr(
-    minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
-model2_opt1.fit(
-    X_train, y_train, w0, learning_rate=1e-3)
+print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
+print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
+# model2_opt1 = myLogRegr(
+#     minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
+# model2_opt1.fit(
+#     X_train, y_train, w0, learning_rate=1e-3)
 
 # Train accuracy
-model2_1_accuracy_train = model2_opt1.getAccuracy(X_train, y_train)
+# model2_1_accuracy_train = accuracy_score(y_train, solvers.predict(X_train, ))
+# model2_1_accuracy_train = model2_opt1.getAccuracy(X_train, y_train)
 
 # Test accuracy
-model2_1_accuracy_test = model2_opt1.getAccuracy(X_test, y_test)
+
+# model2_1_accuracy_test = model2_opt1.getAccuracy(X_test, y_test)
 
 # Results
-print(f"Solver: {model2_opt1.solver}" +
-      f"\nTrain accuracy: {model2_1_accuracy_train:.4f}" +
-      f"\nTest accuracy: {model2_1_accuracy_test:.4f}" +
-      f"\nSolution: {model2_opt1.coef_}" +
-      f"\nLoss: {model2_opt1.obj_:.4f}" +
-      f"\nGradient: {model2_opt1.grad_:.8f}" +
-      "\nMessage: " + model2_opt1.solver_message)
+# print(f"Solver: {model2_opt1.solver}" +
+#       f"\nTrain accuracy: {model2_1_accuracy_train:.4f}" +
+#       f"\nTest accuracy: {model2_1_accuracy_test:.4f}" +
+#       f"\nSolution: {model2_opt1.coef_}" +
+#       f"\nLoss: {model2_opt1.obj_:.4f}" +
+#       f"\nGradient: {model2_opt1.grad_:.8f}" +
+#       "\nMessage: " + model2_opt1.solver_message)
 
 # plotDiagnostic([model2_opt1], [r"$\alpha=1e-3$"])
 
