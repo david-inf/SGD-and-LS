@@ -10,24 +10,30 @@ import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
 
-from myLogisticRegression import myLogRegr
+# from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
+import solvers
 
-rng = np.random.default_rng(42)
+# rng = np.random.default_rng(42)
 
 #%% Apple quality dataset
 
 # load with constant column
 X_train = pd.read_csv("datasets/apple_quality/apple_X_train.csv").values
-y_train = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values
+y_train = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values.reshape(-1)
 X_test = pd.read_csv("datasets/apple_quality/apple_X_test.csv").values
-y_test = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values
+y_test = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values.reshape(-1)
 
 X_train = np.hstack((np.ones((X_train.shape[0],1)), X_train))
 X_test = np.hstack((np.ones((X_test.shape[0],1)), X_test))
 
 # intercept initial guess already added
 w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
+
+#%% 
+
+lam = 0.001
+print(solvers.logistic_hess(w0, X_train, y_train, lam).shape)
 
 #%% Benchmark solver
 
@@ -126,8 +132,8 @@ print(f"Solver: {model2_opt1.solver}" +
 
 # Apple quality
 
-model3_opt = myLogRegr()
-model3_opt.fit(X_train, y_train, w0)
+# model3_opt = myLogRegr()
+# model3_opt.fit(X_train, y_train, w0)
 
 #%%
 ### Two-dimensional attempt
