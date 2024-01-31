@@ -36,7 +36,10 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 # Apple quality
 
 # Train dataset
+# start = time.time()
 model1 = l_bfgs_b(w0, X_train, y_train, 5e-3)
+# end = time.time()
+# print(f"seconds: {end - start}")
 # model1_opt = myLogRegr(
 #     solver="scipy", regul_coef=0.1)
 # model1_opt.fit(
@@ -70,6 +73,16 @@ model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 # k = 250
 
 # Train dataset
+start = time.time()
+print(minibatch_gd_fixed(w0, 1e-3, 8, X_train, y_train, 5e-3))
+end = time.time()
+print(f"seconds: {end - start}")
+
+start = time.time()
+print(minibatch_gd_decreasing(w0, 0.1, 8, X_train, y_train, 5e-3))
+end = time.time()
+print(f"seconds: {end - start}")
+
 # print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
 # print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
 start = time.time()
