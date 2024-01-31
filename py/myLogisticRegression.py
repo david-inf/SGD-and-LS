@@ -7,7 +7,9 @@ Created on Fri Jan 26 16:10:31 2024
 
 import numpy as np
 import matplotlib.pyplot as plt
-from MinibatchGD1 import miniGD_fixed, miniGD_decreasing, miniGD_armijo, optimalSolver
+from sklearn.metrics import accuracy_score
+# from MinibatchGD1 import miniGD_fixed, optimalSolver #, miniGD_decreasing, miniGD_armijo
+from MinibatchGD1 import myOptResult, optimalSolver
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -22,15 +24,12 @@ class myLogRegr():
         self.epochs = epochs
         self.regul_coef = regul_coef
         self.bias = bias
-        self.coef_ = None
         self.coef_seq = None
-        self.obj_ = None
         self.obj_seq = None
-        self.grad_ = None
         self.grad_seq = None
-        self.benchmark_solver = None
-        self.solver_message = None
+        # self.benchmark_solver = None
         self.opt_epochs = 0
+        # self.accuracy = None
 
     def logistic(self, w, X, y):
         # w : vector
@@ -88,20 +87,29 @@ class myLogRegr():
         # if self.bias:
         #     w0, X = self.checkBias(w0, X)
         if self.solver == "scipy":
-            res = optimalSolver(self.logistic, self.logistic_der, w0, X, y)
-            self.benchmark_solver = res
+            res = optimalSolver(
+                self.logistic, self.logistic_der, w0, X, y)
+            # self.benchmark_solver = res
             self.coef_ = res.x
             self.solver_message = res.message
             self.obj_ = res.fun
             self.grad_ = np.linalg.norm(res.jac)
             return self
         elif self.solver == "miniGD-fixed":
-            self.coef_ = miniGD_fixed(
-                self.logistic, self.logistic_der, X, y, self.minibatch_size,
-                w0, self.regul_coef, self.tol, self.epochs, learning_rate)
-            self.coef_ = self.coef_seq[-1]
-            self.obj_ = self.obj_seq[-1]
-            self.grad_ = self.grad_seq[-1]
+            # self.coef_, self.obj_, self.grad_, self.solver_message = miniGD_fixed(
+            #     self.logistic, self.logistic_der, X, y, self.minibatch_size,
+            #     w0, self.tol, self.epochs, learning_rate)
+            res = myOptResult(
+                self.logistic, self.logistic_der, w0, self.minibatch_size,
+                self.tol, self.epochs)
+            res.miniGD_fixed(X, y, learning_rate)
+            self.coef_ = res.sol
+            self.obj_ = res.fun
+            self.grad_ = res.grad
+            self.solver_message = res.message
+            # self.coef_ = self.coef_seq[-1]
+            # self.obj_ = self.obj_seq[-1]
+            # self.grad_ = self.grad_seq[-1]
             return self
         # elif self.solver == "miniGD-decreasing":
         #     self.coef_seq, self.obj_seq, self.grad_seq, self.solver_message,
@@ -122,6 +130,12 @@ class myLogRegr():
         y_proba[y_proba > thresh] = 1
         y_proba[y_proba <= thresh] = -1
         return y_proba
+
+    def getAccuracy(self, X, y):
+        # X: values for prediction
+        # y: actual values
+        y_pred = self.predict(X)
+        return accuracy_score(y, y_pred)
 
     def plotDiagnostic(self):
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(7, 2.5), layout="constrained")
@@ -144,12 +158,12 @@ class myLogRegr():
         if X.shape[1] != w.shape[0]:  # check for bias initial guess
             w = np.insert(w, 0, 0)  # add initial guess for bias
         return w, X
-
-
-
-
-
-
-
-
-
+    
+    # def __str__(self):
+    #     return f"Solver: {self.solver}\nTrain accuracy: {self.accuracy"
+               # f"\nTrain accuracy: {model1_accuracy_train:.4f}" +
+               # f"\nTest accuracy: {model1_accuracy_test:.4f}" +
+               # f"\nSolution: {model1_opt.coef_}" +
+               # f"\nLoss: {model1_opt.obj_:.4f}" +
+               # f"\nGradient: {model1_opt.grad_:.8f}" +
+                # "\nMessage: " + model1_opt.solver_message
