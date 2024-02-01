@@ -37,38 +37,27 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 #%% Benchmark solver
 
 # Train dataset
-# start = time.time()
 model1 = l_bfgs_b(w0, X_train, y_train)
-# end = time.time()
-# print(f"seconds: {end - start}")
-# model1_opt = myLogRegr(
-#     solver="scipy", regul_coef=0.1)
-# model1_opt.fit(
-#     X_train, y_train, w0)
 
 # Train accuracy
 model1.accuracy_train = get_accuracy(model1, X_train, y_train)
-# model1_accuracy_train = accuracy_score(y_train, predict(X_train, model1.x))
-# model1_accuracy_train = model1_opt.getAccuracy(X_train, y_train)
 
 # Test accuracy
 model1.accuracy_test = get_accuracy(model1, X_test, y_test)
-# model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
-# model1_accuracy_test = model1_opt.getAccuracy(X_test, y_test)
 
 # Results
-# print(f"Solver: {model1_opt.solver}" +
-#       f"\nTrain accuracy: {model1_accuracy_train:.4f}" +
-#       f"\nTest accuracy: {model1_accuracy_test:.4f}" +
-#       f"\nSolution: {model1_opt.coef_}" +
-#       f"\nLoss: {model1_opt.obj_:.4f}" +
-#       f"\nGradient: {model1_opt.grad_:.8f}" +
-#       "\nMessage: " + model1_opt.solver_message)
+print(f"Solver: L-BFGS-B" +
+      f"\nTrain accuracy: {model1.accuracy_train:.4f}" +
+      f"\nTest accuracy: {model1.accuracy_test:.4f}" +
+      f"\nSolution: {model1.x}" +
+      f"\nLoss: {(model1.fun / X_train.shape[0]):.4f}" +
+      f"\nGradient: {(np.linalg.norm(model1.jac) / X_train.shape[0]):.4f}" +
+      "\nMessage: " + model1.message)
 
 #%% Minibatch Gradient Descent with fixed step-size
 
 models2 = []
-alpha2_1 = 1e-2
+alpha2_1 = 0.05
 
 M1 = 8
 model2_1 = minibatch_gd_fixed(w0, alpha2_1, M1, X_train, y_train)
@@ -88,6 +77,12 @@ model2_3.accuracy_train = get_accuracy(model2_3, X_train, y_train)
 model2_3.accuracy_test = get_accuracy(model2_3, X_test, y_test)
 models2.append(model2_3)
 
+M4 = 64
+model2_4 = minibatch_gd_fixed(w0, alpha2_1, M4, X_train, y_train)
+model2_4.accuracy_train = get_accuracy(model2_4, X_train, y_train)
+model2_4.accuracy_test = get_accuracy(model2_4, X_test, y_test)
+models2.append(model2_4)
+
 model2_data = pd.DataFrame(
     {
     "Solver": [model.solver for model in models2],
@@ -95,6 +90,7 @@ model2_data = pd.DataFrame(
     "Loss": [model.fun for model in models2],
     "Grad norm": [model.grad for model in models2],
     "Time": [model.runtime for model in models2],
+    "Termination": [model.message for model in models2],
     "Train accuracy": [model.accuracy_train for model in models2],
     "Test accuracy": [model.accuracy_test for model in models2]
     }
@@ -132,7 +128,42 @@ model3_data = pd.DataFrame(
     }
     )
 
-plot_loss(models3, [f"M={model.}" for model in models3])
+plot_loss(models3, [f"alpha={model.initial_step_size}" for model in models3])
+
+#%% SGDM - compare sensitivity to its step-size
+
+models_sgdm = []
+M_sgdm = 128
+
+model_sgdm_1 = minibatch_gdm_fixed(w0, 1, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_1.accuracy_train = get_accuracy(model_sgdm_1, X_train, y_train)
+model_sgdm_1.accuracy_test = get_accuracy(model_sgdm_1, X_test, y_test)
+models_sgdm.append(model_sgdm_1)
+
+model_sgdm_2 = minibatch_gdm_fixed(w0, 0.1, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_2.accuracy_train = get_accuracy(model_sgdm_2, X_train, y_train)
+model_sgdm_2.accuracy_test = get_accuracy(model_sgdm_2, X_test, y_test)
+models_sgdm.append(model_sgdm_2)
+
+model_sgdm_3 = minibatch_gdm_fixed(w0, 0.01, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_3.accuracy_train = get_accuracy(model_sgdm_3, X_train, y_train)
+model_sgdm_3.accuracy_test = get_accuracy(model_sgdm_3, X_test, y_test)
+models_sgdm.append(model_sgdm_3)
+
+model_sgdm_data = pd.DataFrame(
+    {
+    "Solver": [model.solver for model in models_sgdm],
+    "Minibatch": [model.minibatch_size for model in models_sgdm],
+    "Loss": [model.fun for model in models_sgdm],
+    "Grad norm": [model.grad for model in models_sgdm],
+    "Time": [model.runtime for model in models_sgdm],
+    "Termination": [model.message for model in models_sgdm],
+    "Train accuracy": [model.accuracy_train for model in models_sgdm],
+    "Test accuracy": [model.accuracy_test for model in models_sgdm]
+    }
+    )
+
+plot_loss(models_sgdm, [f"alpha={model.step_size}" for model in models_sgdm])
 
 #%%
 

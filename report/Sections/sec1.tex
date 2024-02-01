@@ -6,24 +6,31 @@
 % problem identification
 % solutions
 
+\subsection{Classification task}
+
 \subsection{Optimization problem}
 
 \[
 \min_{w\in\R^p}\func(w)=L(w)+\lambda\Omega(w)
 \]
 
+%\[
+%\func(w)=\sum_{i=1}^Nf_i(w)+\lambda\norma{w}^2
+%\]
+
 \begin{equation}\label{eq:opt-prob}
-\min\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\norma{w}^2
+\min\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\norma{w}^2
 \end{equation}
 where $i=\,\dots,N$ are the dataset indices, $y^{i}\in\set{-1,1}$ is the response variable corresponding to the negative or positive class, $x^{i}\in\R^p$ are dataset examples.
 
 \[
-\nabla\func(w)=X^Tr+2\lambda w,\quad r=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
+\nabla\func(w)=\frac{1}{N}X^Tr+2\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
 \]
 
 \[
-\nabla^2\func(w)=X^TDX+2\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
+\nabla^2\func(w)=\frac{1}{N}XDX^T+2\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
 \]
+$r\in\R^N$, $D\in\R^{N\times N}$
 
 \begin{prop}
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
@@ -43,7 +50,7 @@ X^T=
 w=
 \begin{pmatrix}
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
-\end{pmatrix}\in\R^{p+1}
+\end{pmatrix}\in\R^{(p+1)}
 \]
 
 \[
@@ -51,6 +58,13 @@ y=
 \begin{pmatrix}
 y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \end{pmatrix}\in\set{-1,1}
+\]
+
+\[
+x^{(i)}=
+\begin{pmatrix}
+1 \\ x_1^{(i)} \\ x_2^{(i)} \\ \vdots \\ x_N^{(i)}
+\end{pmatrix}\in\R^{(p+1)}
 \]
 
 \cleardoublepage
@@ -71,13 +85,13 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \centering
 \subfloat[][\emph{Log-loss}\label{subfig:log-loss}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel=$\log(1+\exp(-uv))$,ytick={1,2,4},axis lines=middle,enlargelimits]
+\begin{axis}[xlabel=$uv$,ylabel=$\log(1+\exp(-uv))$,ytick={1,2,4},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
 \end{axis}
-\end{tikzpicture}} \\
+\end{tikzpicture}} \quad
 \subfloat[][\emph{Sigmoid function}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel=$\frac{1}{1+e^{-x}}$,axis lines=middle,enlargelimits]
+\begin{axis}[xlabel=$x$,ylabel=$\frac{1}{1+e^{-x}}$,axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,red,smooth] {1/(1+exp(-x))};
 \end{axis}
 \end{tikzpicture}}
@@ -118,10 +132,6 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 
 \cleardoublepage
 \section{Mini-batch gradient descent variants}
-
-\[
-\func(w)=\sum_{i=1}^Nf_i(w)
-\]
 
 \subsection{Fixed step-size}
 

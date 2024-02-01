@@ -16,6 +16,8 @@ Python
 Logistic regression - theory
 - binary classification
 - the problem admits a unique optimal solution
+- devo dividere per N??
+- dividere per 2 il regolarizzatore??
 
 Logistic regression - python
 - python class? like in scikit?

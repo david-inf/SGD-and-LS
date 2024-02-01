@@ -11,12 +11,10 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.optimize import OptimizeResult
 # from numba import jit
-from my_utils import logistic, logistic_der, f_and_df, f_and_df_2
+from solvers_utils import logistic, logistic_der, f_and_df, f_and_df_2
 
 #%% Benchmark solver
-def l_bfgs_b(w0, X, y): 
-    # res = minimize(logistic, w0, args=(X, y, coeff), method="L-BFGS-B",
-    #                jac=logistic_der, bounds=None, options={"gtol": 1e-4})
+def l_bfgs_b(w0, X, y):
     res = minimize(f_and_df_2, w0, args=(X, y), method="L-BFGS-B",
                    jac=True, bounds=None, options={"gtol": 1e-4})
     return res    
@@ -86,9 +84,8 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     # return w_seq[k, :], grad_seq[k], fun_seq[k], message
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
                 success=True, solver="MiniGD-fixed", grad=grad_seq[k],
-                fun_per_it=fun_seq, minibatch_size=M, runtime = end - start)
-
-# TODO: add alpha
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start, step_size=alpha)
 
 #%% Minibatch Gradient Descent with decreasing step-size
 def minibatch_gd_decreasing(w0, alpha0, M, X, y):
@@ -102,6 +99,7 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
         ## Shuffle dataset
@@ -121,13 +119,18 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
         k += 1
         w_seq[k, :] = y_tnext
         fun_seq[k], grad_seq[k] = f_and_df(y_tnext, X, y)
+    end = time.time()
     message = ""
     if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     # return w_seq[k,:]
-    return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    # return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
+                success=True, solver="MiniGD-decreasing", grad=grad_seq[k],
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start, initial_step_size=alpha0)
 
 #%% Minibatch Gradient Descent with Armijo line search
 def reset_step(N, alpha, alpha0, M, t):
@@ -150,21 +153,21 @@ def armijo_condition(x, x_next, X, y, alpha):
     return fun_next > thresh
 
 
-# def armijo_method(x, x_next, X, y, alpha, alpha0, M, t):
-#     N, p = X.shape
-#     alpha = reset_step(N, alpha, alpha0, M, t)
-#     y_tnext = y_seq[t, :] - alpha * mini_grad
-#     q = 0  # step-size rejections counter
-#     while armijo_condition(y_seq[t, :], y_tnext, X, y, alpha):
-#         alpha = delta * alpha  # reduce step-size
-#         y_tnext = y_seq[t, :] - alpha * mini_grad
-#         q += 1
-#     return alpha, x_next
-
+def armijo_method(x, d, X, y, alpha, alpha0, M, t):
+    N, p = X.shape
+    alpha = reset_step(N, alpha, alpha0, M, t)
+    x_next = x + alpha * d
+    q = 0  # step-size rejections counter
+    while armijo_condition(x, x_next, X, y, alpha):
+        alpha = 0.5 * alpha  # reduce step-size
+        x_next = x + alpha * d
+        q += 1
+    return alpha, x_next
+# TODO: create branch for testing this function in the algorithm
 
 # @jit(nopython=True)
 def minibatch_gd_armijo(w0, alpha0, M, X, y):
-    delta = 0.5
+    # delta = 0.5
     epochs = 200
     # tol = 1e-4
     N, p = X.shape  # number of examples and features
@@ -175,6 +178,7 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    start = time.time()
     k = 0  # epochs counter   
     while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
         ## Shuffle dataset
@@ -192,25 +196,30 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
             y_tnext = y_seq[t, :] - alpha * mini_grad
             q = 0  # step-size rejections counter
             while armijo_condition(y_seq[t, :], y_tnext, X, y, alpha):
-                alpha = delta * alpha  # reduce step-size
+                alpha = 0.5 * alpha  # reduce step-size
                 y_tnext = y_seq[t, :] - alpha * mini_grad
                 q += 1
             alpha_seq[t+1] = alpha  # accepted step-size
             ## Update (internal) weights
             y_tnext = y_seq[t, :] - alpha * mini_grad
             y_seq[t+1, :] = y_tnext  # internal weights update
-            # alpha_seq[t+1], y_seq[t+1,:] = armijo_method
+            # TODO alpha_seq[t+1], y_tnext = armijo_method(y_seq[t, :], -mini_grad, X, y, alpha_seq[t], M, t)
         ## Update sequence, objective function and gradient norm
         k += 1
         w_seq[k, :] = y_tnext
         fun_seq[k], grad_seq[k] = f_and_df(y_tnext, X, y)
+    end = time.time()
     message = ""
     if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     # return w_seq[k,:]
-    return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    # return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
+                success=True, solver="MiniGD-Armijo", grad=grad_seq[k],
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start)
 
 #%% Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 
@@ -226,6 +235,7 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
         ## Shuffle dataset
@@ -249,13 +259,18 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
         k += 1
         w_seq[k, :] = y_tnext
         fun_seq[k], grad_seq[k] = f_and_df(y_tnext, X, y)
+    end = time.time()
     message = ""
     if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     # return w_seq[k,:]
-    return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    # return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
+                success=True, solver="MiniGDM-fixed", grad=grad_seq[k],
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start, step_size=alpha, momentum=beta)
 
 #%% Minibatch Gradient Descent with Momentum, Armijo line search
 
@@ -277,6 +292,7 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
         ## Shuffle dataset
@@ -320,13 +336,18 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
         k += 1
         w_seq[k, :] = y_tnext
         fun_seq[k], grad_seq[k] = f_and_df(y_tnext, X, y)
+    end = time.time()
     message = ""
     if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     # return w_seq[k,:]
-    return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    # return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
+                success=True, solver="MSL-SGDM-C", grad=grad_seq[k],
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start)
 
 
 # MSL-SGDM-R
@@ -342,6 +363,7 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
         ## Shuffle dataset
@@ -362,7 +384,7 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
             mini_grad = minibatch_gradient(X, y, minibatch, y_seq[t, :])
             ## Compute potential direction
             d_tnext = - ((1 - beta0) * mini_grad + beta0 * d_seq[t])
-            if not direction_condition(y_seq[t,:], d_tnext, X, y):
+            if not direction_condition(mini_grad, d_tnext):
                 d_tnext = d_seq[0,:]
             d_seq[t+1,:] = d_tnext
             ## Compute potential next step
@@ -380,10 +402,15 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
         k += 1
         w_seq[k, :] = y_tnext
         fun_seq[k], grad_seq[k] = f_and_df(y_tnext, X, y)
+    end = time.time()
     message = ""
     if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     # return w_seq[k,:]
-    return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    # return w_seq[k, :], grad_seq[k], fun_seq[k], message
+    return OptimizeResult(fun=fun_seq[k], x=w_seq[k,:], message=message,
+                success=True, solver="MSL-SGDM-R", grad=grad_seq[k],
+                fun_per_it=fun_seq, minibatch_size=M,
+                runtime = end - start)
