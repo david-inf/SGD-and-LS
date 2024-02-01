@@ -119,10 +119,14 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \cleardoublepage
 \section{Mini-batch gradient descent variants}
 
+\[
+\func(w)=\sum_{i=1}^Nf_i(w)
+\]
+
 \subsection{Fixed step-size}
 
 \begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed or decreasing step-size}]
-given £!$w^0\in\R^n$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
+given £!$w^0\in\R^n$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
  set £!$y_0=w^k$!£
@@ -130,7 +134,7 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
   get mini-batch indices from £!$B_t$!£
   approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
   compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
  end for
  update weights £!$w^{k+1}=y_{N/M}$!£
  epoch ends £!$k=k+1$!£
@@ -146,7 +150,7 @@ end while
 % create function armijo_condition()
 % while (£!$f_{i_t}(y_{t-1}+\alpha d_t)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
 \begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search}]
-given £!$w^0\in\R^{p+1}$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
+given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
@@ -155,7 +159,7 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
   get mini-batch indices £!$i_t$!£ from £!$B_t$!£
   approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
   compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
-  £!$\alpha=\mathtt{reset()}$!£, £!$q=0$!£
+  £!$\alpha=\mathtt{reset}()$!£, £!$q=0$!£
   compute potential next step £!$y_t=y_{t-1}+\alpha d_t$!£
   while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
    reduce step-size £!$\alpha=\delta\alpha$!£
@@ -173,7 +177,7 @@ end while
 \subsection{Fixed momentum term}
 
 \begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size}]
-given £!$w^0\in\R^{p+1}$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\beta\in(0,1)$!£
+given £!$w^0\in\R^{p+1}$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\set{\beta_k}=\beta\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
@@ -182,15 +186,15 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
   get mini-batch indices £!$i_t$!£ from £!$B_t$!£
   approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
   compute direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
  end for
  update weights £!$w^{k+1}=y_{N/M}$!£
  epoch ends £!$k=k+1$!£
 end while
 \end{lstlisting}
 
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search for Momentum term and step-size}]
-given £!$w^0\in\R^{p+1}$!£, £!$\func(w)=\sum_{i=1}^Nf_i(w)$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
+\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction}]
+given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
@@ -216,6 +220,34 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  end for
 update weights £!$w^{k+1}=y_{N/M}$!£
 epoch ends £!$k=k+1$!£
+end while
+\end{lstlisting}
+
+\cleardoublepage
+\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart}]
+given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\set{\beta_k}=\beta\in(0,1)$!£
+£!$k=0$!£
+while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
+ shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+ set £!$y_0=w^k$!£, £!$d_0=0$!£
+ for £!$t=1,\dots,N/M$!£
+  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+  compute potential next direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
+  if (£!$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$!£)
+   restart direction £!$d_t=d_0$!£
+  end if
+  £!$\alpha=\mathtt{reset()}$!£, £!$q_a=0$!£
+  compute potential next step £!$y_t=y_{t-1}+\alpha d_{t-1}$!£
+  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
+   reduce step-size £!$\alpha=\delta_a\alpha$!£
+   rejections counter £!$q_a=q_a+1$!£
+  end while
+  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
+  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+ end for
+ update weights £!$w^{k+1}=y_{N/M}$!£
+ epoch ends £!$k=k+1$!£
 end while
 \end{lstlisting}
 

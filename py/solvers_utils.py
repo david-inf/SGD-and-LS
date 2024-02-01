@@ -21,13 +21,6 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def predict(X, w, thresh=0.5):
-    y_proba = sigmoid(np.dot(X, w))
-    y_proba[y_proba > thresh] = 1
-    y_proba[y_proba <= thresh] = -1
-    return y_proba
-
-
 def logistic(w, X, y, coeff=5e-3):
     """
     Parameters

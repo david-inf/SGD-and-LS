@@ -6,16 +6,17 @@ Created on Thu Jan 25 21:20:04 2024
 """
 
 #%% Packages
-import time
+# import time
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.metrics import accuracy_score
+# from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
-            minibatch_gd_armijo, minibatch_gdm_fixed)
-from my_utils import predict
+            minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
+from plot_utils import plot_loss
+from ml_utils import get_accuracy
 
 # rng = np.random.default_rng(42)
 
@@ -35,8 +36,6 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 
 #%% Benchmark solver
 
-# Apple quality
-
 # Train dataset
 # start = time.time()
 model1 = l_bfgs_b(w0, X_train, y_train)
@@ -48,11 +47,13 @@ model1 = l_bfgs_b(w0, X_train, y_train)
 #     X_train, y_train, w0)
 
 # Train accuracy
-model1_accuracy_train = accuracy_score(y_train, predict(X_train, model1.x))
+model1.accuracy_train = get_accuracy(model1, X_train, y_train)
+# model1_accuracy_train = accuracy_score(y_train, predict(X_train, model1.x))
 # model1_accuracy_train = model1_opt.getAccuracy(X_train, y_train)
 
 # Test accuracy
-model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
+model1.accuracy_test = get_accuracy(model1, X_test, y_test)
+# model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 # model1_accuracy_test = model1_opt.getAccuracy(X_test, y_test)
 
 # Results
@@ -64,7 +65,76 @@ model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 #       f"\nGradient: {model1_opt.grad_:.8f}" +
 #       "\nMessage: " + model1_opt.solver_message)
 
-#%% miniGD-fixed
+#%% Minibatch Gradient Descent with fixed step-size
+
+models2 = []
+alpha2_1 = 1e-2
+
+M1 = 8
+model2_1 = minibatch_gd_fixed(w0, alpha2_1, M1, X_train, y_train)
+model2_1.accuracy_train = get_accuracy(model2_1, X_train, y_train)
+model2_1.accuracy_test = get_accuracy(model2_1, X_test, y_test)
+models2.append(model2_1)
+
+M2 = 16
+model2_2 = minibatch_gd_fixed(w0, alpha2_1, M2, X_train, y_train)
+model2_2.accuracy_train = get_accuracy(model2_2, X_train, y_train)
+model2_2.accuracy_test = get_accuracy(model2_2, X_test, y_test)
+models2.append(model2_2)
+
+M3 = 32
+model2_3 = minibatch_gd_fixed(w0, alpha2_1, M3, X_train, y_train)
+model2_3.accuracy_train = get_accuracy(model2_3, X_train, y_train)
+model2_3.accuracy_test = get_accuracy(model2_3, X_test, y_test)
+models2.append(model2_3)
+
+model2_data = pd.DataFrame(
+    {
+    "Solver": [model.solver for model in models2],
+    "Minibatch": [model.minibatch_size for model in models2],
+    "Loss": [model.fun for model in models2],
+    "Grad norm": [model.grad for model in models2],
+    "Time": [model.runtime for model in models2],
+    "Train accuracy": [model.accuracy_train for model in models2],
+    "Test accuracy": [model.accuracy_test for model in models2]
+    }
+    )
+
+plot_loss(models2, [f"M={model.minibatch_size}" for model in models2])
+
+#%% Minibatch Gradient Descent with decreasing step-size
+
+models3 = []
+alpha3_1 = 1
+alpha3_2 = 0.1
+alpha3_3 = 0.01
+M_3 = 16
+
+model3_1 = minibatch_gd_fixed(w0, alpha3_1, M_3, X_train, y_train)
+model3_1.accuracy_train = get_accuracy(model3_1, X_train, y_train)
+model3_1.accuracy_test = get_accuracy(model3_1, X_test, y_test)
+models3.append(model3_1)
+
+model3_2 = minibatch_gd_fixed(w0, alpha3_1, M_3, X_train, y_train)
+model3_2.accuracy_train = get_accuracy(model3_2, X_train, y_train)
+model3_2.accuracy_test = get_accuracy(model3_2, X_test, y_test)
+models3.append(model3_2)
+
+model3_data = pd.DataFrame(
+    {
+    "Solver": [model.solver for model in models3],
+    "Minibatch": [model.minibatch_size for model in models3],
+    "Loss": [model.fun for model in models3],
+    "Grad norm": [model.grad for model in models3],
+    "Time": [model.runtime for model in models3],
+    "Train accuracy": [model.accuracy_train for model in models3],
+    "Test accuracy": [model.accuracy_test for model in models3]
+    }
+    )
+
+plot_loss(models3, [f"M={model.}" for model in models3])
+
+#%%
 
 # Apple quality
 
@@ -75,31 +145,36 @@ model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 # k = 250
 
 # Train dataset
-start = time.time()
-print(minibatch_gd_fixed(w0, 1e-3, 8, X_train, y_train))
-end = time.time()
-print(f"seconds: {end - start}")
+# start = time.time()
+# print(minibatch_gd_fixed(w0, 1e-3, 8, X_train, y_train))
+# end = time.time()
+# print(f"seconds: {end - start}")
 
-start = time.time()
-print(minibatch_gd_decreasing(w0, 0.1, 8, X_train, y_train))
-end = time.time()
-print(f"seconds: {end - start}")
+# start = time.time()
+# print(minibatch_gd_decreasing(w0, 0.1, 8, X_train, y_train))
+# end = time.time()
+# print(f"seconds: {end - start}")
 
 # print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
 # print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
-start = time.time()
-print(minibatch_gd_armijo(w0, 1e-10, M=8, X=X_train, y=y_train))
-end = time.time()
-print(f"seconds: {end - start}")
+# start = time.time()
+# print(minibatch_gd_armijo(w0, 1e-10, M=8, X=X_train, y=y_train))
+# end = time.time()
+# print(f"seconds: {end - start}")
 # model2_opt1 = myLogRegr(
 #     minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
 # model2_opt1.fit(
 #     X_train, y_train, w0, learning_rate=1e-3)
 
-start = time.time()
-print(minibatch_gdm_fixed(w0, 0.001, 0.8, 8, X_train, y_train))
-end = time.time()
-print(f"seconds: {end - start}")
+# start = time.time()
+# print(msl_sgdm_c(w0, 0.001, 0.8, 8, X_train, y_train))
+# end = time.time()
+# print(f"seconds: {end - start}")
+
+# start = time.time()
+# print(msl_sgdm_r(w0, 0.001, 0.9, 8, X_train, y_train))
+# end = time.time()
+# print(f"seconds: {end - start}")
 
 # Train accuracy
 # model2_1_accuracy_train = accuracy_score(y_train, solvers.predict(X_train, ))
