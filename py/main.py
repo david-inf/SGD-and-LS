@@ -13,7 +13,8 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
-from solvers import l_bfgs_b, predict, minibatch_gd_fixed, minibatch_gd_decreasing, minibatch_gd_armijo
+from solvers import l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing, minibatch_gd_armijo
+from my_utils import predict
 
 # rng = np.random.default_rng(42)
 
@@ -37,7 +38,7 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 
 # Train dataset
 # start = time.time()
-model1 = l_bfgs_b(w0, X_train, y_train, 5e-3)
+model1 = l_bfgs_b(w0, X_train, y_train)
 # end = time.time()
 # print(f"seconds: {end - start}")
 # model1_opt = myLogRegr(
@@ -74,19 +75,19 @@ model1_accuracy_test = accuracy_score(y_test, predict(X_test, model1.x))
 
 # Train dataset
 start = time.time()
-print(minibatch_gd_fixed(w0, 1e-3, 8, X_train, y_train, 5e-3))
+print(minibatch_gd_fixed(w0, 1e-3, 8, X_train, y_train))
 end = time.time()
 print(f"seconds: {end - start}")
 
 start = time.time()
-print(minibatch_gd_decreasing(w0, 0.1, 8, X_train, y_train, 5e-3))
+print(minibatch_gd_decreasing(w0, 0.1, 8, X_train, y_train))
 end = time.time()
 print(f"seconds: {end - start}")
 
 # print(solvers.minibatch_gd_fixed(w0, 1e-3, M=8, X=X_train, y=y_train, coeff=5e-3))
 # print(solvers.minibatch_gd_decreasing(w0, 0.1, M=8, X=X_train, y=y_train, coeff=5e-3))
 start = time.time()
-print(minibatch_gd_armijo(w0, 1e-10, M=8, X=X_train, y=y_train, coeff=5e-3))
+print(minibatch_gd_armijo(w0, 1e-10, M=8, X=X_train, y=y_train))
 end = time.time()
 print(f"seconds: {end - start}")
 # model2_opt1 = myLogRegr(
