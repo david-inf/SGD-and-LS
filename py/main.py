@@ -13,7 +13,8 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
 # from myUtils import plotDiagnostic
-from solvers import l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing, minibatch_gd_armijo
+from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
+            minibatch_gd_armijo, minibatch_gdm_fixed)
 from my_utils import predict
 
 # rng = np.random.default_rng(42)
@@ -94,6 +95,11 @@ print(f"seconds: {end - start}")
 #     minibatch_size=M, solver="miniGD-fixed", regul_coef=lam, epochs=k)
 # model2_opt1.fit(
 #     X_train, y_train, w0, learning_rate=1e-3)
+
+start = time.time()
+print(minibatch_gdm_fixed(w0, 0.001, 0.8, 8, X_train, y_train))
+end = time.time()
+print(f"seconds: {end - start}")
 
 # Train accuracy
 # model2_1_accuracy_train = accuracy_score(y_train, solvers.predict(X_train, ))
