@@ -16,7 +16,7 @@ import pandas as pd
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
 from plot_utils import plot_loss
-from ml_utils import get_accuracy
+from ml_utils import get_accuracy, optim_data
 
 # rng = np.random.default_rng(42)
 
@@ -83,59 +83,36 @@ model2_4.accuracy_train = get_accuracy(model2_4, X_train, y_train)
 model2_4.accuracy_test = get_accuracy(model2_4, X_test, y_test)
 models2.append(model2_4)
 
-model2_data = pd.DataFrame(
-    {
-    "Solver": [model.solver for model in models2],
-    "Minibatch": [model.minibatch_size for model in models2],
-    "Loss": [model.fun for model in models2],
-    "Grad norm": [model.grad for model in models2],
-    "Time": [model.runtime for model in models2],
-    "Termination": [model.message for model in models2],
-    "Train accuracy": [model.accuracy_train for model in models2],
-    "Test accuracy": [model.accuracy_test for model in models2]
-    }
-    )
+model2_data = optim_data(models2)
 
 plot_loss(models2, [f"M={model.minibatch_size}" for model in models2])
 
 #%% Minibatch Gradient Descent with decreasing step-size
 
 models3 = []
-alpha3_1 = 1
-alpha3_2 = 0.1
-alpha3_3 = 0.01
-M_3 = 16
 
-model3_1 = minibatch_gd_fixed(w0, alpha3_1, M_3, X_train, y_train)
+model3_1 = minibatch_gd_decreasing(w0, 1, 16, X_train, y_train)
 model3_1.accuracy_train = get_accuracy(model3_1, X_train, y_train)
 model3_1.accuracy_test = get_accuracy(model3_1, X_test, y_test)
 models3.append(model3_1)
 
-model3_2 = minibatch_gd_fixed(w0, alpha3_1, M_3, X_train, y_train)
+model3_2 = minibatch_gd_decreasing(w0, 0.1, 16, X_train, y_train)
 model3_2.accuracy_train = get_accuracy(model3_2, X_train, y_train)
 model3_2.accuracy_test = get_accuracy(model3_2, X_test, y_test)
 models3.append(model3_2)
 
-model3_data = pd.DataFrame(
-    {
-    "Solver": [model.solver for model in models3],
-    "Minibatch": [model.minibatch_size for model in models3],
-    "Loss": [model.fun for model in models3],
-    "Grad norm": [model.grad for model in models3],
-    "Time": [model.runtime for model in models3],
-    "Train accuracy": [model.accuracy_train for model in models3],
-    "Test accuracy": [model.accuracy_test for model in models3]
-    }
-    )
+model3_3 = minibatch_gd_decreasing(w0, 0.01, 16, X_train, y_train)
+model3_3.accuracy_train = get_accuracy(model3_3, X_train, y_train)
+model3_3.accuracy_test = get_accuracy(model3_3, X_test, y_test)
+models3.append(model3_3)
+
+model3_data = optim_data(models3)
 
 plot_loss(models3, [f"alpha={model.initial_step_size}" for model in models3])
 
 #%% SGD Armijo
 
 models_armijo = []
-# alpha3_1 = 1
-# alpha3_2 = 0.1
-# alpha3_3 = 0.01
 
 model_armijo_1 = minibatch_gd_armijo(w0, 1, 8, X_train, y_train)
 model_armijo_1.accuracy_train = get_accuracy(model_armijo_1, X_train, y_train)
@@ -152,54 +129,55 @@ model_armijo_3.accuracy_train = get_accuracy(model_armijo_3, X_train, y_train)
 model_armijo_3.accuracy_test = get_accuracy(model_armijo_3, X_test, y_test)
 models_armijo.append(model_armijo_3)
 
-model_armijo_data = pd.DataFrame(
-    {
-    "Solver": [model.solver for model in models_armijo],
-    "Minibatch": [model.minibatch_size for model in models_armijo],
-    "Loss": [model.fun/X_train.shape[0] for model in models_armijo],
-    "Grad norm": [model.grad/X_train.shape[0] for model in models_armijo],
-    "Time": [model.runtime for model in models_armijo],
-    "Train accuracy": [model.accuracy_train for model in models_armijo],
-    "Test accuracy": [model.accuracy_test for model in models_armijo]
-    }
-    )
+model_armijo_data = optim_data(models_armijo)
 
 plot_loss(models_armijo, [f"M={model.minibatch_size}" for model in models_armijo])
 
 #%% SGDM - compare sensitivity to its step-size
 
 models_sgdm = []
-M_sgdm = 128
 
-model_sgdm_1 = minibatch_gdm_fixed(w0, 1, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_1 = minibatch_gdm_fixed(w0, 1, 0.9, 128, X_train, y_train)
 model_sgdm_1.accuracy_train = get_accuracy(model_sgdm_1, X_train, y_train)
 model_sgdm_1.accuracy_test = get_accuracy(model_sgdm_1, X_test, y_test)
 models_sgdm.append(model_sgdm_1)
 
-model_sgdm_2 = minibatch_gdm_fixed(w0, 0.1, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_2 = minibatch_gdm_fixed(w0, 0.1, 0.9, 128, X_train, y_train)
 model_sgdm_2.accuracy_train = get_accuracy(model_sgdm_2, X_train, y_train)
 model_sgdm_2.accuracy_test = get_accuracy(model_sgdm_2, X_test, y_test)
 models_sgdm.append(model_sgdm_2)
 
-model_sgdm_3 = minibatch_gdm_fixed(w0, 0.01, 0.9, M_sgdm, X_train, y_train)
+model_sgdm_3 = minibatch_gdm_fixed(w0, 0.01, 0.9, 128, X_train, y_train)
 model_sgdm_3.accuracy_train = get_accuracy(model_sgdm_3, X_train, y_train)
 model_sgdm_3.accuracy_test = get_accuracy(model_sgdm_3, X_test, y_test)
 models_sgdm.append(model_sgdm_3)
 
-model_sgdm_data = pd.DataFrame(
-    {
-    "Solver": [model.solver for model in models_sgdm],
-    "Minibatch": [model.minibatch_size for model in models_sgdm],
-    "Loss": [model.fun for model in models_sgdm],
-    "Grad norm": [model.grad for model in models_sgdm],
-    "Time": [model.runtime for model in models_sgdm],
-    "Termination": [model.message for model in models_sgdm],
-    "Train accuracy": [model.accuracy_train for model in models_sgdm],
-    "Test accuracy": [model.accuracy_test for model in models_sgdm]
-    }
-    )
+model_sgdm_data = optim_data(models_sgdm)
 
 plot_loss(models_sgdm, [f"alpha={model.step_size}" for model in models_sgdm])
+
+#%% MSL-SGDM-C
+
+models_msl_c = []
+
+model_msl_c_1 = msl_sgdm_c(w0, 1, 0.8, 32, X_train, y_train)
+model_msl_c_1.accuracy_train = get_accuracy(model_msl_c_1, X_train, y_train)
+model_msl_c_1.accuracy_test = get_accuracy(model_msl_c_1, X_test, y_test)
+models_msl_c.append(model_msl_c_1)
+
+model_msl_c_2 = msl_sgdm_c(w0, 0.1, 0.8, 32, X_train, y_train)
+model_msl_c_2.accuracy_train = get_accuracy(model_msl_c_2, X_train, y_train)
+model_msl_c_2.accuracy_test = get_accuracy(model_msl_c_2, X_test, y_test)
+models_msl_c.append(model_msl_c_2)
+
+model_msl_c_3 = msl_sgdm_c(w0, 0.01, 0.8, 32, X_train, y_train)
+model_msl_c_3.accuracy_train = get_accuracy(model_msl_c_3, X_train, y_train)
+model_msl_c_3.accuracy_test = get_accuracy(model_msl_c_3, X_test, y_test)
+models_msl_c.append(model_msl_c_3)
+
+model_msl_c_data = optim_data(models_msl_c)
+
+plot_loss(models_msl_c, [f"alpha0={model.initial_step_size}" for model in models_msl_c])
 
 #%%
 
