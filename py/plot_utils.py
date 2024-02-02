@@ -29,9 +29,9 @@ def plotDiagnostic(lrs, labels):
     ax2.legend()
     plt.show()
     
-def plot_loss(models, labels):
+def plot_loss(models, labels, title=None):
     fig, ax1 = plt.subplots(ncols=1, layout="constrained")
-    ax1.set_title("Training loss against epochs")
+    ax1.set_title(title)
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Training loss")
     ax1.set_yscale("log")
@@ -41,6 +41,24 @@ def plot_loss(models, labels):
         i += 1
     ax1.legend()
     plt.show()
+    
+def plot_accuracy(models, labels, title=None):
+    # grafico a barre dell'accuracy
+    # sulla y l'accuracy
+    # sulla x barre raggruppate per train e test accuracy, al variare di un iperparametro
+    fig, ax1 = plt.subplots(ncols=1, layout="constrained")
+    ax1.set_title(title)
+    # ax1.set_xlabel()
+    # ax1.set_ylabel("Accuracy")
+    ax1.set_xticks(labels)
+    ax1.set_ylim([0, 1])
+    width = 0.25
+    multiplier = 0
+    for model in models:
+        ax1.bar()
+    ax1.legend(["Train score", "Test score"])
+    plt.show()
+    
 
 # def printDiagnostic(model):
 #     # TODO: add accuracy

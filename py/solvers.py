@@ -83,7 +83,8 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MiniGD-fixed", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start, step_size=alpha)
+                          runtime=end - start,
+                          step_size=alpha, momentum = 0)
 
 # %% Minibatch Gradient Descent with decreasing step-size
 
@@ -127,7 +128,8 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MiniGD-decreasing", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start, initial_step_size=alpha0)
+                          runtime=end - start,
+                          step_size=alpha0, momentum=0)
 
 # %% Minibatch Gradient Descent with Armijo line search
 
@@ -207,7 +209,8 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MiniGD-Armijo", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start)
+                          runtime=end - start,
+                          step_size=alpha0, momentum=0)
 
 # %% Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 
@@ -256,7 +259,8 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MiniGDM-fixed", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start, step_size=alpha, momentum=beta)
+                          runtime=end - start,
+                          step_size=alpha, momentum=beta)
 
 # %% Minibatch Gradient Descent with Momentum, Armijo line search
 
@@ -328,8 +332,8 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MSL-SGDM-C", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start, initial_step_size=alpha0,
-                          initial_momentum=beta0)
+                          runtime=end - start,
+                          step_size=alpha0, momentum=beta0)
 
 
 # MSL-SGDM-R
@@ -381,4 +385,5 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
                           success=True, solver="MSL-SGDM-R", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start)
+                          runtime=end - start,
+                          step_size=alpha0, momentum=beta0)

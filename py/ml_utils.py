@@ -26,6 +26,8 @@ def optim_data(models):
         {
         "Solver": [model.solver for model in models],
         "Minibatch": [model.minibatch_size for model in models],
+        "Step-size": [model.step_size for model in models],
+        "Momentum": [model.momentum for model in models],
         "Loss": [model.fun for model in models],
         "Grad norm": [model.grad for model in models],
         "Run-time": [model.runtime for model in models],
