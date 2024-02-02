@@ -6,6 +6,7 @@ Created on Thu Feb  1 18:06:08 2024
 """
 
 # merge with ml_utils
+import numpy as np
 import matplotlib.pyplot as plt
 
 def plotDiagnostic(lrs, labels):
@@ -42,21 +43,33 @@ def plot_loss(models, labels, title=None):
     ax1.legend()
     plt.show()
     
-def plot_accuracy(models, labels, title=None):
+def plot_accuracy(models):
     # grafico a barre dell'accuracy
     # sulla y l'accuracy
     # sulla x barre raggruppate per train e test accuracy, al variare di un iperparametro
-    fig, ax1 = plt.subplots(ncols=1, layout="constrained")
-    ax1.set_title(title)
-    # ax1.set_xlabel()
-    # ax1.set_ylabel("Accuracy")
-    ax1.set_xticks(labels)
-    ax1.set_ylim([0, 1])
-    width = 0.25
+    solvers = [model.solver for model in models]
+    solvers_dict = {}
+    solvers_dict["Train score"] = [model.accuracy_train for model in models]
+    solvers_dict["Test score"] = [model.accuracy_test for model in models]
+    
+    x = np.arange(len(models))
+    bar_width = 0.25
     multiplier = 0
-    for model in models:
-        ax1.bar()
-    ax1.legend(["Train score", "Test score"])
+    
+    fig, ax1 = plt.subplots(ncols=1, layout="constrained")
+    for score, vals in solvers_dict.items():
+        offset = bar_width * multiplier
+        rects = ax1.bar(x + offset, vals, bar_width, label=score)
+        ax1.bar_label(rects, fmt="%.2f", padding=3)
+        multiplier += 1
+    
+    # ax1.set_title()
+    # ax1.set_xlabel("Solver")
+    ax1.set_ylabel("Accuracy")       
+    ax1.set_xticks(x + bar_width / 2, solvers, rotation=90)
+    ax1.legend()
+    ax1.set_ylim([0, 1])
+    ax1.grid(True)
     plt.show()
     
 

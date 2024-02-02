@@ -13,7 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
-from plot_utils import plot_loss
+from plot_utils import plot_loss, plot_accuracy
 from ml_utils import get_accuracy, optim_data
 
 # rng = np.random.default_rng(42)
@@ -21,13 +21,13 @@ from ml_utils import get_accuracy, optim_data
 #%% Apple quality dataset
 
 # load with constant column
-X_train = pd.read_csv("datasets/apple_quality/apple_X_train.csv").values
-y_train = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values.reshape(-1)
-X_test = pd.read_csv("datasets/apple_quality/apple_X_test.csv").values
-y_test = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values.reshape(-1)
+X_train_apple = pd.read_csv("datasets/apple_quality/apple_X_train.csv").values
+y_train_apple = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values.reshape(-1)
+X_test_apple = pd.read_csv("datasets/apple_quality/apple_X_test.csv").values
+y_test_apple = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values.reshape(-1)
 
-X_train = np.hstack((np.ones((X_train.shape[0],1)), X_train))
-X_test = np.hstack((np.ones((X_test.shape[0],1)), X_test))
+X_train_apple = np.hstack((np.ones((X_train_apple.shape[0],1)), X_train_apple))
+X_test_apple = np.hstack((np.ones((X_test_apple.shape[0],1)), X_test_apple))
 
 # intercept initial guess already added
 w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
@@ -35,55 +35,48 @@ w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 #%% Benchmark solver
 
 # Train dataset
-model1 = l_bfgs_b(w0, X_train, y_train)
+model1 = l_bfgs_b(w0, X_train_apple, y_train_apple)
 
 # Train accuracy
-model1.accuracy_train = get_accuracy(model1, X_train, y_train)
+model1.accuracy_train = get_accuracy(model1, X_train_apple, y_train_apple)
 
 # Test accuracy
-model1.accuracy_test = get_accuracy(model1, X_test, y_test)
+model1.accuracy_test = get_accuracy(model1, X_test_apple, y_test_apple)
 
 # Results
 print("Solver: L-BFGS-B" +
       f"\nTrain accuracy: {model1.accuracy_train:.4f}" +
       f"\nTest accuracy: {model1.accuracy_test:.4f}" +
       f"\nSolution: {model1.x}" +
-      f"\nLoss: {(model1.fun / X_train.shape[0]):.4f}" +
-      f"\nGradient: {(np.linalg.norm(model1.jac) / X_train.shape[0]):.4f}" +
+      f"\nLoss: {(model1.fun / X_train_apple.shape[0]):.4f}" +
+      f"\nGradient: {(np.linalg.norm(model1.jac) / X_train_apple.shape[0]):.4f}" +
       "\nMessage: " + model1.message)
 
 #%% Minibatch Gradient Descent with fixed step-size
 
-models2 = []
-alpha2_1 = 0.05
+models1 = []
+M1 = 32
 
-M1 = 8
-model2_1 = minibatch_gd_fixed(w0, alpha2_1, M1, X_train, y_train)
-model2_1.accuracy_train = get_accuracy(model2_1, X_train, y_train)
-model2_1.accuracy_test = get_accuracy(model2_1, X_test, y_test)
-models2.append(model2_1)
+sgd_fixed_1 = minibatch_gd_fixed(w0, 0.1, M1, X_train_apple, y_train_apple)
+sgd_fixed_1.accuracy_train = get_accuracy(sgd_fixed_1, X_train_apple, y_train_apple)
+sgd_fixed_1.accuracy_test = get_accuracy(sgd_fixed_1, X_test_apple, y_test_apple)
+models1.append(sgd_fixed_1)
 
-M2 = 16
-model2_2 = minibatch_gd_fixed(w0, alpha2_1, M2, X_train, y_train)
-model2_2.accuracy_train = get_accuracy(model2_2, X_train, y_train)
-model2_2.accuracy_test = get_accuracy(model2_2, X_test, y_test)
-models2.append(model2_2)
+sgd_fixed_2 = minibatch_gd_fixed(w0, 0.01, M1, X_train_apple, y_train_apple)
+sgd_fixed_2.accuracy_train = get_accuracy(sgd_fixed_2, X_train_apple, y_train_apple)
+sgd_fixed_2.accuracy_test = get_accuracy(sgd_fixed_2, X_test_apple, y_test_apple)
+models1.append(sgd_fixed_2)
 
-M3 = 32
-model2_3 = minibatch_gd_fixed(w0, alpha2_1, M3, X_train, y_train)
-model2_3.accuracy_train = get_accuracy(model2_3, X_train, y_train)
-model2_3.accuracy_test = get_accuracy(model2_3, X_test, y_test)
-models2.append(model2_3)
+sgd_fixed_3 = minibatch_gd_fixed(w0, 0.001, M1, X_train_apple, y_train_apple)
+sgd_fixed_3.accuracy_train = get_accuracy(sgd_fixed_3, X_train_apple, y_train_apple)
+sgd_fixed_3.accuracy_test = get_accuracy(sgd_fixed_3, X_test_apple, y_test_apple)
+models1.append(sgd_fixed_3)
 
-M4 = 64
-model2_4 = minibatch_gd_fixed(w0, alpha2_1, M4, X_train, y_train)
-model2_4.accuracy_train = get_accuracy(model2_4, X_train, y_train)
-model2_4.accuracy_test = get_accuracy(model2_4, X_test, y_test)
-models2.append(model2_4)
+sgd_data_1 = optim_data(models1)
 
-model2_data = optim_data(models2)
+plot_loss(models1, [f"MiniGD-fixed({model.step_size})" for model in models1])
 
-plot_loss(models2, [f"M={model.minibatch_size}" for model in models2])
+plot_accuracy(models1)
 
 #%% Minibatch Gradient Descent with decreasing step-size
 
