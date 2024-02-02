@@ -146,7 +146,7 @@ def reset_step(N, alpha, alpha0, M, t):
 
 
 def armijo_condition(x, x_next, X, y, alpha):
-    g = 0.8  # gamma
+    g = 0.5  # gamma
     fun, grad_norm = f_and_df(x, X, y)
     thresh = fun - g * alpha * grad_norm ** 2
     fun_next = logistic(x_next, X, y)
@@ -163,7 +163,7 @@ def armijo_method(x, d, X, y, alpha, alpha0, M, t):
         x_next = x + alpha * d
         q += 1
     return alpha, x_next
-# TODO: create branch for testing this function in the algorithm
+
 
 # @jit(nopython=True)
 def minibatch_gd_armijo(w0, alpha0, M, X, y):
@@ -191,19 +191,10 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
         for t, minibatch in enumerate(minibatches):
             ## Evaluate gradient approximation
             mini_grad = minibatch_gradient(X, y, minibatch, y_seq[t, :])
-            ## Armijo, compute potential next step
-            alpha = reset_step(N, alpha_seq[t], alpha0, M, t)
-            y_tnext = y_seq[t, :] - alpha * mini_grad
-            q = 0  # step-size rejections counter
-            while armijo_condition(y_seq[t, :], y_tnext, X, y, alpha):
-                alpha = 0.5 * alpha  # reduce step-size
-                y_tnext = y_seq[t, :] - alpha * mini_grad
-                q += 1
-            alpha_seq[t+1] = alpha  # accepted step-size
-            ## Update (internal) weights
-            y_tnext = y_seq[t, :] - alpha * mini_grad
+            ## Armijo line search
+            alpha_seq[t+1], y_tnext = armijo_method(
+                y_seq[t, :], -mini_grad, X, y, alpha_seq[t], alpha0, M, t)
             y_seq[t+1, :] = y_tnext  # internal weights update
-            # TODO alpha_seq[t+1], y_tnext = armijo_method(y_seq[t, :], -mini_grad, X, y, alpha_seq[t], M, t)
         ## Update sequence, objective function and gradient norm
         k += 1
         w_seq[k, :] = y_tnext

@@ -46,7 +46,7 @@ model1.accuracy_train = get_accuracy(model1, X_train, y_train)
 model1.accuracy_test = get_accuracy(model1, X_test, y_test)
 
 # Results
-print(f"Solver: L-BFGS-B" +
+print("Solver: L-BFGS-B" +
       f"\nTrain accuracy: {model1.accuracy_train:.4f}" +
       f"\nTest accuracy: {model1.accuracy_test:.4f}" +
       f"\nSolution: {model1.x}" +
@@ -129,6 +129,42 @@ model3_data = pd.DataFrame(
     )
 
 plot_loss(models3, [f"alpha={model.initial_step_size}" for model in models3])
+
+#%% SGD Armijo
+
+models_armijo = []
+# alpha3_1 = 1
+# alpha3_2 = 0.1
+# alpha3_3 = 0.01
+
+model_armijo_1 = minibatch_gd_armijo(w0, 1, 8, X_train, y_train)
+model_armijo_1.accuracy_train = get_accuracy(model_armijo_1, X_train, y_train)
+model_armijo_1.accuracy_test = get_accuracy(model_armijo_1, X_test, y_test)
+models_armijo.append(model_armijo_1)
+
+model_armijo_2 = minibatch_gd_armijo(w0, 1, 16, X_train, y_train)
+model_armijo_2.accuracy_train = get_accuracy(model_armijo_2, X_train, y_train)
+model_armijo_2.accuracy_test = get_accuracy(model_armijo_2, X_test, y_test)
+models_armijo.append(model_armijo_2)
+
+model_armijo_3 = minibatch_gd_armijo(w0, 1, 32, X_train, y_train)
+model_armijo_3.accuracy_train = get_accuracy(model_armijo_3, X_train, y_train)
+model_armijo_3.accuracy_test = get_accuracy(model_armijo_3, X_test, y_test)
+models_armijo.append(model_armijo_3)
+
+model_armijo_data = pd.DataFrame(
+    {
+    "Solver": [model.solver for model in models_armijo],
+    "Minibatch": [model.minibatch_size for model in models_armijo],
+    "Loss": [model.fun/X_train.shape[0] for model in models_armijo],
+    "Grad norm": [model.grad/X_train.shape[0] for model in models_armijo],
+    "Time": [model.runtime for model in models_armijo],
+    "Train accuracy": [model.accuracy_train for model in models_armijo],
+    "Test accuracy": [model.accuracy_test for model in models_armijo]
+    }
+    )
+
+plot_loss(models_armijo, [f"M={model.minibatch_size}" for model in models_armijo])
 
 #%% SGDM - compare sensitivity to its step-size
 
@@ -311,8 +347,3 @@ plot_loss(models_sgdm, [f"alpha={model.step_size}" for model in models_sgdm])
 
 # model_benchmark = myLogRegr(solver="scipy")
 # model_benchmark.fit(X_train, y_train, w0)
-
-
-
-
-
