@@ -13,8 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
-from plot_utils import plot_loss, plot_accuracy
-from ml_utils import get_accuracy, optim_data
+from ml_utils import get_accuracy, optim_data, plot_loss, plot_accuracy
 
 # rng = np.random.default_rng(42)
 
@@ -43,16 +42,7 @@ model1.accuracy_train = get_accuracy(model1, X_train_apple, y_train_apple)
 # Test accuracy
 model1.accuracy_test = get_accuracy(model1, X_test_apple, y_test_apple)
 
-# Results
-print("Solver: L-BFGS-B" +
-      f"\nTrain accuracy: {model1.accuracy_train:.4f}" +
-      f"\nTest accuracy: {model1.accuracy_test:.4f}" +
-      f"\nSolution: {model1.x}" +
-      f"\nLoss: {(model1.fun / X_train_apple.shape[0]):.4f}" +
-      f"\nGradient: {(np.linalg.norm(model1.jac) / X_train_apple.shape[0]):.4f}" +
-      "\nMessage: " + model1.message)
-
-#%% Minibatch Gradient Descent with fixed step-size
+#%% Minibatch Gradient Descent with fixed step-size and decreasing
 
 models1 = []
 M1 = 32
@@ -72,34 +62,28 @@ sgd_fixed_3.accuracy_train = get_accuracy(sgd_fixed_3, X_train_apple, y_train_ap
 sgd_fixed_3.accuracy_test = get_accuracy(sgd_fixed_3, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_3)
 
+sgd_decre_1 = minibatch_gd_decreasing(w0, 1, M1, X_train_apple, y_train_apple)
+sgd_decre_1.accuracy_train = get_accuracy(sgd_decre_1, X_train_apple, y_train_apple)
+sgd_decre_1.accuracy_test = get_accuracy(sgd_decre_1, X_test_apple, y_test_apple)
+models1.append(sgd_decre_1)
+
+sgd_decre_2 = minibatch_gd_decreasing(w0, 0.1, M1, X_train_apple, y_train_apple)
+sgd_decre_2.accuracy_train = get_accuracy(sgd_decre_2, X_train_apple, y_train_apple)
+sgd_decre_2.accuracy_test = get_accuracy(sgd_decre_2, X_test_apple, y_test_apple)
+models1.append(sgd_decre_2)
+
+sgd_decre_3 = minibatch_gd_decreasing(w0, 0.01, M1, X_train_apple, y_train_apple)
+sgd_decre_3.accuracy_train = get_accuracy(sgd_decre_3, X_train_apple, y_train_apple)
+sgd_decre_3.accuracy_test = get_accuracy(sgd_decre_3, X_test_apple, y_test_apple)
+models1.append(sgd_decre_3)
+
 sgd_data_1 = optim_data(models1)
 
-plot_loss(models1, [f"MiniGD-fixed({model.step_size})" for model in models1])
+plot_loss(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
+          [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
 
-plot_accuracy(models1)
-
-#%% Minibatch Gradient Descent with decreasing step-size
-
-models3 = []
-
-model3_1 = minibatch_gd_decreasing(w0, 1, 16, X_train, y_train)
-model3_1.accuracy_train = get_accuracy(model3_1, X_train, y_train)
-model3_1.accuracy_test = get_accuracy(model3_1, X_test, y_test)
-models3.append(model3_1)
-
-model3_2 = minibatch_gd_decreasing(w0, 0.1, 16, X_train, y_train)
-model3_2.accuracy_train = get_accuracy(model3_2, X_train, y_train)
-model3_2.accuracy_test = get_accuracy(model3_2, X_test, y_test)
-models3.append(model3_2)
-
-model3_3 = minibatch_gd_decreasing(w0, 0.01, 16, X_train, y_train)
-model3_3.accuracy_train = get_accuracy(model3_3, X_train, y_train)
-model3_3.accuracy_test = get_accuracy(model3_3, X_test, y_test)
-models3.append(model3_3)
-
-model3_data = optim_data(models3)
-
-plot_loss(models3, [f"alpha={model.initial_step_size}" for model in models3])
+plot_accuracy(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
+              [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
 
 #%% SGD Armijo
 

@@ -133,9 +133,11 @@ x^{(i)}=
 \cleardoublepage
 \section{Mini-batch gradient descent variants}
 
+see algorithm~\vref{code:MiniGD-fix-decr}
+
 \subsection{Fixed step-size}
 
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed or decreasing step-size}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed or decreasing step-size},label=code:MiniGD-fix-decr]
 given £!$w^0\in\R^n$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
@@ -159,7 +161,7 @@ end while
 % define function reset()
 % create function armijo_condition()
 % while (£!$f_{i_t}(y_{t-1}+\alpha d_t)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search}]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -186,7 +188,7 @@ end while
 \cleardoublepage
 \subsection{Fixed momentum term}
 
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size}]
 given £!$w^0\in\R^{p+1}$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\set{\beta_k}=\beta\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -203,7 +205,7 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
 end while
 \end{lstlisting}
 
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction}]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -234,7 +236,7 @@ end while
 \end{lstlisting}
 
 \cleardoublepage
-\begin{lstlisting}[style=simple,title={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart}]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\set{\beta_k}=\beta\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)

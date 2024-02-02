@@ -16,8 +16,8 @@ Python
 Logistic regression - theory
 - binary classification
 - the problem admits a unique optimal solution
-- devo dividere per N??
-- dividere per 2 il regolarizzatore??
+- [ ] devo dividere per N??
+- [ ] dividere per 2 il regolarizzatore??
 
 Logistic regression - python
 - python class? like in scikit?
@@ -27,14 +27,14 @@ Logistic regression - python
     - get gradient
 
 Metrics/diagnostic
-- training loss against epochs
+- [x] training loss against epochs
     - su un numero fissato di epoche: while k<k*
-- timer per esecuzione
+- [x] timer per esecuzione
 - training loss against iterations
     - per iterations si intende quelle interne ad una epoca
     - le iterations sono fissate una volta assegnata la dimensione del minibatch
-- benchmark: scipy.optimize.minimize
-    - fun e jac devono avere un solo argomento, va ripensato come chiamarla
+- [x] benchmark: scipy.optimize.minimize
+    - fun e jac devono avere un solo argomento, va ripensato come chiamarla -> gliene posso passare altri con args=()
 
 Scoperte
 - miniGD con passo costante è non monotono, o almeno per certi valori dipendenti dal dataset
@@ -44,3 +44,4 @@ Scoperte
 Altro
 - speed up execution
     - numba, cuda
+    - pytorch

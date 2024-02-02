@@ -8,9 +8,7 @@ Created on Wed Jan 31 14:15:19 2024
 # %% Packages
 import time
 import numpy as np
-from scipy.optimize import minimize
-from scipy.optimize import OptimizeResult
-# from numba import jit
+from scipy.optimize import minimize, OptimizeResult
 from solvers_utils import logistic, logistic_der, f_and_df, f_and_df_2
 
 # %% Benchmark solver
@@ -42,7 +40,7 @@ def shuffle_dataset(N, k, M):
 
 # %% Minibatch Gradient Descent with fixed step-size
 
-
+# SGD-Fixed
 def minibatch_gd_fixed(w0, alpha, M, X, y):
     epochs = 200
     N, p = X.shape  # number of examples and features
@@ -88,7 +86,7 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
 
 # %% Minibatch Gradient Descent with decreasing step-size
 
-
+# SGD-Decreasing
 def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     epochs = 200
     N, p = X.shape  # number of examples and features
@@ -167,7 +165,7 @@ def armijo_method(x, d, X, y, alpha, alpha0, M, t):
     return alpha, x_next
 
 
-# @jit(nopython=True)
+# SGD-Armijo
 def minibatch_gd_armijo(w0, alpha0, M, X, y):
     epochs = 200
     N, p = X.shape  # number of examples and features
@@ -215,8 +213,6 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
 # %% Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 
 # SGDM
-
-
 def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     epochs = 200
     N, p = X.shape  # number of examples and features
