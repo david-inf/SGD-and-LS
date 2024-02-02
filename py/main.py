@@ -10,9 +10,7 @@ Created on Thu Jan 25 21:20:04 2024
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
-# from sklearn.metrics import accuracy_score
 # from myLogisticRegression import myLogRegr
-# from myUtils import plotDiagnostic
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
 from plot_utils import plot_loss
