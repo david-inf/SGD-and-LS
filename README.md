@@ -15,6 +15,8 @@ Python
 
 Logistic regression - theory
 - binary classification
+    - {-1,1} oppure {0,1}??? is risultati ovviamente cambiano
+    - se {-1,1} va cambiata la sigmoide??
 - the problem admits a unique optimal solution
 - [ ] devo dividere per N??
 - [ ] dividere per 2 il regolarizzatore??

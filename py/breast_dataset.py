@@ -65,11 +65,8 @@ models_1.append(sgd_decre_3)
 
 sgd_data_1 = optim_data(models_1)
 
-plot_loss(models_1, [f"MiniGD-fixed({model.step_size})" for model in models_1[:3]] +
-           [f"MiniGD-decreasing({model.step_size})" for model in models_1[3:]])
+plot_loss(models_1, [f"model.solver({model.step_size})" for model in models_1])
 
-plot_accuracy(models_1, [f"MiniGD-fixed({model.step_size})" for model in models_1[:3]] +
-               [f"MiniGD-decreasing({model.step_size})" for model in models_1[3:]])
+plot_accuracy(models_1, [f"model.solver({model.step_size})" for model in models_1])
 
-plot_runtime(models_1, [f"MiniGD-fixed({model.step_size})" for model in models_1[:3]] +
-               [f"MiniGD-decreasing({model.step_size})" for model in models_1[3:]])
+plot_runtime(models_1, [f"model.solver({model.step_size})" for model in models_1])

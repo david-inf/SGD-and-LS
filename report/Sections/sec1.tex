@@ -19,16 +19,16 @@ the general Machine Learning optimization problem for the supervised learning su
 \min_{w\in\R^p}\func(w)=L(w)+\lambda\Omega(w)=
 \begin{cases}
 L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
-\Omega_{\ell_2}=\norma{w}_2^2
+\Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
 \end{cases}
 \]
 where $L(w)$ is called \emph{loss function}, and it is a finite-sum, and $\Omega(w)$ it's the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for this problem.
 
-The task performed is the binary classification, using the Logistic Regression model. Every machine learning model has its own loss function, the logistic regression uses the \emph{log-loss}, for one single dataset sample $\ell_i=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)$, follows the resulting optimization problem
+The task performed is the binary classification, using the Logistic Regression model. Every machine learning model has its own loss function, the logistic regression uses the \emph{log-loss} (figure~\vref{subfig:log-loss}), for one single dataset sample $\ell_i=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)$, follows the resulting optimization problem
 \begin{equation}\label{eq:opt-prob}
-\min\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\norma{w}^2
+\min\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \end{equation}
-where $i=1,\dots,N$ are the dataset samples, $\mathcal{Y}=\set{-1,1}$ is the set of the possible values for the response variable, corresponding to the negative or positive class, $\mathcal{X}\subseteq\R^{(p+1)}$ are dataset examples, $(p+1)$ means that there are $p$ features and the intercept. The $1/N$ term isn't always used, we choose to use that term for scaling issues.
+where $i=1,\dots,N$ are the dataset samples, $\mathcal{Y}=\set{-1,1}$ is the set of the possible values for the response variable, corresponding to the negative or positive class. $\mathcal{X}\subseteq\R^{(p+1)}$ are dataset examples, $p+1$ means that there are $p$ features and the intercept. The $1/N$ term isn't always used, we choose to use that term for scaling issues.
 
 We defined the matrix associated to the dataset and the model weights as follow
 \[
@@ -42,16 +42,20 @@ X^T=
 x^{(i)}=
 \begin{pmatrix}
 1 \\ x_1^{(i)} \\ x_2^{(i)} \\ \vdots \\ x_p^{(i)}
-\end{pmatrix}\in\R^{(p+1)}
+\end{pmatrix}\quad
+w=
+\begin{pmatrix}
+b \\ w_1 \\ w_2 \\ \vdots \\ w_p
+\end{pmatrix}
 \]
 the constant column is added for the intercept. We can see that every $x^{(i)}$ is a column vector
 
 \[
-\nabla\func(w)=\frac{1}{N}X^Tr+2\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
+\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
 \]
 
 \[
-\nabla^2\func(w)=\frac{1}{N}XDX^T+2\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
+\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
 \]
 $r\in\R^N$, $D\in\R^{N\times N}$
 
@@ -59,20 +63,44 @@ $r\in\R^N$, $D\in\R^{N\times N}$
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \end{prop}
 
+\begin{proof}
+The objective function $\func(w)\colon\R^{(p+1)}\to\R$, $\func(w)\in C^2(\R^{(p+1)})$
 
-
+First thing we prove the existence of an optimal solution, that is the global minimum. The derivatives
 \[
-w=
-\begin{pmatrix}
-b \\ w_1 \\ w_2 \\ \vdots \\ w_p
-\end{pmatrix}\in\R^{(p+1)}
+\begin{array}{@{}l@{}}
+\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),r\in\R^N \\[1ex]
+\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w \\[1ex]
+\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I_{(p+1)},\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)}),D\in\R^{N\times N}
+\end{array}
 \]
+where $\sigma(z)$ is the sigmoid function, see figure~\vref{subfig:sigmoid}
+the second order derivative is positive-defined, this because of the square of the euclidean norm, this implies that the objective function is coercive. By a corollary of the Weirstrass theorem we prove that the function admits global minimum.
+
+
+\end{proof}
+
+
+
+%\[
+%w=
+%\begin{pmatrix}
+%b \\ w_1 \\ w_2 \\ \vdots \\ w_p
+%\end{pmatrix}\in\R^{(p+1)}
+%\]
 
 \[
 y=
 \begin{pmatrix}
 y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \end{pmatrix}\in\set{-1,1}
+\]
+
+\[
+\begin{array}{ll}
+%\func(w)\in\R & \nabla\func(w)\in\R^{(p+1)} \\
+\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)
+\end{array}
 \]
 
 \cleardoublepage
@@ -91,35 +119,21 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 
 \begin{figure}
 \centering
-\subfloat[][\emph{Log-loss}\label{subfig:log-loss}]%
+\subfloat[][\emph{Log-loss. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel=$\log(1+\exp(-uv))$,ytick={1,2,4},axis lines=middle,enlargelimits,width=0.45\textwidth]
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},ytick={1,2,4},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
 \end{axis}
 \end{tikzpicture}} \quad
-\subfloat[][\emph{Sigmoid function}]%
+\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$x$,ylabel=$\frac{1}{1+e^{-x}}$,axis lines=middle,enlargelimits,width=0.45\textwidth]
+\begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,red,smooth] {1/(1+exp(-x))};
 \end{axis}
 \end{tikzpicture}}
 \caption{Log-loss and sigmoid function plots}
 \label{fig:log-sigma}
 \end{figure}
-
-%\begin{figure}
-%	\centering
-%	\subfloat[][\emph{First caption}\label{subfig:label1}]%
-%	{\includegraphics[width=.45\textwidth]{}} \quad
-%	\subfloat[][\emph{Second caption}\label{subfig:label2}]%
-%	{\includegraphics[width=.45\textwidth]{}} \\
-%	\subfloat[][\emph{Third caption}\label{subfig:label3}]%
-%	{\includegraphics[width=.45\textwidth]{}} \quad
-%	\subfloat[][\emph{Fourth caption}\label{subfig:label4}]%
-%	{\includegraphics[width=.45\textwidth]{}} 
-%	\caption[]{Global caption}
-%	\label{fig:multifig}
-%\end{figure}
 
 \cleardoublepage
 
@@ -275,7 +289,28 @@ end while
 
 \section{Experiments}
 
+\cleardoublepage
+\section{Mathematical background}
 
+\begin{thm}[Weirstrass theorem]\label{thm:weirs}
+Let $f\colon\R^n\to\R$ be a continuous function and $S\subseteq\R^n$ a compact set. Then function $f$ admits global minimum in $S$.
+\end{thm}
+
+\begin{cor}[Sufficient condition]
+If function $f\colon\R^n\to\R$ is a continuous and coercive function, then $f$ admits global minimum in $\R^n$.
+\end{cor}
+
+\begin{prop}[Coercivity of a quadratic function]
+A quadratic function $\func(x)=\frac{1}{2}x^TQx-c^Tx$ is said to be coercive if and only if the symmetric matrix $Q\in\R^{n\times n}$ is positive-defined.
+\end{prop}
+
+\begin{prop}[Unique global minimum]
+Let $S\subseteq\R^n$ be a convex set, let $f\colon S\to\R$ be a strictly convex function. Then the global minimum, if exists, is unique.
+\end{prop}
+
+\begin{defs}[Convex function]
+Let $S\subseteq\R^n$ be a convex set, a function $f\colon S\to\R$ is said to be convex if the hessian matrix is semi-positive-defined. If the hessian matrix is positive-defined, then the function is strictly convex.
+\end{defs}
 
 
 

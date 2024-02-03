@@ -13,7 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, plot_loss, plot_accuracy, plot_runtime
+from ml_utils import set_accuracy, optim_data, diagnostic, plot_loss, plot_accuracy, plot_runtime
 
 #%% Apple quality dataset
 
@@ -70,14 +70,8 @@ models1.append(sgd_decre_3)
 
 sgd_data_1 = optim_data(models1)
 
-plot_loss(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
-          [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]], start=25)
-
-plot_accuracy(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
-              [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
-
-plot_runtime(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
-              [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
+diagnostic(models1,
+    [f"{model.solver}({model.step_size})" for model in models1], start_loss=25)
 
 #%% [3] SGD Armijo
 
@@ -97,11 +91,7 @@ models_armijo.append(sgd_armijo_3)
 
 model_armijo_data = optim_data(models_armijo)
 
-plot_loss(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
-
-plot_accuracy(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
-
-plot_runtime(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
+diagnostic(models_armijo, [f"{model.solver}({model.step_size})" for model in models_armijo])
 
 #%% [4] SGDM - compare sensitivity to its step-size
 
@@ -121,11 +111,7 @@ models_sgdm.append(sgdm_3)
 
 model_sgdm_data = optim_data(models_sgdm)
 
-plot_loss(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
-
-plot_accuracy(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
-
-plot_runtime(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
+diagnostic(models_sgdm, [f"{model.solver}({model.step_size})" for model in models_sgdm])
 
 #%% [5] MSL-SGDM-C/R - step-size
 
@@ -157,14 +143,7 @@ models_msl.append(msl_r_3)
 
 model_msl_data = optim_data(models_msl)
 
-plot_loss(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
-          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
-
-plot_accuracy(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
-          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
-
-plot_runtime(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
-          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
+diagnostic(models_msl, [f"{model.solver}({model.step_size})" for model in models_msl])
 
 #%%
 

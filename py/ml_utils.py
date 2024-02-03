@@ -100,3 +100,32 @@ def plot_runtime(models, ticks):
     # ax1.set_ylim([0, 1])
     ax1.grid(True)
     plt.show()
+
+
+def diagnostic(models, labels, start_loss=5):
+    plot_loss(models, labels, start=start_loss)
+    plot_runtime(models, labels)
+    plot_accuracy(models, labels)
+
+# def train_comparison(optimizer, *args, **kwargs):
+#     # optimizer: callable
+#     # the first kw should the hyperparameter on which one wuold test the sensitivity
+#     # and the values should be given with a list
+#     # returns a list of models
+#     models = []
+#     param = kwargs.popitem()  # pop the last element
+#     for val in param[1]:
+#         model = optimizer(param[0]=val, X=args[0], y=args[1], kwargs)
+#         set_accuracy(model, args[0], args[1], args[2], args[3])
+#         models.append(model)
+#     return models
+    
+# train_comparison(minibatch_gd_fixed, , w0=w0, alpha[1, 0.1])
+
+
+
+
+
+
+
+

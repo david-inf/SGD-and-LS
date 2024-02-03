@@ -11,7 +11,7 @@ import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 from solvers_utils import logistic, logistic_der, f_and_df, f_and_df_2
 
-# %% Benchmark solver
+# %% L-BFGS-B
 
 
 def l_bfgs_b(w0, X, y):
@@ -38,7 +38,7 @@ def shuffle_dataset(N, k, M):
     minibatches = np.array_split(batch, N / M)  # create the minibatches
     return minibatches  # list of numpy.ndarray
 
-# %% Minibatch Gradient Descent with fixed step-size
+# %% [1] Minibatch Gradient Descent with fixed step-size
 
 # SGD-Fixed
 def minibatch_gd_fixed(w0, alpha, M, X, y):
@@ -54,9 +54,7 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
-        # Approximate gradient and update (internal) weights
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
@@ -79,12 +77,12 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     if k >= epochs:
         message += "Max epochs exceeded"
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
-                          success=True, solver="MiniGD-fixed", grad=grad_seq[k],
+                          success=True, solver="SGD-Fixed", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
                           runtime=end - start,
                           step_size=alpha, momentum = 0)
 
-# %% Minibatch Gradient Descent with decreasing step-size
+# %% [2] Minibatch Gradient Descent with decreasing step-size
 
 # SGD-Decreasing
 def minibatch_gd_decreasing(w0, alpha0, M, X, y):
@@ -100,9 +98,7 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
-        # Approximate gradient and update (internal) weights
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
@@ -124,12 +120,12 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     if k >= epochs:
         message += "Max epochs exceeded"
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
-                          success=True, solver="MiniGD-decreasing", grad=grad_seq[k],
+                          success=True, solver="SGD-Decreasing", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
                           runtime=end - start,
                           step_size=alpha0, momentum=0)
 
-# %% Minibatch Gradient Descent with Armijo line search
+# %% [3] Minibatch Gradient Descent with Armijo line search
 
 
 def reset_step(N, alpha, alpha0, M, t):
@@ -179,17 +175,17 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
-        # Approximate gradient and update (internal) weights
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
+        # step-size for every minibatch
         alpha_seq = np.zeros(len(minibatches) + 1)  # step-size per minibatch
         alpha_seq[0] = alpha0
         for t, minibatch in enumerate(minibatches):
             # Evaluate gradient approximation
             mini_grad = minibatch_gradient(X, y, minibatch, y_seq[t, :])
+            # Compute direction
             d_t = - mini_grad
             # Armijo line search
             alpha_seq[t+1], y_seq[t+1, :] = armijo_method(
@@ -205,12 +201,12 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
     if k >= epochs:
         message += "Max epochs exceeded"
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
-                          success=True, solver="MiniGD-Armijo", grad=grad_seq[k],
+                          success=True, solver="SGD-Armijo", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
                           runtime=end - start,
                           step_size=alpha0, momentum=0)
 
-# %% Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
+# %% [4] Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 
 # SGDM
 def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
@@ -226,9 +222,7 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
-        # Approximate gradient and update (internal) weights
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
@@ -253,12 +247,12 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     if k >= epochs:
         message += "Max epochs exceeded"
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
-                          success=True, solver="MiniGDM-fixed", grad=grad_seq[k],
+                          success=True, solver="SGDM", grad=grad_seq[k],
                           fun_per_it=fun_seq, minibatch_size=M,
                           runtime=end - start,
                           step_size=alpha, momentum=beta)
 
-# %% Minibatch Gradient Descent with Momentum, Armijo line search
+# %% [5] Minibatch Gradient Descent with Momentum, Armijo line search
 
 
 def direction_condition(grad, d):
@@ -292,8 +286,7 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
@@ -346,8 +339,7 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
     start = time.time()
     k = 0  # epochs counter
     while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
-        # Shuffle dataset
-        minibatches = shuffle_dataset(N, k, M)
+        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
         y_seq[0, :] = w_seq[k]
