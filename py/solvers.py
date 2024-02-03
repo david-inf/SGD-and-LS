@@ -53,7 +53,7 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # Approximate gradient and update (internal) weights
@@ -74,7 +74,7 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
@@ -99,7 +99,7 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # Approximate gradient and update (internal) weights
@@ -119,7 +119,7 @@ def minibatch_gd_decreasing(w0, alpha0, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
@@ -178,7 +178,7 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # Approximate gradient and update (internal) weights
@@ -200,7 +200,7 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
@@ -225,7 +225,7 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # Approximate gradient and update (internal) weights
@@ -248,7 +248,7 @@ def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
@@ -291,7 +291,7 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # internal weights sequence
@@ -321,7 +321,7 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
@@ -345,7 +345,7 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-4 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
         # Shuffle dataset
         minibatches = shuffle_dataset(N, k, M)
         # internal weights sequence
@@ -374,7 +374,7 @@ def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-4 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"

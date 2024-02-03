@@ -13,9 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import get_accuracy, optim_data, plot_loss, plot_accuracy
-
-# rng = np.random.default_rng(42)
+from ml_utils import set_accuracy, optim_data, plot_loss, plot_accuracy, plot_runtime
 
 #%% Apple quality dataset
 
@@ -29,130 +27,144 @@ X_train_apple = np.hstack((np.ones((X_train_apple.shape[0],1)), X_train_apple))
 X_test_apple = np.hstack((np.ones((X_test_apple.shape[0],1)), X_test_apple))
 
 # intercept initial guess already added
-w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
+# w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
+rng = np.random.default_rng(42)
+w0 = (5 + 5) * rng.random(8) - 5
 
 #%% Benchmark solver
 
 # Train dataset
 model1 = l_bfgs_b(w0, X_train_apple, y_train_apple)
 
-# Train accuracy
-model1.accuracy_train = get_accuracy(model1, X_train_apple, y_train_apple)
+# Accuracy
+set_accuracy(model1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 
-# Test accuracy
-model1.accuracy_test = get_accuracy(model1, X_test_apple, y_test_apple)
-
-#%% Minibatch Gradient Descent with fixed step-size and decreasing
+#%% [1-2] SGD Fixed-Decreasing
 
 models1 = []
 M1 = 32
 
 sgd_fixed_1 = minibatch_gd_fixed(w0, 0.1, M1, X_train_apple, y_train_apple)
-sgd_fixed_1.accuracy_train = get_accuracy(sgd_fixed_1, X_train_apple, y_train_apple)
-sgd_fixed_1.accuracy_test = get_accuracy(sgd_fixed_1, X_test_apple, y_test_apple)
+set_accuracy(sgd_fixed_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_1)
 
 sgd_fixed_2 = minibatch_gd_fixed(w0, 0.01, M1, X_train_apple, y_train_apple)
-sgd_fixed_2.accuracy_train = get_accuracy(sgd_fixed_2, X_train_apple, y_train_apple)
-sgd_fixed_2.accuracy_test = get_accuracy(sgd_fixed_2, X_test_apple, y_test_apple)
+set_accuracy(sgd_fixed_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_2)
 
 sgd_fixed_3 = minibatch_gd_fixed(w0, 0.001, M1, X_train_apple, y_train_apple)
-sgd_fixed_3.accuracy_train = get_accuracy(sgd_fixed_3, X_train_apple, y_train_apple)
-sgd_fixed_3.accuracy_test = get_accuracy(sgd_fixed_3, X_test_apple, y_test_apple)
+set_accuracy(sgd_fixed_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_3)
 
 sgd_decre_1 = minibatch_gd_decreasing(w0, 1, M1, X_train_apple, y_train_apple)
-sgd_decre_1.accuracy_train = get_accuracy(sgd_decre_1, X_train_apple, y_train_apple)
-sgd_decre_1.accuracy_test = get_accuracy(sgd_decre_1, X_test_apple, y_test_apple)
+set_accuracy(sgd_decre_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_1)
 
 sgd_decre_2 = minibatch_gd_decreasing(w0, 0.1, M1, X_train_apple, y_train_apple)
-sgd_decre_2.accuracy_train = get_accuracy(sgd_decre_2, X_train_apple, y_train_apple)
-sgd_decre_2.accuracy_test = get_accuracy(sgd_decre_2, X_test_apple, y_test_apple)
+set_accuracy(sgd_decre_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_2)
 
-sgd_decre_3 = minibatch_gd_decreasing(w0, 0.01, M1, X_train_apple, y_train_apple)
-sgd_decre_3.accuracy_train = get_accuracy(sgd_decre_3, X_train_apple, y_train_apple)
-sgd_decre_3.accuracy_test = get_accuracy(sgd_decre_3, X_test_apple, y_test_apple)
+sgd_decre_3 = minibatch_gd_decreasing(w0, 0.05, M1, X_train_apple, y_train_apple)
+set_accuracy(sgd_decre_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_3)
 
 sgd_data_1 = optim_data(models1)
 
 plot_loss(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
-          [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
+          [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]], start=25)
 
 plot_accuracy(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
               [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
 
-#%% SGD Armijo
+plot_runtime(models1, [f"MiniGD-fixed({model.step_size})" for model in models1[:3]] +
+              [f"MiniGD-decreasing({model.step_size})" for model in models1[3:]])
+
+#%% [3] SGD Armijo
 
 models_armijo = []
 
-model_armijo_1 = minibatch_gd_armijo(w0, 1, 8, X_train, y_train)
-model_armijo_1.accuracy_train = get_accuracy(model_armijo_1, X_train, y_train)
-model_armijo_1.accuracy_test = get_accuracy(model_armijo_1, X_test, y_test)
-models_armijo.append(model_armijo_1)
+sgd_armijo_1 = minibatch_gd_armijo(w0, 1, 32, X_train_apple, y_train_apple)
+set_accuracy(sgd_armijo_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_armijo.append(sgd_armijo_1)
 
-model_armijo_2 = minibatch_gd_armijo(w0, 1, 16, X_train, y_train)
-model_armijo_2.accuracy_train = get_accuracy(model_armijo_2, X_train, y_train)
-model_armijo_2.accuracy_test = get_accuracy(model_armijo_2, X_test, y_test)
-models_armijo.append(model_armijo_2)
+sgd_armijo_2 = minibatch_gd_armijo(w0, 0.1, 32, X_train_apple, y_train_apple)
+set_accuracy(sgd_armijo_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_armijo.append(sgd_armijo_2)
 
-model_armijo_3 = minibatch_gd_armijo(w0, 1, 32, X_train, y_train)
-model_armijo_3.accuracy_train = get_accuracy(model_armijo_3, X_train, y_train)
-model_armijo_3.accuracy_test = get_accuracy(model_armijo_3, X_test, y_test)
-models_armijo.append(model_armijo_3)
+sgd_armijo_3 = minibatch_gd_armijo(w0, 0.001, 32, X_train_apple, y_train_apple)
+set_accuracy(sgd_armijo_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_armijo.append(sgd_armijo_3)
 
 model_armijo_data = optim_data(models_armijo)
 
-plot_loss(models_armijo, [f"M={model.minibatch_size}" for model in models_armijo])
+plot_loss(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
 
-#%% SGDM - compare sensitivity to its step-size
+plot_accuracy(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
+
+plot_runtime(models_armijo, [f"MiniGD-Armijo({model.step_size})" for model in models_armijo])
+
+#%% [4] SGDM - compare sensitivity to its step-size
 
 models_sgdm = []
 
-model_sgdm_1 = minibatch_gdm_fixed(w0, 1, 0.9, 128, X_train, y_train)
-model_sgdm_1.accuracy_train = get_accuracy(model_sgdm_1, X_train, y_train)
-model_sgdm_1.accuracy_test = get_accuracy(model_sgdm_1, X_test, y_test)
-models_sgdm.append(model_sgdm_1)
+sgdm_1 = minibatch_gdm_fixed(w0, 1, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(sgdm_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_sgdm.append(sgdm_1)
 
-model_sgdm_2 = minibatch_gdm_fixed(w0, 0.1, 0.9, 128, X_train, y_train)
-model_sgdm_2.accuracy_train = get_accuracy(model_sgdm_2, X_train, y_train)
-model_sgdm_2.accuracy_test = get_accuracy(model_sgdm_2, X_test, y_test)
-models_sgdm.append(model_sgdm_2)
+sgdm_2 = minibatch_gdm_fixed(w0, 0.2, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(sgdm_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_sgdm.append(sgdm_2)
 
-model_sgdm_3 = minibatch_gdm_fixed(w0, 0.01, 0.9, 128, X_train, y_train)
-model_sgdm_3.accuracy_train = get_accuracy(model_sgdm_3, X_train, y_train)
-model_sgdm_3.accuracy_test = get_accuracy(model_sgdm_3, X_test, y_test)
-models_sgdm.append(model_sgdm_3)
+sgdm_3 = minibatch_gdm_fixed(w0, 0.5, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(sgdm_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_sgdm.append(sgdm_3)
 
 model_sgdm_data = optim_data(models_sgdm)
 
-plot_loss(models_sgdm, [f"alpha={model.step_size}" for model in models_sgdm])
+plot_loss(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
 
-#%% MSL-SGDM-C
+plot_accuracy(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
 
-models_msl_c = []
+plot_runtime(models_sgdm, [f"SGDM({model.step_size})" for model in models_sgdm])
 
-model_msl_c_1 = msl_sgdm_c(w0, 1, 0.8, 32, X_train, y_train)
-model_msl_c_1.accuracy_train = get_accuracy(model_msl_c_1, X_train, y_train)
-model_msl_c_1.accuracy_test = get_accuracy(model_msl_c_1, X_test, y_test)
-models_msl_c.append(model_msl_c_1)
+#%% [5] MSL-SGDM-C/R - step-size
 
-model_msl_c_2 = msl_sgdm_c(w0, 0.1, 0.8, 32, X_train, y_train)
-model_msl_c_2.accuracy_train = get_accuracy(model_msl_c_2, X_train, y_train)
-model_msl_c_2.accuracy_test = get_accuracy(model_msl_c_2, X_test, y_test)
-models_msl_c.append(model_msl_c_2)
+models_msl = []
 
-model_msl_c_3 = msl_sgdm_c(w0, 0.01, 0.8, 32, X_train, y_train)
-model_msl_c_3.accuracy_train = get_accuracy(model_msl_c_3, X_train, y_train)
-model_msl_c_3.accuracy_test = get_accuracy(model_msl_c_3, X_test, y_test)
-models_msl_c.append(model_msl_c_3)
+msl_c_1 = msl_sgdm_c(w0, 1, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_c_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_c_1)
 
-model_msl_c_data = optim_data(models_msl_c)
+msl_c_2 = msl_sgdm_c(w0, 0.1, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_c_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_c_2)
 
-plot_loss(models_msl_c, [f"alpha0={model.initial_step_size}" for model in models_msl_c])
+msl_c_3 = msl_sgdm_c(w0, 0.2, 0.9, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_c_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_c_3)
+
+msl_r_1 = msl_sgdm_r(w0, 1, 0.8, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_r_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_r_1)
+
+msl_r_2 = msl_sgdm_r(w0, 0.1, 0.8, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_r_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_r_2)
+
+msl_r_3 = msl_sgdm_r(w0, 0.01, 0.8, 128, X_train_apple, y_train_apple)
+set_accuracy(msl_r_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+models_msl.append(msl_r_3)
+
+model_msl_data = optim_data(models_msl)
+
+plot_loss(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
+          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
+
+plot_accuracy(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
+          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
+
+plot_runtime(models_msl, [f"MSL-SGDM-C({model.step_size})" for model in models_msl[:3]] +
+          [f"MSL-SGDM-R({model.step_size})" for model in models_msl[3:]])
 
 #%%
 
