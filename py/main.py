@@ -15,6 +15,8 @@ from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
                     sgdm, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import set_accuracy, optim_data, diagnostic
 
+from models import LogisticRegression
+
 #%% Apple quality dataset
 
 # load with constant column
@@ -30,6 +32,12 @@ X_test_apple = np.hstack((np.ones((X_test_apple.shape[0],1)), X_test_apple))
 # w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
 rng = np.random.default_rng(42)
 w0 = (5 + 5) * rng.random(8) - 5
+
+#%% Class LogisticRegression
+
+model0 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+
+
 
 #%% Benchmark solver
 

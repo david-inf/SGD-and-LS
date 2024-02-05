@@ -23,7 +23,7 @@ def sigmoid(x):
 # def call_f(w0, X, y, args=()):
 #     return logistic(w0, X, y, *args)
 
-def logistic(w, X, y, coeff=1, lam=1):
+def logistic(w, X, y, lam=1):
     """
     Parameters
     ----------
@@ -38,11 +38,11 @@ def logistic(w, X, y, coeff=1, lam=1):
     """
     N = X.shape[0]
     loss = np.sum(np.exp(- y * np.dot(X, w))) / N
-    regul = coeff * lam * 0.5 * np.linalg.norm(w) ** 2
+    regul = lam * 0.5 * np.linalg.norm(w) ** 2
     return loss + regul
 
 
-def logistic_der(w, X, y, coeff=1, lam=1):
+def logistic_der(w, X, y, lam=1, coeff=1):
     """
     Parameters
     ----------
@@ -62,7 +62,7 @@ def logistic_der(w, X, y, coeff=1, lam=1):
     return loss_der + regul_der
 
 
-def f_and_df(w, X, y, coeff=1, lam=1):
+def f_and_dfnorm(w, X, y, lam=1, coeff=1):
     # fun, grad = f_and_f()
     # fun, _ = f_and_f()
     # _, grad = f_and_f()
@@ -72,11 +72,11 @@ def f_and_df(w, X, y, coeff=1, lam=1):
             np.linalg.norm(np.dot(- y * sigmoid(z), X) / N + coeff * lam * 2 * w))  # gradient norm
 
 
-def f_and_df_2(w, X, y, coeff=1, lam=1):
+def f_and_df(w, X, y, lam=1):
     N = X.shape[0]
     z = - y * np.dot(X, w)  # compute one time instead on two
-    return (np.sum(np.exp(z)) / N + coeff * lam * np.linalg.norm(w) ** 2,  # objective
-            np.dot(- y * sigmoid(z), X) / N + coeff * lam * 2 * w)  # gradient
+    return (np.sum(np.exp(z)) / N + lam * np.linalg.norm(w) ** 2,  # objective
+            np.dot(- y * sigmoid(z), X) / N + lam * 2 * w)  # gradient
 
 
 # useless
