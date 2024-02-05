@@ -53,7 +53,8 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
     start = time.time()
     k = 0  # epochs counter
-    while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
+    # while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
+    while grad_seq[k] > 1e-3 and k < epochs:
         minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         # internal weights sequence
         y_seq = np.zeros((len(minibatches) + 1, p))
@@ -86,7 +87,7 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
 
 # SGD-Decreasing
 def minibatch_gd_decreasing(w0, alpha0, M, X, y):
-    epochs = 200
+    epochs = 100
     N, p = X.shape  # number of examples and features
     # weights sequence, w\in\R^p
     w_seq = np.zeros((epochs + 1, p))
@@ -154,7 +155,7 @@ def armijo_method(x, d, X, y, alpha, alpha0, M, t):
     alpha = reset_step(N, alpha, alpha0, M, t)
     x_next = x + alpha * d
     q = 0  # step-size rejections counter
-    while armijo_condition(x, x_next, X, y, alpha):
+    while armijo_condition(x, x_next, X, y, alpha) and q < 20:
         alpha = 0.5 * alpha  # reduce step-size
         x_next = x + alpha * d
         q += 1
@@ -265,7 +266,7 @@ def momentum_correction(beta0, d, grad):
     # compute potential next direction
     d_next = - ((1 - beta) * grad + beta * d)
     q = 0  # momentum term rejections counter
-    while not direction_condition(grad, d_next):
+    while not direction_condition(grad, d_next) and q < 20:
         beta = 0.5 * beta  # reduce momentum term
         d_next = - ((1 - beta) * grad + beta * d)
         q += 1

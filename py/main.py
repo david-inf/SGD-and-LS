@@ -33,10 +33,7 @@ w0 = (5 + 5) * rng.random(8) - 5
 
 #%% Benchmark solver
 
-# Train dataset
 model1 = l_bfgs_b(w0, X_train_apple, y_train_apple)
-
-# Accuracy
 set_accuracy(model1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 
 #%% [1-2] SGD Fixed-Decreasing
