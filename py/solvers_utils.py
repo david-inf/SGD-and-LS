@@ -62,14 +62,14 @@ def logistic_der(w, X, y, lam=1, coeff=1):
     return loss_der + regul_der
 
 
-def f_and_dfnorm(w, X, y, lam=1, coeff=1):
-    # fun, grad = f_and_f()
-    # fun, _ = f_and_f()
-    # _, grad = f_and_f()
+def f_and_dfnorm(w, X, y, lam=1):
+    # fun, grad = f_and_df()
+    # fun, _ = f_and_df()
+    # _, grad = f_and_df()
     N = X.shape[0]
     z = - y * np.dot(X, w)  # compute one time instead on two
-    return (np.sum(np.exp(z)) / N + coeff * lam * np.linalg.norm(w) ** 2,  # objective
-            np.linalg.norm(np.dot(- y * sigmoid(z), X) / N + coeff * lam * 2 * w))  # gradient norm
+    return (np.sum(np.exp(z)) / N + lam * np.linalg.norm(w) ** 2,  # objective
+            np.linalg.norm(np.dot(- y * sigmoid(z), X) / N + lam * 2 * w))  # gradient norm
 
 
 def f_and_df(w, X, y, lam=1):

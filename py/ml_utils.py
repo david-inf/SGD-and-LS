@@ -110,8 +110,47 @@ def diagnostic(models, labels, start_loss=5, end_loss=100):
 #     data = optim_data(models)
 #     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
     
-    
-    
+
+def diagnostic_plots(models, start_loss=5, end_loss=100):
+    # models: list of LogisticRegression
+    fig, axs = plt.subplots(3, 1, layout="constrained",
+                                        figsize=(10, 10))
+    x = np.arange(len(models))
+    bar_width = 0.35
+    multiplier = 0
+    # 1) Training loss
+    for model in models:
+        # Loss
+        axs[0].plot(np.arange(start_loss, end_loss),
+                 model.loss_seq[start_loss:end_loss], label=model.solver)
+        # Runtime
+        offset = bar_width * multiplier
+        rects1 = axs[1].bar(x + offset, model.runtime, bar_width, label=model.solver)
+        axs[1].bar_label(rects1, fmt="%.4f", padding=3)
+        # Accuracy
+        rects2_1 = axs[2].bar(x + offset, model.accuracy_train, bar_width, label="Train score")
+        axs[2].bar_label(rects2_1, fmt="%.3f", fontsize="small", padding=3)
+        rects2_2 = axs[2].bar(x + offset, model.accuracy_test, bar_width, label="Test score")
+        axs[2].bar_label(rects2_2, fmt="%.3f", fontsize="small", padding=3)
+        multiplier += 1
+    axs[0].set_xlabel("Epochs")
+    axs[0].set_ylabel("Training loss")
+    axs[0].set_yscale("log")
+    axs[0].set_ylim([1e-2, 1e2])
+    axs[0].grid(True)
+    axs[1].set_ylabel("Run-time")
+    axs[1].set_xticks(x, [model.solver + f"({model.opt_result.step_size})" for model in models],
+                      rotation=90)
+    axs[1].grid(True)
+    axs[2].set_ylabel("Accuracy")
+    axs[2].set_xticks(x + bar_width / 2,
+            [model.solver + f"({model.opt_result.step_size})" for model in models], rotation=90)
+    # axs[2].legend()
+    axs[2].set_ylim([0, 1])
+    axs[2].grid(True)
+    # axs[0].legend()
+    # 2) Accuracy score
+    # 3) Runtime
     
     
 

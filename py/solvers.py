@@ -132,6 +132,7 @@ def sgd_decreasing(w0, X, y, lam, M, alpha0, epochs, tol):
 
 
 def reset_step(N, alpha, alpha0, M, t):
+    # alpha: previous iteration step-size
     opt = 2
     a = 5e2
     if t == 0:

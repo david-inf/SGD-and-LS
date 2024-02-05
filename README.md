@@ -21,6 +21,10 @@ Logistic regression - theory
 - [ ] devo dividere per N??
 - [ ] dividere per 2 il regolarizzatore??
 
+Ottimizzazione:
+- criteri di arresto
+    - qualcosa per metodi non monotoni?
+
 Logistic regression - python
 - python class? like in scikit?
 - class

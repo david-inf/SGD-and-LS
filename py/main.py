@@ -13,7 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
                     sgdm, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, diagnostic
+from ml_utils import set_accuracy, optim_data, diagnostic, diagnostic_plots
 
 from models import LogisticRegression
 
@@ -37,7 +37,33 @@ w0 = (5 + 5) * rng.random(8) - 5
 
 model0 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 
+#%%
 
+# model1 = LogisticRegression(solver="SGD-Fixed").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1)
+
+# model2 = LogisticRegression(solver="SGD-Decreasing").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1)
+
+# model3 = LogisticRegression(solver="SGD-Armijo").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.001)
+
+# model4 = LogisticRegression(solver="SGDM").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1, momentum=0.8)
+
+# model5 = LogisticRegression(solver="MSL-SGDM-C").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1, momentum=0.9)
+
+# model6 = LogisticRegression(solver="MSL-SGDM-R").fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1, momentum=0.9)
+
+diagnostic_plots([model1, model2, model3])
 
 #%% Benchmark solver
 
