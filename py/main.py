@@ -11,8 +11,8 @@ import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
 # from myLogisticRegression import myLogRegr
-from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
-            minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
+from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
+                    sgdm, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import set_accuracy, optim_data, diagnostic
 
 #%% Apple quality dataset
@@ -41,31 +41,31 @@ set_accuracy(model1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1 = []
 M1 = 32
 
-sgd_fixed_1 = minibatch_gd_fixed(w0, 0.1, M1, X_train_apple, y_train_apple)
+sgd_fixed_1 = sgd_fixed(w0, 0.1, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_fixed_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_1)
 
-sgd_fixed_2 = minibatch_gd_fixed(w0, 0.01, M1, X_train_apple, y_train_apple)
+sgd_fixed_2 = sgd_fixed(w0, 0.01, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_fixed_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_2)
 
-sgd_fixed_3 = minibatch_gd_fixed(w0, 0.001, M1, X_train_apple, y_train_apple)
+sgd_fixed_3 = sgd_fixed(w0, 0.001, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_fixed_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_fixed_3)
 
-sgd_decre_1 = minibatch_gd_decreasing(w0, 1, M1, X_train_apple, y_train_apple)
+sgd_decre_1 = sgd_decreasing(w0, 1, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_decre_1, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_1)
 
-sgd_decre_2 = minibatch_gd_decreasing(w0, 0.1, M1, X_train_apple, y_train_apple)
+sgd_decre_2 = sgd_decreasing(w0, 0.1, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_decre_2, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_2)
 
-sgd_decre_3 = minibatch_gd_decreasing(w0, 0.05, M1, X_train_apple, y_train_apple)
+sgd_decre_3 = sgd_decreasing(w0, 0.05, M1, X_train_apple, y_train_apple)
 set_accuracy(sgd_decre_3, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 models1.append(sgd_decre_3)
 
-sgd_data_1 = optim_data(models1)
+# sgd_data_1 = optim_data(models1)
 
 diagnostic(models1,
     [f"{model.solver}({model.step_size})" for model in models1], start_loss=25)

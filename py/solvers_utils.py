@@ -20,6 +20,8 @@ def sigmoid(x):
     """
     return 1 / (1 + np.exp(-x))
 
+# def call_f(w0, X, y, args=()):
+#     return logistic(w0, X, y, *args)
 
 def logistic(w, X, y, coeff=1, lam=1):
     """
@@ -61,6 +63,9 @@ def logistic_der(w, X, y, coeff=1, lam=1):
 
 
 def f_and_df(w, X, y, coeff=1, lam=1):
+    # fun, grad = f_and_f()
+    # fun, _ = f_and_f()
+    # _, grad = f_and_f()
     N = X.shape[0]
     z = - y * np.dot(X, w)  # compute one time instead on two
     return (np.sum(np.exp(z)) / N + coeff * lam * np.linalg.norm(w) ** 2,  # objective

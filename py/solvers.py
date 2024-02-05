@@ -14,8 +14,8 @@ from solvers_utils import logistic, logistic_der, f_and_df, f_and_df_2
 # %% L-BFGS-B
 
 
-def l_bfgs_b(w0, X, y):
-    res = minimize(f_and_df_2, w0, args=(X, y), method="L-BFGS-B",
+def l_bfgs_b(w0, X, y, lam):
+    res = minimize(f_and_df_2, w0, args=(X, y, lam), method="L-BFGS-B",
                    jac=True, bounds=None, options={"gtol": 1e-4})
     return res
 
@@ -27,7 +27,7 @@ def minibatch_gradient(X, y, minibatch, x):
     samples_x = X[minibatch, :]
     samples_y = y[minibatch]
     grad_sum = logistic_der(x, samples_x, samples_y, M)
-    return np.divide(grad_sum, M)
+    return grad_sum / M
 
 
 def shuffle_dataset(N, k, M):
@@ -43,7 +43,9 @@ def shuffle_dataset(N, k, M):
 # SGD-Fixed
 def sgd_fixed(w0, alpha, M, X, y):
     epochs = 100
-    N, p = X.shape  # number of examples and features
+    p = w0.shape[0]
+    N = X.shape[0]
+    # N, p = X.shape
     # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
@@ -63,7 +65,8 @@ def sgd_fixed(w0, alpha, M, X, y):
         # for t in range(len(minibatches)):  # for minibatch in minibatches
         for t, minibatch in enumerate(minibatches):
             # Evaluate gradient approximation
-            mini_grad = minibatch_gradient(X, y, minibatch, y_seq[t, :])
+            mini_grad = minibatch_gradient(X, y, minibatch, y_seq[t,:])
+            # _, mini_grad = f_and_df_2(y_seq[t,:], X, y, minibatch.shape[0])
             # Compute direction
             d_t = - mini_grad
             # Update (internal) weights

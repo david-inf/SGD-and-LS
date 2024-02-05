@@ -45,11 +45,11 @@ def optim_data(models):
     return models_data
 
 
-def plot_loss(models, labels, title=None, start=5, end=200):
+def plot_loss(models, labels, title=None, start=5, end=100):
     fig, ax1 = plt.subplots(ncols=1, layout="constrained")
     i = 0
     for model in models:
-        ax1.plot(np.arange(start, 200), model.fun_per_it[start:end], label=labels[i])
+        ax1.plot(np.arange(start, end), model.fun_per_it[start:end], label=labels[i])
         # ax1.plot(model.fun_per_it[start:], label=labels[i])
         i += 1
     ax1.set_title(title)
@@ -103,10 +103,10 @@ def plot_runtime(models, ticks):
     plt.show()
 
 
-# def diagnostic(models, start_loss=5, end_loss=100):
-#     # plot_loss(models, labels, start=start_loss)
-#     # plot_runtime(models, labels)
-#     # plot_accuracy(models, labels)
+def diagnostic(models, labels, start_loss=5, end_loss=100):
+    plot_loss(models, labels, start=start_loss, end=end_loss)
+    plot_runtime(models, labels)
+    plot_accuracy(models, labels)
 #     data = optim_data(models)
 #     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
     
