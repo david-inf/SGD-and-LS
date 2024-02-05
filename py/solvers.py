@@ -41,16 +41,17 @@ def shuffle_dataset(N, k, M):
 # %% [1] Minibatch Gradient Descent with fixed step-size
 
 # SGD-Fixed
-def minibatch_gd_fixed(w0, alpha, M, X, y):
-    epochs = 200
+def sgd_fixed(w0, alpha, M, X, y):
+    epochs = 100
     N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
+    # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
     # full objective function and full gradient norm sequences
     fun_seq = np.zeros(epochs + 1)
     grad_seq = np.zeros(epochs + 1)
     fun_seq[0], grad_seq[0] = f_and_df(w0, X, y)
+    # add function and gradient evaluations counters
     start = time.time()
     k = 0  # epochs counter
     # while grad_seq[k] > 1e-3 * (1 + fun_seq[k]) and k < epochs:
@@ -73,23 +74,25 @@ def minibatch_gd_fixed(w0, alpha, M, X, y):
         fun_seq[k], grad_seq[k] = f_and_df(y_seq[-1, :], X, y)
     end = time.time()
     message = ""
-    if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
+    # if grad_seq[-1] <= 1e-3 * (1 + np.absolute(fun_seq[-1])):
+    if grad_seq[-1] <= 1e-3:
         message += "Gradient under tolerance"
     if k >= epochs:
         message += "Max epochs exceeded"
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], message=message,
-                          success=True, solver="SGD-Fixed", grad=grad_seq[k],
-                          fun_per_it=fun_seq, minibatch_size=M,
-                          runtime=end - start,
+                          success=(k > 1), solver="SGD-Fixed",
+                          grad=grad_seq[k], fun_per_it=fun_seq,
+                          minibatch_size=M, nit=k,
+                          runtime=(end - start),
                           step_size=alpha, momentum = 0)
 
 # %% [2] Minibatch Gradient Descent with decreasing step-size
 
 # SGD-Decreasing
-def minibatch_gd_decreasing(w0, alpha0, M, X, y):
+def sgd_decreasing(w0, alpha0, M, X, y):
     epochs = 100
     N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
+    # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
     # full objective function and full gradient norm sequences
@@ -163,8 +166,8 @@ def armijo_method(x, d, X, y, alpha, alpha0, M, t):
 
 
 # SGD-Armijo
-def minibatch_gd_armijo(w0, alpha0, M, X, y):
-    epochs = 200
+def sgd_armijo(w0, alpha0, M, X, y):
+    epochs = 100
     N, p = X.shape  # number of examples and features
     # weights sequence, w\in\R^p
     w_seq = np.zeros((epochs + 1, p))
@@ -210,10 +213,10 @@ def minibatch_gd_armijo(w0, alpha0, M, X, y):
 # %% [4] Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 
 # SGDM
-def minibatch_gdm_fixed(w0, alpha, beta, M, X, y):
-    epochs = 200
+def sgdm(w0, alpha, beta, M, X, y):
+    epochs = 100
     N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
+    # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
     # full objective function and full gradient norm sequences
@@ -275,9 +278,9 @@ def momentum_correction(beta0, d, grad):
 
 # MSL-SGDM-C
 def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
-    epochs = 200  # consider removing
+    epochs = 100  # consider removing
     N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
+    # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
     # full objective function and full gradient norm sequences
@@ -328,9 +331,9 @@ def msl_sgdm_c(w0, alpha0, beta0, M, X, y):
 
 # MSL-SGDM-R
 def msl_sgdm_r(w0, alpha0, beta0, M, X, y):
-    epochs = 200  # consider removing
+    epochs = 100  # consider removing
     N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
+    # weights sequence
     w_seq = np.zeros((epochs + 1, p))
     w_seq[0, :] = w0
     # full objective function and full gradient norm sequences

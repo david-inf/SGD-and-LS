@@ -9,8 +9,8 @@ Created on Mon Feb  5 11:56:29 2024
 
 import numpy as np
 import pandas as pd
-from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
-            minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
+from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
+                    sgdm, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import set_accuracy, optim_data, diagnostic
 
 #%% Bank churn dataset
@@ -29,5 +29,5 @@ set_accuracy(model1, X_train, y_train, X_test, y_test)
 
 #%% [1-2] SGD - Fixed/Decreasing
 
-sgd_fixed_1 = minibatch_gd_fixed(w0, 0.1, 128, X_train, y_train)
+sgd_fixed_1 = sgd_fixed(w0, 0.1, 128, X_train, y_train)
 set_accuracy(sgd_fixed_1, X_train, y_train, X_test, y_test)

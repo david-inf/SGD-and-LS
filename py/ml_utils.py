@@ -36,7 +36,8 @@ def optim_data(models):
             "Loss": [model.fun for model in models],
             "Grad norm": [model.grad for model in models],
             "Run-time": [model.runtime for model in models],
-            "Termination": [model.message for model in models],
+            "Iterations": [model.nit for model in models],
+            # "Termination": [model.message for model in models],
             "Train accuracy": [model.accuracy_train for model in models],
             "Test accuracy": [model.accuracy_test for model in models]
         }
@@ -102,11 +103,13 @@ def plot_runtime(models, ticks):
     plt.show()
 
 
-def diagnostic(models, labels, start_loss=5, end_loss=200):
-    # plot_loss(models, labels, start=start_loss)
-    # plot_runtime(models, labels)
-    # plot_accuracy(models, labels)
-    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
+# def diagnostic(models, start_loss=5, end_loss=100):
+#     # plot_loss(models, labels, start=start_loss)
+#     # plot_runtime(models, labels)
+#     # plot_accuracy(models, labels)
+#     data = optim_data(models)
+#     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
+    
     
     
     

@@ -13,7 +13,7 @@ import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, minibatch_gd_fixed, minibatch_gd_decreasing,
             minibatch_gd_armijo, minibatch_gdm_fixed, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, diagnostic, plot_loss, plot_accuracy, plot_runtime
+from ml_utils import set_accuracy, optim_data, diagnostic
 
 #%% Apple quality dataset
 
