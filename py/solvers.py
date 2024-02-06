@@ -167,7 +167,6 @@ def armijo_method(x, d, X, y, lam, alpha, alpha0, M, t):
 
 # Minibatch Gradient Descent with Armijo line search
 def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
-    epochs = 100
     N, p = X.shape  # number of examples and features
     # weights sequence, w\in\R^p
     w_seq = np.zeros((epochs + 1, p))
@@ -209,7 +208,6 @@ def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
 
 # Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
 def sgdm(w0, X, y, lam, M, alpha, beta, epochs, tol):
-    epochs = 100
     N, p = X.shape  # number of examples and features
     # weights sequence
     w_seq = np.zeros((epochs + 1, p))
@@ -267,7 +265,6 @@ def momentum_correction(beta0, d, grad):
 
 # Minibatch Gradient Descent with Momentum correction, Armijo line search
 def msl_sgdm_c(w0, X, y, lam, M, alpha0, beta0, epochs, tol):
-    epochs = 100  # consider removing
     N, p = X.shape  # number of examples and features
     # weights sequence
     w_seq = np.zeros((epochs + 1, p))
@@ -315,7 +312,6 @@ def msl_sgdm_c(w0, X, y, lam, M, alpha0, beta0, epochs, tol):
 
 # Minibatch Gradient Descent with Momentum restart, Armijo line search
 def msl_sgdm_r(w0, X, y, lam, M, alpha0, beta0, epochs, tol):
-    epochs = 100  # consider removing
     N, p = X.shape  # number of examples and features
     # weights sequence
     w_seq = np.zeros((epochs + 1, p))

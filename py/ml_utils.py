@@ -26,20 +26,22 @@ def set_accuracy(model, X_train, y_train, X_test, y_test):
 
 
 def optim_data(models):
+    # models: LogisticRegression
     models_data = pd.DataFrame(
         {
             "Solver": [model.solver for model in models],
-            "Minibatch": [model.minibatch_size for model in models],
-            "Step-size": [model.step_size for model in models],
-            "Momentum": [model.momentum for model in models],
-            "Solution": [model.x for model in models],
-            "Loss": [model.fun for model in models],
+            "Minibatch": [model.minibatch for model in models],
+            "Step-size": [model.opt_result.step_size for model in models],
+            "Momentum": [model.opt_result.momentum for model in models],
+            "Solution": [model.coef_ for model in models],
+            "Loss": [model.loss for model in models],
             "Grad norm": [model.grad for model in models],
-            "Run-time": [model.runtime for model in models],
-            "Iterations": [model.nit for model in models],
+            "Run-time": [model.opt_result.runtime for model in models],
+            "Iterations": [model.opt_result.nit for model in models],
             # "Termination": [model.message for model in models],
             "Train accuracy": [model.accuracy_train for model in models],
-            "Test accuracy": [model.accuracy_test for model in models]
+            "Test accuracy": [model.accuracy_test for model in models],
+            "Loss/Epochs": [model.loss_seq for model in models]
         }
     )
     return models_data
@@ -109,48 +111,94 @@ def diagnostic(models, labels, start_loss=5, end_loss=100):
     plot_accuracy(models, labels)
 #     data = optim_data(models)
 #     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
-    
 
-def diagnostic_plots(models, start_loss=5, end_loss=100):
-    # models: list of LogisticRegression
-    fig, axs = plt.subplots(3, 1, layout="constrained",
-                                        figsize=(10, 10))
-    x = np.arange(len(models))
-    bar_width = 0.35
-    multiplier = 0
+
+
+def test_plots(data):
+    fig, axs = plt.subplots(3, 1, layout="constrained", figsize=(10, 12))
+    data["labels"] = data["Solver"] + "(" + data["Step-size"].astype(str) + ")"
     # 1) Training loss
-    for model in models:
-        # Loss
-        axs[0].plot(np.arange(start_loss, end_loss),
-                 model.loss_seq[start_loss:end_loss], label=model.solver)
-        # Runtime
-        offset = bar_width * multiplier
-        rects1 = axs[1].bar(x + offset, model.runtime, bar_width, label=model.solver)
-        axs[1].bar_label(rects1, fmt="%.4f", padding=3)
-        # Accuracy
-        rects2_1 = axs[2].bar(x + offset, model.accuracy_train, bar_width, label="Train score")
-        axs[2].bar_label(rects2_1, fmt="%.3f", fontsize="small", padding=3)
-        rects2_2 = axs[2].bar(x + offset, model.accuracy_test, bar_width, label="Test score")
-        axs[2].bar_label(rects2_2, fmt="%.3f", fontsize="small", padding=3)
-        multiplier += 1
+    start = 5
+    end = data["Loss/Epochs"][0].shape[0]
+    for loss in data["Loss/Epochs"]:
+        axs[0].plot(np.arange(start, end), loss[start:end])
     axs[0].set_xlabel("Epochs")
     axs[0].set_ylabel("Training loss")
     axs[0].set_yscale("log")
-    axs[0].set_ylim([1e-2, 1e2])
+    axs[0].legend(data["labels"])
     axs[0].grid(True)
-    axs[1].set_ylabel("Run-time")
-    axs[1].set_xticks(x, [model.solver + f"({model.opt_result.step_size})" for model in models],
-                      rotation=90)
+    # 2) Run-time
+    x = np.arange(data.shape[0])
+    bar_width = 0.35
+    rects1 = axs[1].bar(data["labels"], data["Run-time"], bar_width)
     axs[1].grid(True)
-    axs[2].set_ylabel("Accuracy")
-    axs[2].set_xticks(x + bar_width / 2,
-            [model.solver + f"({model.opt_result.step_size})" for model in models], rotation=90)
-    # axs[2].legend()
-    axs[2].set_ylim([0, 1])
+    axs[1].set_ylabel("Run-time")
+    axs[1].bar_label(rects1, fmt="%.4f", padding=3)
+    axs[1].set_xticks(x, data["labels"], rotation=90)
+    # 3) Accuracy
+    accuracy_dict = {}
+    accuracy_dict["Train score"] = data["Train accuracy"]
+    accuracy_dict["Test score"] = data["Test accuracy"]
+    multiplier = 0
+    for score, vals in accuracy_dict.items():
+        offset = bar_width * multiplier
+        rects2 = axs[2].bar(x + offset, vals, bar_width, label=score)
+        axs[2].bar_label(rects2, fmt="%.3f", fontsize="small", padding=3)
+        multiplier += 1
     axs[2].grid(True)
-    # axs[0].legend()
-    # 2) Accuracy score
-    # 3) Runtime
+    axs[2].set_ylabel("Accuracy")
+    axs[2].set_xticks(x + bar_width / 2, data["labels"], rotation=90)
+    axs[2].set_ylim([0, 1])
+    axs[2].legend()
+
+# test_plots(models1_data)
+
+
+
+# def diagnostic_plots(models, start_loss=5, end_loss=101):
+#     # models: list of LogisticRegression
+#     fig, axs = plt.subplots(3, 1, layout="constrained",
+#                                         figsize=(10, 10))
+#     # 1) Training loss
+#     for model in models:
+#         axs[0].plot(np.arange(start_loss, end_loss),
+#                  model.loss_seq[start_loss:end_loss], label=model.solver)
+#     # for model in models[3:]:
+#     #     axs[0].plot(np.arange(start_loss, end_loss),
+#     #              model.loss_seq[start_loss:end_loss], label=model.solver,
+#     #              linestyle="dashed")
+#     axs[0].set_xlabel("Epochs")
+#     axs[0].set_ylabel("Training loss")
+#     axs[0].set_yscale("log")
+#     axs[0].set_ylim([0.1, 5])
+#     axs[0].grid(True)
+#     axs[0].legend()
+    # 2) Runtime
+    # x = np.arange(len(models))
+    # bar_width = 0.35
+    # multiplier1 = 0
+    # for model in models:
+    #     offset1 = bar_width * multiplier1
+    #     rects1 = axs[1].bar(x + offset1, model.runtime, bar_width, label=model.solver)
+    #     axs[1].bar_label(rects1, fmt="%.4f", padding=3)
+    #     multiplier1 += 1
+    # axs[1].set_ylabel("Run-time")
+    # axs[1].set_xticks(x, [model.solver + f"({model.opt_result.step_size})" for model in models],
+    #                   rotation=90)
+    # axs[1].grid(True)
+    # 3) Accuracy
+    # multiplier2 = 0
+    # rects2_1 = axs[2].bar(x + offset, model.accuracy_train, bar_width, label="Train score")
+    # axs[2].bar_label(rects2_1, fmt="%.3f", fontsize="small", padding=3)
+    # rects2_2 = axs[2].bar(x + offset, model.accuracy_test, bar_width, label="Test score")
+    # axs[2].bar_label(rects2_2, fmt="%.3f", fontsize="small", padding=3)
+    # multiplier2 += 1
+    # axs[2].set_ylabel("Accuracy")
+    # axs[2].set_xticks(x + bar_width / 2,
+    #         [model.solver + f"({model.opt_result.step_size})" for model in models], rotation=90)
+    # axs[2].legend()
+    # axs[2].set_ylim([0, 1])
+    # axs[2].grid(True)
     
     
 

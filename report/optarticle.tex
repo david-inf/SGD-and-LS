@@ -153,7 +153,9 @@
 \maketitle
 
 \begin{abstract}
-\lipsum[1] % the one given with the assignment
+In recent years, tailored line search approaches have proposed to define the step-size, or learning rate, in SGD-type algorithms for finite-sum problems. In particular, a stochastic extension of standard Armijo line search has been proposed in \texttt{bib1}. The development of this kind of techniques is relevant, because it shall allow to enforce a stronger converging behaviour (due to the Armijo condition), similar to that of standard GD, within SGD methods that are commonly employed with large scale training problems.
+
+However, the stochastic line search is not immediately employable when the momentum term is part of the update equation, as the search direction might not be a descent direction (which is a necessary condition for the Armijo condition). This problem is addressed in \texttt{bib2}, where a strategy is proposed to guarantee the descent property with momentum.
 \end{abstract}
 
 \setcounter{tocdepth}{2}

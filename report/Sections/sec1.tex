@@ -6,6 +6,18 @@
 % problem identification
 % solutions
 
+This report summarizes the analysis performed in order to investigate the behaviour of the algorithms retrieved from the scientific literature. The optimization problem that we aim to solve is that of the Logistic Regression with $\ell_2\text{-regularization}$ term added.
+
+The implemented algorithms are
+\begin{itemize}
+\item Mini-batch Gradient Descent with fixed and decreasing step-size, algorithm~\vref{code:SGD-fix-decr};
+\item Mini-batch Gradient Descent with Armijo-type line search, algorithm~\vref{code:SGD-Armijo};
+\item Mini-batch Gradient Descent with fixed step-size and momentum, algorithm~\vref{code:SGDM};
+\item Mini-batch Gradient Descent with with Armijo-type line search and momentum correction and restart, algorithms~\ref{code:MSL-SGDM-C} and~\vref{code:MSL-SGDM-R}.
+\end{itemize}
+
+After that, the efficiency of the algorithms is tested on different datasets.
+
 \subsection{Classification task}
 
 \subsection{Optimization problem}
@@ -69,7 +81,7 @@ The objective function $\func(w)\colon\R^{(p+1)}\to\R$, $\func(w)\in C^2(\R^{(p+
 First thing we prove the existence of an optimal solution, that is the global minimum. The derivatives
 \[
 \begin{array}{@{}l@{}}
-\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),r\in\R^N \\[1ex]
+\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),\,r\in\R^N \\[1ex]
 \nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w \\[1ex]
 \nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I_{(p+1)},\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)}),D\in\R^{N\times N}
 \end{array}
@@ -121,8 +133,9 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \centering
 \subfloat[][\emph{Log-loss. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},ytick={1,2,4},axis lines=middle,enlargelimits,width=0.45\textwidth]
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
+\addplot[dashed] {1};
 \end{axis}
 \end{tikzpicture}} \quad
 \subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
@@ -133,6 +146,21 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \end{tikzpicture}}
 \caption{Log-loss and sigmoid function plots}
 \label{fig:log-sigma}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth,legend style={nodes={scale=0.5, transform shape}}]
+\addplot[samples=200,blue,smooth] {ln(1+exp(-x))+0.5*x^2};
+\addplot[samples=200,red,smooth] {ln(1+exp(-x))+0.5*0.5*x^2};
+\addplot[samples=200,green,smooth] {ln(1+exp(-x))+0.5*0.1*x^2};
+\addplot[dashed] {1};
+\legend{$\lambda=1$, $\lambda=0.5$, $\lambda=0.1$}
+\end{axis}
+\end{tikzpicture}
+\caption{}
+\label{fig:1}
 \end{figure}
 
 \cleardoublepage
@@ -155,11 +183,9 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \cleardoublepage
 \section{Mini-batch gradient descent variants}
 
-see algorithm~\vref{code:MiniGD-fix-decr}
-
 \subsection{Fixed step-size}
 
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed or decreasing step-size},label=code:MiniGD-fix-decr]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed or decreasing step-size},label=code:SGD-fix-decr]
 given £!$w^0\in\R^n$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
  shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
@@ -183,7 +209,7 @@ end while
 % define function reset()
 % create function armijo_condition()
 % while (£!$f_{i_t}(y_{t-1}+\alpha d_t)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search},label=code:SGD-Armijo]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -210,7 +236,7 @@ end while
 \cleardoublepage
 \subsection{Fixed momentum term}
 
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size},label=code:SGDM]
 given £!$w^0\in\R^{p+1}$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\set{\beta_k}=\beta\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -227,7 +253,7 @@ while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
 end while
 \end{lstlisting}
 
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction},label=code:MSL-SGDM-C]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
@@ -258,7 +284,7 @@ end while
 \end{lstlisting}
 
 \cleardoublepage
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart}]
+\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart},label=code:MSL-SGDM-R]
 given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\set{\beta_k}=\beta\in(0,1)$!£
 £!$k=0$!£
 while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)

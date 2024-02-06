@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 25 21:20:04 2024
-
-@author: Utente
-"""
 
 #%% Packages
 # import time
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
                     sgdm, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, diagnostic, diagnostic_plots
+from ml_utils import set_accuracy, optim_data, diagnostic, test_plots
 
 from models import LogisticRegression
 
@@ -24,9 +19,6 @@ X_train_apple = pd.read_csv("datasets/apple_quality/apple_X_train.csv").values
 y_train_apple = pd.read_csv("datasets/apple_quality/apple_y_train.csv").values.reshape(-1)
 X_test_apple = pd.read_csv("datasets/apple_quality/apple_X_test.csv").values
 y_test_apple = pd.read_csv("datasets/apple_quality/apple_y_test.csv").values.reshape(-1)
-
-X_train_apple = np.hstack((np.ones((X_train_apple.shape[0],1)), X_train_apple))
-X_test_apple = np.hstack((np.ones((X_test_apple.shape[0],1)), X_test_apple))
 
 # intercept initial guess already added
 # w0 = np.array([-4, 3, -1, 1, 0, 2, 2.5, -1])
@@ -39,31 +31,52 @@ model0 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple
 
 #%%
 
-# model1 = LogisticRegression(solver="SGD-Fixed").fit(
-#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-#     step_size=0.1)
+model1_1 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1)
 
-# model2 = LogisticRegression(solver="SGD-Decreasing").fit(
-#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-#     step_size=0.1)
+model1_2 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.01)
 
-# model3 = LogisticRegression(solver="SGD-Armijo").fit(
-#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-#     step_size=0.001)
+model1_3 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.05)
 
-# model4 = LogisticRegression(solver="SGDM").fit(
+model2_1 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1)
+
+model2_2 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.01)
+
+model2_3 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
+    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.05)
+
+# model3 = LogisticRegression(solver="SGD-Armijo", C=0.5).fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.01)
+
+# model4 = LogisticRegression(solver="SGDM", C=0.1).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 #     step_size=0.1, momentum=0.8)
 
-# model5 = LogisticRegression(solver="MSL-SGDM-C").fit(
+# model5 = LogisticRegression(solver="MSL-SGDM-C", C=0.1).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 #     step_size=0.1, momentum=0.9)
 
-# model6 = LogisticRegression(solver="MSL-SGDM-R").fit(
+# model6 = LogisticRegression(solver="MSL-SGDM-R", C=0.1).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 #     step_size=0.1, momentum=0.9)
 
-diagnostic_plots([model1, model2, model3])
+# diagnostic_plots([model1, model2, model3])
+
+models1_data = optim_data([model1_1, model1_2, model1_3,
+                           model2_1, model2_2, model2_3])
+
+test_plots(models1_data)
 
 #%% Benchmark solver
 

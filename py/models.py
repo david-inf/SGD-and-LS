@@ -19,7 +19,7 @@ class LogisticRegression():
         self.loss = None
         self.loss_seq = None
         self.grad = None
-        self.runtime = None
+        # self.runtime = None
         self.accuracy_train = None
         self.accuracy_test = None
 
@@ -42,7 +42,7 @@ class LogisticRegression():
             self.loss = model.fun
             self.grad = model.grad
             self.loss_seq = model.fun_per_it
-            self.runtime = model.runtime
+            # self.runtime = model.runtime
             # sgd_fixed(w0, X, y, lam, M, alpha, epochs, tol)
         elif self.solver in ["SGDM", "MSL-SGDM-C", "MSL-SGDM-R"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
@@ -52,7 +52,7 @@ class LogisticRegression():
             self.loss = model.fun
             self.grad = model.grad
             self.loss_seq = model.fun_per_it
-            self.runtime = model.runtime
+            # self.runtime = model.runtime
             # sgdm(w0, X, y, lam, M, alpha, beta, epochs, tol)
         self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
         self.accuracy_test = accuracy_score(y_test, self.predict(X_test))
