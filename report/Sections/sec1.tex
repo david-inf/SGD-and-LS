@@ -18,31 +18,37 @@ The implemented algorithms are
 
 After that, the efficiency of the algorithms is tested on different datasets.
 
-\subsection{Classification task}
 
-\subsection{Optimization problem}
+\subsection{Classification task}
 
 Given the following dataset
 \[
-\mathcal{D}=\set{(x^{(i)}, y^{(i)})\mid x^{(i)}\in\mathcal{X}, y^{(i)}\in\mathcal{Y}, i=1,2,\dots,N}
+\mathcal{D}=\set{(x^{(i)},\,y^{(i)})\mid x^{(i)}\in\mathcal{X},\,y^{(i)}\in\mathcal{Y},\,i=1,2,\dots,N}
 \]
-the general Machine Learning optimization problem for the supervised learning subset is formulated as follows
+the general Machine Learning (ML) optimization problem in the context of supervised learning is formulated as follows
 \[
-\min_{w\in\R^p}\func(w)=L(w)+\lambda\Omega(w)=
+\min_{w}\func(w)=L(w)+\lambda\Omega(w)=
 \begin{cases}
 L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
 \Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
 \end{cases}
 \]
-where $L(w)$ is called \emph{loss function}, and it is a finite-sum, and $\Omega(w)$ it's the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for this problem.
+where $L(w)$ is called \emph{loss function} and $\Omega(w)$ it's the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
 
-The task performed is the binary classification, using the Logistic Regression model. Every machine learning model has its own loss function, the logistic regression uses the \emph{log-loss} (figure~\vref{subfig:log-loss}), for one single dataset sample $\ell_i=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)$, follows the resulting optimization problem
-\begin{equation}\label{eq:opt-prob}
-\min\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
+The task performed is the \emph{binary classification}, where $\mathcal{Y}=\set{-1,1}$ are the allowed values for the response variable, i.e. negative and positive class; the adopted machine learning model is Logistic Regression. Every ML model has its loss function, the logistic regression uses the \emph{log-loss}, for a sample of the dataset the loss function is as follows
+\begin{equation}\label{eq:sample_loss}
+\ell_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)
 \end{equation}
-where $i=1,\dots,N$ are the dataset samples, $\mathcal{Y}=\set{-1,1}$ is the set of the possible values for the response variable, corresponding to the negative or positive class. $\mathcal{X}\subseteq\R^{(p+1)}$ are dataset examples, $p+1$ means that there are $p$ features and the intercept. The $1/N$ term isn't always used, we choose to use that term for scaling issues.
+figure~\vref{subfig:log-loss} shows a plot of the loss function where $u=y^{(i)}$ and $v=w^Tx^{(i)}$, so the resulting function $\ell(uv)=\log\bigl(1+\exp(-uv)\bigr)$.
 
-We defined the matrix associated to the dataset and the model weights as follow
+
+\subsection{Optimization problem}
+
+Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using Stochastic Gradient Descent (SGD) algorithm variants
+\begin{equation}\label{eq:opt-prob}
+\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
+\end{equation}
+where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept. The $1/N$ term isn't always used, we choose to use that term for scaling issues. We define the matrix associated to the dataset and the model weights as follows
 \[
 X^T=
 \begin{pmatrix}
@@ -60,46 +66,63 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is added for the intercept. We can see that every $x^{(i)}$ is a column vector
+the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$.% We can see that every $x^{(i)}$ is a column vector
 
-\[
-\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
-\]
+The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
+\begin{align}
+\nabla\func(w) &= \frac{1}{N}X^Tr+\lambda w \\
+\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}
+\end{align}
+where $r\in\R^N$ is a vector of the same length as the total number of sample, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ and $I_{(p+1)}$ is the identity matrix with size $p+1$.
 
-\[
-\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
-\]
-$r\in\R^N$, $D\in\R^{N\times N}$
+%\[
+%\begin{array}{@{}l@{}}
+%\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),\,r\in\R^N \\[1ex]
+%\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w \\[1ex]
+%\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I_{(p+1)},\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)}),D\in\R^{N\times N}
+%\end{array}
+%\]
+
+%\[
+%\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
+%\]
+
+%\[
+%\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
+%\]
+%$r\in\R^N$, $D\in\R^{N\times N}$
+
+The next proposition allows to address the optimization problem.
 
 \begin{prop}
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \end{prop}
 
 \begin{proof}
-The objective function $\func(w)\colon\R^{(p+1)}\to\R$, $\func(w)\in C^2(\R^{(p+1)})$
+As said, the function is twice continuously differentiable, that allows the use of GD-type algorithms.
+
+\noindent$(i)$ Existence of a optimal solution
 
 First thing we prove the existence of an optimal solution, that is the global minimum. The derivatives
-\[
-\begin{array}{@{}l@{}}
-\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),\,r\in\R^N \\[1ex]
-\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w \\[1ex]
-\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I_{(p+1)},\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)}),D\in\R^{N\times N}
-\end{array}
-\]
+
 where $\sigma(z)$ is the sigmoid function, see figure~\vref{subfig:sigmoid}
 the second order derivative is positive-defined, this because of the square of the euclidean norm, this implies that the objective function is coercive. By a corollary of the Weirstrass theorem we prove that the function admits global minimum.
 
+\noindent$(ii)$ Type of the optimal solution
 
 \end{proof}
 
+\begin{rmk}
+...something about convergence speed...
+\end{rmk}
 
-
-%\[
-%w=
-%\begin{pmatrix}
-%b \\ w_1 \\ w_2 \\ \vdots \\ w_p
-%\end{pmatrix}\in\R^{(p+1)}
-%\]
+\begin{itemize}
+\item the hessian matrix is positive defined $\forall w$, this means that the objective function, which is quadratic, is coercive and for the continuity that function admits global minimum, so $\func(w)$ has finite inferior limit
+\item the hessian matrix being positive defined implies also that the objective function is strictly convex (on the other hand the loss function is just convex, due to its hessian matrix being positive semi-defined), this implies that if the global minimum exists, that solution is unique
+\item a global minimum is a point that satisfy $\nabla\func(w^\ast)=0$, which is a sufficient condition implied by the convexity of the problem, see figure~\vref{subfig:log-loss}
+\item the $\ell_2$ regularization implies that the objective function is strongly convex, this speeds up the convergence
+\item further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
+\end{itemize}
 
 \[
 y=
@@ -111,7 +134,8 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 \[
 \begin{array}{ll}
 %\func(w)\in\R & \nabla\func(w)\in\R^{(p+1)} \\
-\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)
+\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) \\
+\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w
 \end{array}
 \]
 
@@ -131,9 +155,9 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 
 \begin{figure}
 \centering
-\subfloat[][\emph{Log-loss. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
+\subfloat[][\emph{Log-loss, see equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
 {\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
 \addplot[dashed] {1};
 \end{axis}
@@ -142,6 +166,7 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 {\begin{tikzpicture}
 \begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
 \addplot[samples=200,red,smooth] {1/(1+exp(-x))};
+\addplot[dashed] {1};
 \end{axis}
 \end{tikzpicture}}
 \caption{Log-loss and sigmoid function plots}
@@ -165,18 +190,10 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 
 \cleardoublepage
 
-\begin{itemize}
-\item $uv\gg0$: the example is labelled correctly
-\item $uv\ll0$: the class assigned to the example is the wrong one
-\end{itemize}
-
-\begin{itemize}
-\item the hessian matrix is positive defined $\forall w$, this means that the objective function, which is quadratic, is coercive and for the continuity that function admits global minimum, so $\func(w)$ has finite inferior limit
-\item the hessian matrix being positive defined implies also that the objective function is strictly convex (on the other hand the loss function is just convex, due to its hessian matrix being positive semi-defined), this implies that if the global minimum exists, that solution is unique
-\item a global minimum is a point that satisfy $\nabla\func(w^\ast)=0$, which is a sufficient condition implied by the convexity of the problem, see figure~\vref{subfig:log-loss}
-\item the $\ell_2$ regularization implies that the objective function is strongly convex, this speeds up the convergence
-\item further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
-\end{itemize}
+%\begin{itemize}
+%\item $uv\gg0$: the example is labelled correctly
+%\item $uv\ll0$: the class assigned to the example is the wrong one
+%\end{itemize}
 
 %\section{Theoretical results}
 
@@ -318,6 +335,10 @@ end while
 \cleardoublepage
 \section{Mathematical background}
 
+\begin{defs}[Convex function]
+Let $S\subseteq\R^n$ be a convex set, a function $f\colon S\to\R$ is said to be convex if the hessian matrix is semi-positive-defined. If the hessian matrix is positive-defined, then the function is strictly convex.
+\end{defs}
+
 \begin{thm}[Weirstrass theorem]\label{thm:weirs}
 Let $f\colon\R^n\to\R$ be a continuous function and $S\subseteq\R^n$ a compact set. Then function $f$ admits global minimum in $S$.
 \end{thm}
@@ -334,9 +355,7 @@ A quadratic function $\func(x)=\frac{1}{2}x^TQx-c^Tx$ is said to be coercive if 
 Let $S\subseteq\R^n$ be a convex set, let $f\colon S\to\R$ be a strictly convex function. Then the global minimum, if exists, is unique.
 \end{prop}
 
-\begin{defs}[Convex function]
-Let $S\subseteq\R^n$ be a convex set, a function $f\colon S\to\R$ is said to be convex if the hessian matrix is semi-positive-defined. If the hessian matrix is positive-defined, then the function is strictly convex.
-\end{defs}
+% add gradient descent?
 
 
 

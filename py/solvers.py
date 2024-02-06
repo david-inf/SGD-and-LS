@@ -16,7 +16,7 @@ from solvers_utils import logistic, logistic_der, f_and_dfnorm, f_and_df
 
 def l_bfgs_b(w0, X, y, lam):
     res = minimize(f_and_df, w0, args=(X, y, lam), method="L-BFGS-B",
-                   jac=True, bounds=None, options={"gtol": 1e-4})
+                   jac=True, bounds=None, options={"gtol": 1e-5, "ftol": 1e-5})
     return res
 
 # %% Solvers utils
