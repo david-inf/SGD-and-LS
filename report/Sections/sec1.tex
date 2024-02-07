@@ -18,16 +18,19 @@ The implemented algorithms are
 
 After that, the efficiency of the algorithms is tested on different datasets.
 
+In this section the Machine Learning (ML) problem and the relative optimization problem are shown shown, proving the existence and uniqueness of the optimal solution.
 
+% ---------------------------------------------------- %
 \subsection{Classification task}
+% ---------------------------------------------------- %
 
-Given the following dataset
+Given a dataset as follows
 \[
 \mathcal{D}=\set{(x^{(i)},\,y^{(i)})\mid x^{(i)}\in\mathcal{X},\,y^{(i)}\in\mathcal{Y},\,i=1,2,\dots,N}
 \]
-the general Machine Learning (ML) optimization problem in the context of supervised learning is formulated as follows
+the general machine learning optimization problem in the context of \emph{supervised learning} is formulated as follows
 \[
-\min_{w}\func(w)=L(w)+\lambda\Omega(w)=
+\min_{w}\func(w)=L(w)+\lambda\Omega(w)\rightarrow
 \begin{cases}
 L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
 \Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
@@ -41,8 +44,9 @@ The task performed is the \emph{binary classification}, where $\mathcal{Y}=\set{
 \end{equation}
 figure~\vref{subfig:log-loss} shows a plot of the loss function where $u=y^{(i)}$ and $v=w^Tx^{(i)}$, so the resulting function $\ell(uv)=\log\bigl(1+\exp(-uv)\bigr)$.
 
-
+% ---------------------------------------------------- %
 \subsection{Optimization problem}
+% ---------------------------------------------------- %
 
 Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using Stochastic Gradient Descent (SGD) algorithm variants
 \begin{equation}\label{eq:opt-prob}
@@ -69,11 +73,14 @@ b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$.% We can see that every $x^{(i)}$ is a column vector
 
 The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
+\begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
-\nabla\func(w) &= \frac{1}{N}X^Tr+\lambda w \\
-\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}
+\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
+\nabla\func(w) &= \frac{1}{N}X^Tr+\lambda w \label{subeq:jacobian} \\
+\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
-where $r\in\R^N$ is a vector of the same length as the total number of sample, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ and $I_{(p+1)}$ is the identity matrix with size $p+1$.
+\end{subequations}
+where $r\in\R^N$ is a vector of the same length as the total number of sample, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$.
 
 %\[
 %\begin{array}{@{}l@{}}
@@ -97,47 +104,51 @@ The next proposition allows to address the optimization problem.
 \begin{prop}
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \end{prop}
-
 \begin{proof}
-As said, the function is twice continuously differentiable, that allows the use of GD-type algorithms.
+%As said, the function is twice continuously differentiable, that allows the use of GD-type algorithms.
+\noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is coercive, in fact $\forall\set{w^k}$ such that $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
+\[
+\lim_{k\to\infty}\func(w^k)\geq\lim_{k\to\infty}\lambda\frac{1}{2}\norma{w^k}^2=\infty\Rightarrow\lim_{k\to\infty}\func(w^k)=\infty
+\]
+hence by a corollary of the Weirstrass theorem (see theorem~\vref{cor:weirs1}) the problem admits global minimum in $\R^{(p+1)}$.
 
-\noindent$(i)$ Existence of a optimal solution
-
-First thing we prove the existence of an optimal solution, that is the global minimum. The derivatives
-
-where $\sigma(z)$ is the sigmoid function, see figure~\vref{subfig:sigmoid}
-the second order derivative is positive-defined, this because of the square of the euclidean norm, this implies that the objective function is coercive. By a corollary of the Weirstrass theorem we prove that the function admits global minimum.
-
-\noindent$(ii)$ Type of the optimal solution
-
+\noindent$(ii)$ \emph{Unicity} of the optimal solution. We now prove that the hessian matrix~\eqref{subeq:hessian} is positive definite
+\[
+w^T\nabla^2\func(w)w=w^TXDX^Tw+\lambda w^TIw=\underbrace{y^TDy}_{\geq0}+\lambda\norma{w}^2\geq\lambda\norma{w}^2>0\quad\forall w
+\]
+the hessian matrix positive definite implies that the objective function is strictly convex (see definition~\ref{def:conv_fun}) and that implies that the global minimum, if exists, is unique (see proposition~\ref{prop:min_unique}). Being in the convex case, the global minimum is a $w^\ast\in\R^{(p+1)}$ such that $\nabla\func(w^\ast)=0$ (see proposition~\ref{prop:opt_second}).\qedhere
 \end{proof}
 
 \begin{rmk}
-...something about convergence speed...
+Since the log-loss is convex, the regularization term makes the objective function \emph{strongly convex}, this should speed up the optimization process.
 \end{rmk}
 
-\begin{itemize}
-\item the hessian matrix is positive defined $\forall w$, this means that the objective function, which is quadratic, is coercive and for the continuity that function admits global minimum, so $\func(w)$ has finite inferior limit
-\item the hessian matrix being positive defined implies also that the objective function is strictly convex (on the other hand the loss function is just convex, due to its hessian matrix being positive semi-defined), this implies that if the global minimum exists, that solution is unique
-\item a global minimum is a point that satisfy $\nabla\func(w^\ast)=0$, which is a sufficient condition implied by the convexity of the problem, see figure~\vref{subfig:log-loss}
-\item the $\ell_2$ regularization implies that the objective function is strongly convex, this speeds up the convergence
-\item further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
-\end{itemize}
+%\begin{rmk}
+%further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
+%\end{rmk}
 
-\[
-y=
-\begin{pmatrix}
-y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
-\end{pmatrix}\in\set{-1,1}
-\]
+%\begin{itemize}
+%\item the hessian matrix is positive defined $\forall w$, this means that the objective function, which is quadratic, is coercive and for the continuity that function admits global minimum, so $\func(w)$ has finite inferior limit
+%\item the hessian matrix being positive defined implies also that the objective function is strictly convex (on the other hand the loss function is just convex, due to its hessian matrix being positive semi-defined), this implies that if the global minimum exists, that solution is unique
+%\item a global minimum is a point that satisfy $\nabla\func(w^\ast)=0$, which is a sufficient condition implied by the convexity of the problem, see figure~\vref{subfig:log-loss}
+%\item the $\ell_2$ regularization implies that the objective function is strongly convex, this speeds up the convergence
+%\item further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
+%\end{itemize}
 
-\[
-\begin{array}{ll}
-%\func(w)\in\R & \nabla\func(w)\in\R^{(p+1)} \\
-\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) \\
-\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w
-\end{array}
-\]
+%\[
+%y=
+%\begin{pmatrix}
+%y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
+%\end{pmatrix}\in\set{-1,1}
+%\]
+
+%\[
+%\begin{array}{ll}
+%%\func(w)\in\R & \nabla\func(w)\in\R^{(p+1)} \\
+%\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) \\
+%\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w
+%\end{array}
+%\]
 
 \cleardoublepage
 
@@ -153,215 +164,76 @@ y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
 %\label{fig:log-loss}
 %\end{figure}
 
-\begin{figure}
-\centering
-\subfloat[][\emph{Log-loss, see equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
-{\begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
-\addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
-\addplot[dashed] {1};
-\end{axis}
-\end{tikzpicture}} \quad
-\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
-{\begin{tikzpicture}
-\begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
-\addplot[samples=200,red,smooth] {1/(1+exp(-x))};
-\addplot[dashed] {1};
-\end{axis}
-\end{tikzpicture}}
-\caption{Log-loss and sigmoid function plots}
-\label{fig:log-sigma}
-\end{figure}
+%\begin{figure}
+%\centering
+%\subfloat[][\emph{Log-loss, see equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
+%{\begin{tikzpicture}
+%\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
+%\addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
+%\addplot[dashed] {1};
+%\end{axis}
+%\end{tikzpicture}} \quad
+%\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
+%{\begin{tikzpicture}
+%\begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
+%\addplot[samples=200,red,smooth] {1/(1+exp(-x))};
+%\addplot[dashed] {1};
+%\end{axis}
+%\end{tikzpicture}}
+%\caption{Log-loss and sigmoid function plots}
+%\label{fig:log-sigma}
+%\end{figure}
+
+%\begin{figure}
+%\centering
+%\begin{tikzpicture}
+%\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth,legend style={nodes={scale=0.5, transform shape}}]
+%\addplot[samples=200,blue,smooth] {ln(1+exp(-x))+0.5*x^2};
+%\addplot[samples=200,red,smooth] {ln(1+exp(-x))+0.5*0.5*x^2};
+%\addplot[samples=200,green,smooth] {ln(1+exp(-x))+0.5*0.1*x^2};
+%\addplot[dashed] {1};
+%\legend{$\lambda=1$, $\lambda=0.5$, $\lambda=0.1$}
+%\end{axis}
+%\end{tikzpicture}
+%\caption{Influence of the regularization term on the objective function~\eqref{eq:opt-prob}}
+%\label{fig:loss_regul}
+%\end{figure}
 
 \begin{figure}
 \centering
+\subfloat[][\emph{Log-loss, equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
+{%
 \begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth,legend style={nodes={scale=0.5, transform shape}}]
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.41\textwidth]
+\addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
+\addplot[dashed] {1};
+\end{axis}
+\end{tikzpicture}%
+} \quad
+\subfloat[][\emph{Influence of the regularization term on the loss function, equation~\eqref{subeq:obj-fun}, $\lambda=\textcolor{blue}{1},\textcolor{red}{0.5},\textcolor{green}{0.1}$}\label{subfig:loss_regul}]%
+{%
+\begin{tikzpicture}
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.41\textwidth,legend style={nodes={scale=0.5, transform shape}}]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))+0.5*x^2};
 \addplot[samples=200,red,smooth] {ln(1+exp(-x))+0.5*0.5*x^2};
 \addplot[samples=200,green,smooth] {ln(1+exp(-x))+0.5*0.1*x^2};
 \addplot[dashed] {1};
-\legend{$\lambda=1$, $\lambda=0.5$, $\lambda=0.1$}
+%\legend{$\lambda=1$, $\lambda=0.5$, $\lambda=0.1$}
 \end{axis}
 \end{tikzpicture}
-\caption{}
-\label{fig:1}
+} \quad
+\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
+{%
+\begin{tikzpicture}
+\begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.41\textwidth]
+\addplot[samples=200,red,smooth] {1/(1+exp(-x))};
+\addplot[dashed] {1};
+\end{axis}
+\end{tikzpicture}%
+}
 \end{figure}
-
-\cleardoublepage
 
 %\begin{itemize}
 %\item $uv\gg0$: the example is labelled correctly
 %\item $uv\ll0$: the class assigned to the example is the wrong one
 %\end{itemize}
-
-%\section{Theoretical results}
-
-\cleardoublepage
-\section{Mini-batch gradient descent variants}
-
-\subsection{Fixed step-size}
-
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed or decreasing step-size},label=code:SGD-fix-decr]
-given £!$w^0\in\R^n$!£, £!$k=0$!£ e £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
-while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
- shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
- set £!$y_0=w^k$!£
- for £!$t=1,\dots,N/M$!£
-  get mini-batch indices from £!$B_t$!£
-  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
-  compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
- end for
- update weights £!$w^{k+1}=y_{N/M}$!£
- epoch ends £!$k=k+1$!£
-end while
-\end{lstlisting}
-
-%\subsection{Decreasing step-size}
-
-\subsection{Stochastic line search}
-
-%compute true gradient approximation £!$\nabla f_{i_t}(w)$!£ with examples from £!$B_t$!£
-% define function reset()
-% create function armijo_condition()
-% while (£!$f_{i_t}(y_{t-1}+\alpha d_t)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search},label=code:SGD-Armijo]
-given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
-£!$k=0$!£
-while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
- shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
- set £!$y_0=w^k$!£
- for £!$t=1,\dots,N/M$!£
-  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
-  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
-  compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
-  £!$\alpha=\mathtt{reset}()$!£, £!$q=0$!£
-  compute potential next step £!$y_t=y_{t-1}+\alpha d_t$!£
-  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
-   reduce step-size £!$\alpha=\delta\alpha$!£
-   rejections counter £!$q=q+1$!£
-  end while
-  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
- end for
- update weights £!$w^{k+1}=y_{N/M}$!£
- epoch ends £!$k=k+1$!£
-end while
-\end{lstlisting}
-
-\cleardoublepage
-\subsection{Fixed momentum term}
-
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed Momentum term and fixed step-size},label=code:SGDM]
-given £!$w^0\in\R^{p+1}$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\set{\beta_k}=\beta\in(0,1)$!£
-£!$k=0$!£
-while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
- shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
- set £!$y_0=w^k$!£, £!$d_0=0$!£
- for £!$t=1,\dots,N/M$!£
-  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
-  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
-  compute direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
- end for
- update weights £!$w^{k+1}=y_{N/M}$!£
- epoch ends £!$k=k+1$!£
-end while
-\end{lstlisting}
-
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum correction},label=code:MSL-SGDM-C]
-given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
-£!$k=0$!£
-while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
- shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
- set £!$y_0=w^k$!£, £!$d_0=0$!£
- for £!$t=1,\dots,N/M$!£
-  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
-  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
-  compute potential next direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
-  £!$q_m=0$!£
-  while (£!$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$!£)
-   reduce momentum term £!$\beta=\delta_m\beta$!£
-   rejections counter £!$q_m=q_m+1$!£
-  end while
-  set optimal mini-batch momentum term £!$\beta_t=\beta$!£
-  £!$\alpha=\mathtt{reset()}$!£, £!$q_a=0$!£
-  compute potential next step £!$y_t=y_{t-1}+\alpha d_{t-1}$!£
-  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
-   reduce step-size £!$\alpha=\delta_a\alpha$!£
-   rejections counter £!$q_a=q_a+1$!£
-  end while
-  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
- end for
-update weights £!$w^{k+1}=y_{N/M}$!£
-epoch ends £!$k=k+1$!£
-end while
-\end{lstlisting}
-
-\cleardoublepage
-\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search for step-size and Momentum restart},label=code:MSL-SGDM-R]
-given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\set{\beta_k}=\beta\in(0,1)$!£
-£!$k=0$!£
-while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
- shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
- set £!$y_0=w^k$!£, £!$d_0=0$!£
- for £!$t=1,\dots,N/M$!£
-  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
-  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
-  compute potential next direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
-  if (£!$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$!£)
-   restart direction £!$d_t=d_0$!£
-  end if
-  £!$\alpha=\mathtt{reset()}$!£, £!$q_a=0$!£
-  compute potential next step £!$y_t=y_{t-1}+\alpha d_{t-1}$!£
-  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
-   reduce step-size £!$\alpha=\delta_a\alpha$!£
-   rejections counter £!$q_a=q_a+1$!£
-  end while
-  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
-  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
- end for
- update weights £!$w^{k+1}=y_{N/M}$!£
- epoch ends £!$k=k+1$!£
-end while
-\end{lstlisting}
-
-%\subsection{Corrected/restart momentum}
-
-\section{Experiments}
-
-\cleardoublepage
-\section{Mathematical background}
-
-\begin{defs}[Convex function]
-Let $S\subseteq\R^n$ be a convex set, a function $f\colon S\to\R$ is said to be convex if the hessian matrix is semi-positive-defined. If the hessian matrix is positive-defined, then the function is strictly convex.
-\end{defs}
-
-\begin{thm}[Weirstrass theorem]\label{thm:weirs}
-Let $f\colon\R^n\to\R$ be a continuous function and $S\subseteq\R^n$ a compact set. Then function $f$ admits global minimum in $S$.
-\end{thm}
-
-\begin{cor}[Sufficient condition]
-If function $f\colon\R^n\to\R$ is a continuous and coercive function, then $f$ admits global minimum in $\R^n$.
-\end{cor}
-
-\begin{prop}[Coercivity of a quadratic function]
-A quadratic function $\func(x)=\frac{1}{2}x^TQx-c^Tx$ is said to be coercive if and only if the symmetric matrix $Q\in\R^{n\times n}$ is positive-defined.
-\end{prop}
-
-\begin{prop}[Unique global minimum]
-Let $S\subseteq\R^n$ be a convex set, let $f\colon S\to\R$ be a strictly convex function. Then the global minimum, if exists, is unique.
-\end{prop}
-
-% add gradient descent?
-
-
-
-
-
-
-
-
-

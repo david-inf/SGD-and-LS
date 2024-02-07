@@ -1,0 +1,41 @@
+% !TeX spellcheck = en_GB
+% ***************************************************** %
+\section{Experiments}
+% ***************************************************** %
+
+\cleardoublepage
+% ***************************************************** %
+\section{Mathematical background}
+% ***************************************************** %
+
+\begin{defs}[Convex function]\label{def:conv_fun}
+	Let $S\subseteq\R^n$ be a convex set, a function $f\colon S\to\R$ is said to be convex if the hessian matrix is semi-positive-defined. If the hessian matrix is positive-defined, then the function is strictly convex.
+\end{defs}
+
+\begin{thm}[Weirstrass theorem]\label{thm:weirs}
+	Let $f\colon\R^n\to\R$ be a continuous function and $S\subseteq\R^n$ a compact set. Then function $f$ admits global minimum in $S$.
+\end{thm}
+
+\begin{cor}[Sufficient condition]\label{cor:weirs1}
+	If function $f\colon\R^n\to\R$ is a continuous and coercive function, then $f$ admits global minimum in $\R^n$.
+\end{cor}
+
+\begin{prop}[Coercivity of a quadratic function]
+	A quadratic function $\func(x)=\frac{1}{2}x^TQx-c^Tx$ is said to be coercive if and only if the symmetric matrix $Q\in\R^{n\times n}$ is positive-defined.
+\end{prop}
+
+\begin{prop}[Unique global minimum]\label{prop:min_unique}
+	Let $S\subseteq\R^n$ be a convex set, let $f\colon S\to\R$ be a strictly convex function. Then the global minimum, if exists, is unique.
+\end{prop}
+
+\begin{prop}[First order optimality condition]
+	$\bar{x}$ is a local minimum for $f\colon\R^n\to\R$ of class $f\in C^1(\R^n)$ if and only if $\nabla\func(\bar{x})=0$.
+\end{prop}
+
+\begin{prop}[Second order optimality condition]\label{prop:opt_second}
+	$\bar{x}\in\R^n$ is a local minimum for $f\colon\R^n\to\R$ of class $f\in C^2(\R^n)$ if and only if
+	\[\nabla\func(\bar{x})=0\quad\wedge\quad \nabla^2\func(\bar{x})\,\,\,\text{positive semi-definite}\]
+\end{prop}
+
+
+% add gradient descent?

@@ -1,0 +1,343 @@
+% !TeX spellcheck = en_GB
+% ***************************************************** %
+\section{Mini-batch gradient descent variants}
+% ***************************************************** %
+
+In this section we tackle the algorithmic part, the SGD-type chosen is the Mini-batch Gradient Descent where the mini-batch size $M$ is greater than 1 and much less than the dataset size. For simplicity, we will call it SGD anyway.
+
+The basic SGD perform steps of the form
+\begin{equation}\label{eq:sgd_step}
+w^{k+1}=w^k-\alpha_k\nabla f_{i_k}(w^k)
+\end{equation}
+starting from an arbitrary $w^0\in\R^{(p+1)}$ due to global convergence, $\nabla f_{i_k}(w^k)$ is the gradients evaluated on a random mini-batch extracted from the dataset. Using this form, without a line search method for choosing the optimal step-size $\alpha_k$, the objective function value doesn't decrease necessarily at each step, thus making the method \emph{non-monotonous}.
+
+In order to use the SGD algorithm, it is necessary to make further assumptions on the objective function and the gradients (how far the gradient samples are from the \emph{true gradients})
+\begin{itemize}
+\item the function $f$ in problem~\eqref{eq:opt-prob} has a \emph{finite-sum structure}, that is the common machine learning setting;
+\item being a loss function plus a quadratic regularization term, $f$ is bounded below by some value $f^\ast$, we can also take a look at figure~\ref{subfig:log-loss};
+\item for some constant $G>0$ the magnitude of all gradients samples are bounded $\forall w\in\R^{(p+1)}$ by $\norma{\nabla f_i(w)}\leq G$;
+\item other than twice continuously differentiable, we assume that $f$ has Lipschitz-continuous gradients with constant $L>0$, one can also say that $f$ is $L\text{-smooth}$.
+\end{itemize}
+
+Regarding the implementation of the algorithm, it is essential to define a stopping criterion. The first choice is always
+\begin{equation}\label{eq:stopping1}
+\norma{\nabla\func(w^k)}\leq\epsilon,\quad\epsilon>0
+\end{equation}
+unless there is a small tolerance $\epsilon$, the algorithm reaches a stationary point.
+
+Other than this, we can add conditions of premature termination like
+\begin{itemize}
+\item exceeding a threshold for the epochs number $k^\ast$ or function and gradient evaluations;
+\item internal failures when computing $w^{k+1}$, for example during the line search.
+\end{itemize}
+
+% ---------------------------------------------------- %
+\subsection{Basic SGD}
+% ---------------------------------------------------- %
+
+Particularly the basic version has two possible step-size choices
+\begin{itemize}
+\item \emph{constant step-size} $\alpha_k=\alpha$;
+\item \emph{decreasing step-size} $\alpha_k=\frac{\alpha_0}{k+1}$.
+\end{itemize}
+the second choice has such form in order to ensure the convergence of the algorithm; this two version are shown in algorithm~\vref{code:SGD-fix-decr}. The iteration~\eqref{eq:sgd_step} sees the index $k$ changed to $t$, the former is the index of the \emph{epochs} while the latter is the index of the mini-batches.
+
+%\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with fixed or decreasing step-size}]
+%given £!$w^0\in\R^{p+1}$!£, £!$k=0$!£ and £!$\set{\alpha_k}\mid\alpha_k=\alpha\vee\alpha_k=\frac{\alpha_0}{k+1}$!£
+%while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w^k)})$!£)
+% shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+% set £!$y_0=w^k$!£
+% for £!$t=1,\dots,N/M$!£
+%  get mini-batch indices from £!$B_t$!£
+%  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+%  compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
+%  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
+% end for
+% update weights £!$w^{k+1}=y_{N/M}$!£
+% epoch ends £!$k=k+1$!£
+%end while
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Mini-batch Gradient Descent with fixed or decreasing step-size}\label{code:SGD-fix-decr}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$}
+$k \gets 0$\;
+\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
+	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	$y_0 \gets w^k$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$\;
+		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
+		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
+		$y_t \gets y_{t-1}+\alpha_kd_t$\;
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+% ---------------------------------------------------- %
+\subsection{Stochastic line search}
+% ---------------------------------------------------- %
+
+Now we move on to the approach by \texttt{bib1}. The proposed algorithm needs one more assumption, that is, the model is able to \emph{interpolate} the data, this property requires that the gradient w.r.t. each samples converges to zero at the optimal solution
+\[
+\text{if}\,\,\,\nabla\func(w^\ast)=0\Rightarrow\nabla f_i(w^\ast)=0\,\,\,\forall i=1,\dots,N
+\]
+
+The proposed approach applies the Armijo line search to the SGD algorithm, referring to the notation in~\eqref{eq:sgd_step}, the \emph{Armijo condition} is as follows
+\[
+f_{i_k}(w^{k+1})\leq f_{i_k}(w^k)+\gamma\alpha_k\nabla f_{i_k}(w^k)^Td_{i_k}=f_{i_k}(w^k)-\gamma\alpha_k\nabla\norma{f_{i_k}(w^k)}^2
+\]
+where the direction $d_{i_k}$ is equal to the \emph{anti-gradient} evaluated on the considered sample. The constant $\gamma$ is an hyper-parameter set to $1/2$ for convergence properties in the strongly-convex case.
+
+As the standard Armijo method, the proposed line search uses a \emph{backtracking} technique that iteratively decreases the initial step-size $\alpha_0$ by a constant factor $\delta$ usually set to $1/2$ until the condition is satisfied.
+
+The authors also gave heuristics in order to avoid unnecessary function evaluations, see algorithm~\vref{code:reset-step}, 
+
+
+See algorithm~\vref{code:SGD-Armijo}.
+
+%\begin{lstlisting}[style=simple,caption={Procedure for resetting the step-size in the line search setting},label=code:reset-step]
+%reset(£!$\alpha,\alpha_0$!£)
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Procedure for resetting the step-size in the line search setting}\label{code:reset-step}
+\KwData{$\alpha$, $\alpha_0$, $a$, $M$, $N$, $t$, $\mathtt{opt}$}
+\uIf{$t=1$}{\KwRet{$\alpha_0$}}
+\uElseIf{$\mathtt{opt}=0$}{$\alpha\gets\alpha$}
+\uElseIf{$\mathtt{opt}=1$}{$\alpha\gets\alpha_0$}
+\ElseIf{$\mathtt{opt}=2$}{$\alpha\gets\alpha a^{M/N}$}
+\KwRet{$\alpha$}
+\end{algorithm}
+
+%compute true gradient approximation £!$\nabla f_{i_t}(w)$!£ with examples from £!$B_t$!£
+% define function reset() - ok
+% create function armijo_condition()
+% while (£!$f_{i_t}(y_{t-1}+\alpha d_t)>f_{i_t}(y_{t-1})-\gamma\alpha\norma{\nabla f_{i_t}(y_{t-1})}^2$!£)
+%\begin{lstlisting}[style=simple,caption={Mini-batch Gradient Descent with Armijo line search},label=code:SGD-Armijo]
+%given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta\in(0,1),\,\alpha_0\in\R^+$!£
+%£!$k=0$!£
+%while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
+% shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+% set £!$y_0=w^k$!£
+% for £!$t=1,\dots,N/M$!£
+%  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+%  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+%  compute direction £!$d_t=-\nabla f_{i_t}(y_{t-1})$!£
+%  £!$\alpha=\mathtt{reset}()$!£, £!$q=0$!£
+%  compute potential next step £!$y_t=y_{t-1}+\alpha d_t$!£
+%  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
+%   reduce step-size £!$\alpha=\delta\alpha$!£
+%   rejections counter £!$q=q+1$!£
+%  end while
+%  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
+%  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+% end for
+% update weights £!$w^{k+1}=y_{N/M}$!£
+% epoch ends £!$k=k+1$!£
+%end while
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Mini-batch Gradient Descent with Armijo line search}\label{code:SGD-Armijo}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$}
+\KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+$k \gets 0$\;
+\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
+	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	$y_0 \gets w^k$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$\;
+		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
+		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
+		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
+%		$\alpha\gets\alpha_0$\;
+		$q\gets0$\;
+		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q<q^\ast$}{
+			$\alpha\gets\delta\alpha$\;
+			$y_t \gets y_{t-1}+\alpha d_t$\;
+			$q\gets q+1$\;
+		}
+		$\alpha_t\gets\alpha$\;
+		$y_t\gets y_{t-1}+\alpha_td_t$
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+\cleardoublepage
+% ---------------------------------------------------- %
+\subsection{Adding momentum term}
+% ---------------------------------------------------- %
+
+%\begin{lstlisting}[style=simple,caption={},label=code:SGDM]
+%given £!$w^0\in\R^{p+1}$!£, £!$\set{\alpha_k}=\alpha$!£, £!$\set{\beta_k}=\beta\in(0,1)$!£
+%£!$k=0$!£
+%while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
+% shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+% set £!$y_0=w^k$!£, £!$d_0=0$!£
+% for £!$t=1,\dots,N/M$!£
+%  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+%  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+%  compute direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
+%  make a (internal) step £!$y_t=y_{t-1}+\alpha_kd_t$!£
+% end for
+% update weights £!$w^{k+1}=y_{N/M}$!£
+% epoch ends £!$k=k+1$!£
+%end while
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Mini-batch Gradient Descent with fixed Momentum term and step-size}\label{code:SGDM}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$, $\set{\beta_k}$}
+$k \gets 0$\;
+\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
+	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	$y_0 \gets w^k$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$\;
+		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
+		$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
+		$y_t \gets y_{t-1}+\alpha_kd_t$\;
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+%\begin{lstlisting}[style=simple,caption={},label=code:]
+%given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\beta_0\in(0,1)$!£
+%£!$k=0$!£
+%while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
+% shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+% set £!$y_0=w^k$!£, £!$d_0=0$!£
+% for £!$t=1,\dots,N/M$!£
+%  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+%  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+%  compute potential next direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
+%  £!$q_m=0$!£
+%  while (£!$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$!£)
+%   reduce momentum term £!$\beta=\delta_m\beta$!£
+%   rejections counter £!$q_m=q_m+1$!£
+%  end while
+%  set optimal mini-batch momentum term £!$\beta_t=\beta$!£
+%  £!$\alpha=\mathtt{reset()}$!£, £!$q_a=0$!£
+%  compute potential next step £!$y_t=y_{t-1}+\alpha d_{t-1}$!£
+%  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
+%   reduce step-size £!$\alpha=\delta_a\alpha$!£
+%   rejections counter £!$q_a=q_a+1$!£
+%  end while
+%  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
+%  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+% end for
+%update weights £!$w^{k+1}=y_{N/M}$!£
+%epoch ends £!$k=k+1$!£
+%end while
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Mini-batch Gradient Descent with Armijo line search and Momentum correction}\label{code:MSL-SGDM-C}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
+\KwData{$\gamma\in(0,1)$, $\delta_a\in(0,1)$, $\delta_b\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+$k \gets 0$\;
+\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
+	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	$y_0 \gets w^k$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$\;
+		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
+		$\beta\gets\beta_0$\;
+		$q_m\gets0$\;
+		\While{$\nabla f_{i_t}(y_{t-1})^Td_t\geq0\wedge q_m<q_m^\ast$}{
+			$\beta\gets\delta_m\beta$\;
+			$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
+			$q_m\gets q_m+1$\;
+		}
+		$\beta_t\gets\beta$\;
+		$d_t\gets-\bigl((1-\beta_t)\nabla f_{i_t}(y_{t-1})+\beta_td_{t-1}\bigr)$\;
+		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
+		$q_a\gets0$\;
+		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q_a<q_a^\ast$}{
+			$\alpha\gets\delta_m\alpha$\;
+			$y_t \gets y_{t-1}+\alpha d_t$\;
+			$q_a\gets q_a+1$\;
+		}
+		$\alpha_t\gets\alpha$\;
+		$y_t\gets y_{t-1}+\alpha_td_t$
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+%\begin{lstlisting}[style=simple,caption={},label=code:MSL-SGDM-R]
+%given £!$w^0\in\R^{p+1}$!£, £!$\gamma\in(0,1),\,\delta_a\in(0,1),\,\alpha_0\in\R^+$!£, £!$\delta_m\in(0,1),\,\set{\beta_k}=\beta\in(0,1)$!£
+%£!$k=0$!£
+%while (£!$\norma{\nabla\func(w^k)}>\epsilon(1+\abs{\func(w)})$!£)
+% shuffle £!$\set{1,\dots,N}$!£ and split £!$B_1,\dots,B_{N/M}$!£ such that £!$1<\abs{B_t}=M\ll N$!£
+% set £!$y_0=w^k$!£, £!$d_0=0$!£
+% for £!$t=1,\dots,N/M$!£
+%  get mini-batch indices £!$i_t$!£ from £!$B_t$!£
+%  approximate true gradient £!$\nabla f_{i_t}(w)=\frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$!£
+%  compute potential next direction £!$d_t=-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$!£
+%  if (£!!£)
+%   restart direction £!$d_t=d_0$!£
+%  end if
+%  £!$\alpha=\mathtt{reset()}$!£, £!$q_a=0$!£
+%  compute potential next step £!$y_t=y_{t-1}+\alpha d_{t-1}$!£
+%  while (£!$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$!£)
+%   reduce step-size £!$\alpha=\delta_a\alpha$!£
+%   rejections counter £!$q_a=q_a+1$!£
+%  end while
+%  set optimal mini-batch step-size £!$\alpha_t=\alpha$!£
+%  make a (internal) step £!$y_t=y_{t-1}+\alpha_td_t$!£
+% end for
+% update weights £!$w^{k+1}=y_{N/M}$!£
+% epoch ends £!$k=k+1$!£
+%end while
+%\end{lstlisting}
+
+\begin{algorithm}
+\caption{Mini-batch Gradient Descent with Armijo line search and Momentum restart}\label{code:MSL-SGDM-R}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta\in(0,1)$}
+\KwData{$\gamma\in(0,1)$, $\delta_a\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+$k \gets 0$\;
+$d_0\gets0$\;
+\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
+	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	$y_0 \gets w^k$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$\;
+		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
+		$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
+		\If{$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$}{
+			$d_t\gets d_0$\;
+		}
+		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
+		$q_a\gets0$\;
+		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q_a<q_a^\ast$}{
+			$\alpha\gets\delta_m\alpha$\;
+			$y_t \gets y_{t-1}+\alpha d_t$\;
+			$q_a\gets q_a+1$\;
+		}
+		$\alpha_t\gets\alpha$\;
+		$y_t\gets y_{t-1}+\alpha_td_t$
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+
+
+
+
+
+
+
+
+
+

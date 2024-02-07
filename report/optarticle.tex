@@ -59,6 +59,7 @@
 \newtheorem{cor}[thm]{Corollary}
 \newtheorem{prop}{Proposition}
 %\newtheorem{lem}[thm]{Lemma}
+\renewcommand{\qedsymbol}{$\blacksquare$}
 % Remarks
 \theoremstyle{remark}
 \newtheorem{rmk}{Remark}
@@ -102,6 +103,8 @@
 % Code
 % -------------------------------- %
 \input{./optarticle-code.tex}
+\usepackage[ruled]{algorithm2e}
+\newcommand{\forcond}{$t=1$ \KwTo $N/M$}
 % -------------------------------- %
 % My stuff
 % -------------------------------- %
@@ -142,7 +145,7 @@
 	pdftitle={\myTitle},pdfauthor={\myName},pdfsubject={\mySubject}%
 }
 % -------------------------------- %
-\usepackage{showframe}
+%\usepackage{showframe}
 \begin{document}
 \frenchspacing
 % ************************************************************************************* %
@@ -164,7 +167,9 @@ However, the stochastic line search is not immediately employable when the momen
 % ************************************************************************************* %
 % MAINMATTER %
 % ************************************************************************************* %
-\input{./Sections/sec1.tex}
+\input{./Sections/sec1.tex}\cleardoublepage
+\input{./Sections/sec2.tex}\cleardoublepage
+\input{./Sections/sec3.tex}
 % ************************************************************************************* %
 % BACKMATTER %
 % ************************************************************************************* %
