@@ -77,8 +77,7 @@ def sgd_fixed(w0, X, y, lam, M, alpha, epochs, tol):
             # Evaluate gradient approximation
             mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
             d_t = - mini_grad  # compute direction
-            y_seq[t+1, :] = y_seq[t, :] + alpha * \
-                d_t  # weights internal update
+            y_seq[t+1, :] = y_seq[t, :] + alpha * d_t  # model internal update
         # Update sequence, objective function and gradient norm
         k += 1
         w_seq[k, :] = y_seq[-1, :]

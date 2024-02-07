@@ -77,6 +77,7 @@
 %\usepackage{xcolor}
 \usepackage{pgfplots} % + tikz
 \pgfplotsset{/pgf/number format/use comma,compat=newest}
+\usetikzlibrary{calc}
 %%\usepackage{tikz} % + graphicx,keyval,xcolor
 %%\definecolor{Maroon}{cmyk}{0,0.87,0.68,0.32}
 %\definecolor{RoyalBlue}{cmyk}{1,0.50,0,0}
@@ -87,8 +88,8 @@
 % -------------------------------- %
 % Floating objects
 % -------------------------------- %
-%\usepackage{booktabs}
-%\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{tabularx}
 %\usepackage{multirow}
 \usepackage{subfig}
 %\usepackage{wrapfig}
@@ -105,6 +106,12 @@
 \input{./optarticle-code.tex}
 \usepackage[ruled]{algorithm2e}
 \newcommand{\forcond}{$t=1$ \KwTo $N/M$}
+% -------------------------------- %
+% Miscellaneous
+% -------------------------------- %
+\interfootnotelinepenalty=10000
+\dimen\footins=2.5cm
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 % -------------------------------- %
 % My stuff
 % -------------------------------- %
@@ -132,13 +139,12 @@
 % -------------------------------- %
 % Bibliography
 % -------------------------------- %
-% Activate bibliography when you are ready
 %\usepackage[autostyle,italian=guillemets,babel]{csquotes}
 %\usepackage[backend=biber,useprefix,style=ieee,backref,hyperref,defernumbers=true]{biblatex}
 %\usepackage[backend=biber,useprefix,style=authoryear-comp,hyperref,defernumbers=true]{biblatex}
 %\addbibresource{optarticle-bib.bib}
 % -------------------------------- %
-\usepackage{hyperref}
+\usepackage[hyperfootnotes=false]{hyperref}
 \hypersetup{%
 %	colorlinks,urlcolor=webbrown,linkcolor=RoyalBlue,citecolor=webgreen,%
 	linktocpage,pdfstartpage=1,bookmarksnumbered,bookmarksopen,bookmarksopenlevel=2,%
@@ -167,9 +173,10 @@ However, the stochastic line search is not immediately employable when the momen
 % ************************************************************************************* %
 % MAINMATTER %
 % ************************************************************************************* %
-\input{./Sections/sec1.tex}\cleardoublepage
-\input{./Sections/sec2.tex}\cleardoublepage
+\input{./Sections/sec1.tex}
+\input{./Sections/sec2.tex}
 \input{./Sections/sec3.tex}
+\input{./Sections/code.tex}
 % ************************************************************************************* %
 % BACKMATTER %
 % ************************************************************************************* %
