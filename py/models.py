@@ -24,6 +24,7 @@ class LogisticRegression():
         self.accuracy_test = None
 
     def fit(self, w0, X_train, y_train, X_test, y_test, step_size=1, momentum=0):
+        N = X_train.shape[0]
         # dictionary of callables
         solver_dict = {"L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
                        "SGD-Fixed": sgd_fixed, "SGD-Decreasing": sgd_decreasing,
@@ -45,9 +46,7 @@ class LogisticRegression():
             self.coef_ = model.x
             self.loss = model.fun
             self.grad = model.grad
-            self.loss_seq = model.fun_per_it
-            # self.runtime = model.runtime
-            # sgd_fixed(w0, X, y, lam, M, alpha, epochs, tol)
+            self.loss_seq = model.fun_per_it / N
         elif self.solver in ["SGDM", "MSL-SGDM-C", "MSL-SGDM-R"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum, self.epochs, self.tol)
@@ -55,9 +54,7 @@ class LogisticRegression():
             self.coef_ = model.x
             self.loss = model.fun
             self.grad = model.grad
-            self.loss_seq = model.fun_per_it
-            # self.runtime = model.runtime
-            # sgdm(w0, X, y, lam, M, alpha, beta, epochs, tol)
+            self.loss_seq = model.fun_per_it / N
         self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
         self.accuracy_test = accuracy_score(y_test, self.predict(X_test))
         return self

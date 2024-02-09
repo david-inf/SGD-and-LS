@@ -122,15 +122,6 @@ def plot_runtime(models, ticks):
     plt.show()
 
 
-def diagnostic(models, labels, start_loss=5, end_loss=100):
-    plot_loss(models, labels, start=start_loss, end=end_loss)
-    plot_runtime(models, labels)
-    plot_accuracy(models, labels)
-#     data = optim_data(models)
-#     fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, layout="constrained")
-
-
-
 def test_plots(data):
     fig, axs = plt.subplots(3, 1, layout="constrained", figsize=(10, 12))
     data["labels"] = data["Solver"] + "(" + data["Step-size"].astype(str) + ")"
@@ -167,6 +158,24 @@ def test_plots(data):
     axs[2].set_xticks(x + bar_width / 2, data["labels"], rotation=90)
     axs[2].set_ylim([0, 1])
     axs[2].legend()
+
+
+def diagnostic(data):
+    fig, ax = plt.subplots(layout="constrained", figsize=(6.4, 4.8))
+    df = data
+    df["labels"] = df["Solver"] + "(" + df["Step-size"].astype(str) + ")"
+    # 1) Training loss
+    start = 1
+    end = df["Loss/Epochs"][0].shape[0]
+    for loss in df["Loss/Epochs"]:
+        ax.plot(np.arange(start, end), loss[start:end])
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Training loss")
+    ax.set_yscale("log")
+    ax.legend(df["labels"])
+    ax.grid(True, which="both", axis="both")
+    ax.set_ylim(top=10 ** 0)  # bug
+    # ax.set_clip_on(True)
 
 # test_plots(models1_data)
 

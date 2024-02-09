@@ -26,7 +26,9 @@ w0 = (5 + 5) * rng.random(8) - 5
 
 #%% Class LogisticRegression
 
-model0 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+model0_1 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+model0_2 = LogisticRegression(solver="Newton-CG").fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
+model0_3 = LogisticRegression(solver="CG").fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple)
 
 #%%
 
@@ -75,7 +77,7 @@ model2_3 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
 models1_data = optim_data([model1_1, model1_2, model1_3,
                            model2_1, model2_2, model2_3])
 
-test_plots(models1_data)
+diagnostic(models1_data)
 
 #%% Benchmark solver
 

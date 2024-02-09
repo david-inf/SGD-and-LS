@@ -77,8 +77,7 @@ def f_and_df(w, X, y, lam=1):
             np.dot(- y * sigmoid(z), X) + lam * w)  # gradient
 
 
-# useless
-def logistic_hess(w, X, y, coeff=1):
+def logistic_hess(w, X, y, lam=1):
     """
     Parameters
     ----------
@@ -91,10 +90,14 @@ def logistic_hess(w, X, y, coeff=1):
     -------
     Matrix like (w.shape[0], w.shape[0])
     """
+    z = y * np.dot(X, w)  # vector or scalar
     if X.ndim == 2:
-        D = np.diag(sigmoid(y * np.dot(X, w)) * sigmoid(- y * np.dot(X, w)))
+        D = np.diag(sigmoid(z) * sigmoid(- z))
     else:
-        D = sigmoid(y * np.dot(X, w)) * sigmoid(- y * np.dot(X, w))
-    loss_hess = np.dot(np.dot(D, X).T, X)
-    regul_hess = 2 * coeff * np.eye(w.shape[0])
-    return loss_hess + regul_hess
+        D = sigmoid(z) * sigmoid(- z)
+    # if z scalar -> D scalar
+    # if z vector -> D diagnonal matrix
+    # D = sigmoid(z) * sigmoid(- z)
+    ddL = np.dot(np.dot(D, X).T, X)
+    ddO = lam * np.eye(w.shape[0])
+    return ddL + ddO
