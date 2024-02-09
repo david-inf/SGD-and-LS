@@ -200,19 +200,21 @@ Since the log-loss is convex, the regularization term makes the objective functi
 
 \begin{figure}
 \centering
-\subfloat[][\emph{Log-loss, equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
+\subfloat[][\emph{Log-loss, equation~\eqref{eq:sample_loss}. $\mathrm{if}\,uv\gg0$ then the example is labelled correctly; $\mathrm{if}\,uv\ll0$ then the label is the wrong one; $\mathrm{if}\,uv\approx0$ then $w$ is the null model.}\label{subfig:log-loss}]%
 {%
 \begin{tikzpicture}
 \begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.41\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
 \addplot[dashed] {1};
+%\addplot[dashed] {ln(2)} node[right, font=\small] {$\log(2)$};
+\addplot [black, mark=-, nodes near coords=$\log(2)$, font={\scriptsize}, every node near coord/.style={anchor=180}] coordinates {(0,{ln(2)})};
 \end{axis}
 \end{tikzpicture}%
 } \quad
 \subfloat[][\emph{Influence of the regularization term on the loss function, equation~\eqref{subeq:obj-fun}, $\lambda=\textcolor{blue}{1},\textcolor{red}{0.5},\textcolor{green}{0.1}$}\label{subfig:loss_regul}]%
 {%
 \begin{tikzpicture}
-\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.41\textwidth,legend style={nodes={scale=0.5, transform shape}}]
+\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.41\textwidth,legend style={nodes={scale=0.5, transform shape}}]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))+0.5*x^2};
 \addplot[samples=200,red,smooth] {ln(1+exp(-x))+0.5*0.5*x^2};
 \addplot[samples=200,green,smooth] {ln(1+exp(-x))+0.5*0.1*x^2};
@@ -221,7 +223,7 @@ Since the log-loss is convex, the regularization term makes the objective functi
 \end{axis}
 \end{tikzpicture}
 } \quad
-\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
+\subfloat[][\emph{Sigmoid function. Used for prediction with encoding: $\mathrm{if}\,v>0.5\Rightarrow\hat{u}=1$ and $\mathrm{if}\,v\leq0.5\Rightarrow\hat{u}=-1$.}\label{subfig:sigmoid}]%
 {%
 \begin{tikzpicture}
 \begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.41\textwidth]

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb  1 18:33:32 2024
-
-@author: Utente
-"""
 
 import numpy as np
 import pandas as pd
@@ -30,6 +24,7 @@ def optim_data(models):
     models_data = pd.DataFrame(
         {
             "Solver": [model.solver for model in models],
+            "C": [model.C for model in models],
             "Minibatch": [model.minibatch for model in models],
             "Step-size": [model.opt_result.step_size for model in models],
             "Momentum": [model.opt_result.momentum for model in models],
@@ -45,6 +40,28 @@ def optim_data(models):
         }
     )
     return models_data
+
+
+def optim_bench(model):
+    data = pd.DataFrame(
+        {
+            "Solver": model.solver,
+            "C": model.C,
+            "Minibatch": np.nan,
+            "Step-size": np.nan,
+            "Momentum": np.nan,
+            "Solution": [model.coef_],
+            "Loss": model.loss,
+            "Grad norm": model.grad,
+            "Run-time": np.nan,
+            "Iterations": model.opt_result.nit,
+            # "Termination": model.message,
+            "Train accuracy": model.accuracy_train,
+            "Test accuracy": model.accuracy_test,
+            "Loss/Epochs": np.nan
+        }
+    )
+    return data
 
 
 def plot_loss(models, labels, title=None, start=0, end=200):
@@ -132,7 +149,7 @@ def test_plots(data):
     bar_width = 0.35
     rects1 = axs[1].bar(data["labels"], data["Run-time"], bar_width)
     axs[1].grid(True)
-    axs[1].set_ylabel("Run-time")
+    axs[1].set_ylabel("Run-time (seconds)")
     axs[1].bar_label(rects1, fmt="%.4f", padding=3)
     axs[1].set_xticks(x, data["labels"], rotation=90)
     # 3) Accuracy

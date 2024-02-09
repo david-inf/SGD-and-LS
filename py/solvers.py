@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 31 14:15:19 2024
-
-@author: Utente
-"""
 
 # %% Packages
 import time
@@ -45,6 +39,10 @@ def stopping(fun_k, grad_k, nit, max_iter, tol):
     # fun and grad already evaluated
     # grad > tol * (1 + fun) and k < epochs:
     return grad_k > tol and nit < max_iter
+
+
+# def stopping(nit, max_iter):
+    # return nit < max_iter
 
 # %% [1] SGD-Fixed
 

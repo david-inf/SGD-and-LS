@@ -2,12 +2,12 @@
 #%% Packages
 # import time
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 # from myLogisticRegression import myLogRegr
 from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
                     sgdm, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, diagnostic, test_plots
+from ml_utils import set_accuracy, optim_data, diagnostic, test_plots, optim_bench
 
 from models import LogisticRegression
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -34,6 +33,9 @@ class LogisticRegression():
             self.coef_ = model.x
             self.loss = model.fun
             self.grad = np.linalg.norm(model.jac)
+            self.epochs = None
+            self.tol = None
+            self.minibatch = None
         elif self.solver in ["SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, self.epochs, self.tol)
