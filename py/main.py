@@ -30,7 +30,7 @@ model0 = LogisticRegression().fit(w0, X_train_apple, y_train_apple, X_test_apple
 
 #%%
 
-model1_1 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+model1_1 = LogisticRegression(solver="SGD-Fixed", C=1).fit(
     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1)
 
