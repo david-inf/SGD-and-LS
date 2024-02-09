@@ -28,7 +28,7 @@ def minibatch_gradient(x, X, y, lam, minibatch):
     samples_x = X[minibatch, :]
     samples_y = y[minibatch]
     # in oder to sum over the gradients, regularization term is multiplied by M
-    grad_sum = logistic_der(x, samples_x, samples_y, lam, M)
+    grad_sum = logistic_der(x, samples_x, samples_y, lam, M)  # check
     return grad_sum / M
 
 
@@ -43,7 +43,7 @@ def shuffle_dataset(N, k, M):
 
 def stopping(fun_k, grad_k, nit, max_iter, tol):
     # fun and grad already evaluated
-    # grad > 1e-3 * (1 + fun) and k < epochs:
+    # grad > tol * (1 + fun) and k < epochs:
     return grad_k > tol and nit < max_iter
 
 # %% [1] SGD-Fixed
@@ -51,9 +51,8 @@ def stopping(fun_k, grad_k, nit, max_iter, tol):
 # minimize(logistic, w0, args=(),method=sgd_fixed,
 #       jac=logistic_der, options=dict(X, y, lam, M=16, alpha=1))
 
+
 # Minibatch Gradient Descent with fixed step-size
-
-
 def sgd_fixed(w0, X, y, lam, M, alpha, epochs, tol):
     N, p = X.shape
     # weights sequence

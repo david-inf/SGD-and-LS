@@ -47,7 +47,7 @@ def optim_data(models):
     return models_data
 
 
-def plot_loss(models, labels, title=None, start=5, end=100):
+def plot_loss(models, labels, title=None, start=0, end=200):
     fig, ax1 = plt.subplots(ncols=1, layout="constrained")
     i = 0
     for model in models:
@@ -118,7 +118,7 @@ def test_plots(data):
     fig, axs = plt.subplots(3, 1, layout="constrained", figsize=(10, 12))
     data["labels"] = data["Solver"] + "(" + data["Step-size"].astype(str) + ")"
     # 1) Training loss
-    start = 5
+    start = 0
     end = data["Loss/Epochs"][0].shape[0]
     for loss in data["Loss/Epochs"]:
         axs[0].plot(np.arange(start, end), loss[start:end])

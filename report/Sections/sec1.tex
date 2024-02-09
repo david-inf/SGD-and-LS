@@ -105,7 +105,8 @@ The next proposition allows to address the optimization problem.
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \end{prop}
 \begin{proof}
-%As said, the function is twice continuously differentiable, that allows the use of GD-type algorithms.
+We need to prove the existence and the uniqueness of the global minimum.
+
 \noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is coercive, in fact $\forall\set{w^k}$ such that $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
 \[
 \lim_{k\to\infty}\func(w^k)\geq\lim_{k\to\infty}\lambda\frac{1}{2}\norma{w^k}^2=\infty\Rightarrow\lim_{k\to\infty}\func(w^k)=\infty

@@ -8,7 +8,7 @@ from ml_utils import predict
 
 
 class LogisticRegression():
-    def __init__(self, C=1, solver="L-BFGS", epochs=100, tol=1e-3, minibatch=16):
+    def __init__(self, C=1, solver="L-BFGS", epochs=200, tol=1e-4, minibatch=16):
         self.C = C  # lambda
         self.solver = solver
         self.epochs = epochs
