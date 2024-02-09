@@ -1,7 +1,8 @@
 
 import numpy as np
 from sklearn.metrics import accuracy_score
-from solvers import (l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
+from solvers import (l_bfgs_b, newton_cg, cg,
+                     sgd_fixed, sgd_decreasing, sgd_armijo,
                      sgdm, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import predict
 
@@ -24,11 +25,12 @@ class LogisticRegression():
 
     def fit(self, w0, X_train, y_train, X_test, y_test, step_size=1, momentum=0):
         # dictionary of callables
-        solver_dict = {"SGD-Fixed": sgd_fixed, "SGD-Decreasing": sgd_decreasing,
+        solver_dict = {"L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
+                       "SGD-Fixed": sgd_fixed, "SGD-Decreasing": sgd_decreasing,
                        "SGD-Armijo": sgd_armijo, "SGDM": sgdm,
                        "MSL-SGDM-C": msl_sgdm_c, "MSL-SGDM-R": msl_sgdm_r}
-        if self.solver == "L-BFGS":
-            model = l_bfgs_b(w0, X_train, y_train, self.C)
+        if self.solver in ["L-BFGS", "Newton-CG", "CG"]:
+            model = solver_dict[self.solver](w0, X_train, y_train, self.C)
             self.opt_result = model
             self.coef_ = model.x
             self.loss = model.fun

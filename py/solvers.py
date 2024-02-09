@@ -5,11 +5,23 @@ import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 from solvers_utils import logistic, logistic_der, f_and_dfnorm, f_and_df
 
-# %% [0] L-BFGS-B
+# %% [0] L-BFGS-B / Newton-CG / CG
 
 
 def l_bfgs_b(w0, X, y, lam):
     res = minimize(f_and_df, w0, args=(X, y, lam), method="L-BFGS-B",
+                   jac=True, bounds=None, options={"gtol": 1e-5, "ftol": 1e-5})
+    return res
+
+
+def newton_cg(w0, X, y, lam):
+    res = minimize(f_and_df, w0, args=(X, y, lam), method="Newton-CG",
+                   jac=True, bounds=None, options={"gtol": 1e-5, "ftol": 1e-5})
+    return res
+
+
+def cg(w0, X, y, lam):
+    res = minimize(f_and_df, w0, args=(X, y, lam), method="CG",
                    jac=True, bounds=None, options={"gtol": 1e-5, "ftol": 1e-5})
     return res
 
