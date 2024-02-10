@@ -61,22 +61,18 @@ def stopping(fun_k, grad_k, nit, max_iter, tol):
 
 
 # SGD-Fixed, SGD-Decreasing, SGDM
-def sgd_m(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Fixed"):
+def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, tol, solv="SGD-Fixed"):
     alpha_seq = np.zeros(epochs)
     if solv in ("SGD-Fixed", "SGDM"):
-        alpha_seq += alpha  # same step-size for every epoch
+        alpha_seq += alpha0  # same step-size for every epoch
     elif solv == "SGD-Decreasing":
-        np.arange(epochs)
-        alpha_seq = alpha / (np.arange(alpha_seq.size) + 1)
+        alpha_seq = alpha0 / (np.arange(alpha_seq.size) + 1)
     N, p = X.shape
-    # weights sequence
-    w_seq = np.zeros((epochs + 1, p))
+    w_seq = np.zeros((epochs + 1, p)) # weights sequence
     w_seq[0, :] = w0
-    # full objective function and full gradient norm sequences
-    fun_seq = np.zeros(epochs + 1)
-    grad_seq = np.zeros((epochs + 1, p))
+    fun_seq = np.zeros(epochs + 1)  # full objective function sequence
+    grad_seq = np.zeros((epochs + 1, p))  # full gradient sequence
     fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
-    # function and gradient evaluations counters
     # funcalls = 1
     # gradcalls = 1
     start = time.time()
@@ -84,15 +80,14 @@ def sgd_m(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Fixed"):
     while stopping(fun_seq[k], grad_seq[k, :], k, epochs, tol):
         minibatches = shuffle_dataset(N, k, M)  # get random minibatches
         y_seq = np.zeros((len(minibatches) + 1, p))  # internal updates
-        y_seq[0, :] = w_seq[k]
-        d_seq = np.zeros((len(minibatches) + 1, p))  # internal directions
-        d_seq[0, :] = np.zeros_like(w_seq[k])
-        for t, minibatch in enumerate(minibatches):
-            # compute direction
+        y_seq[0, :] = w_seq[k]  # y0 = wk
+        d_seq = np.zeros((len(minibatches), p))  # internal directions
+        for t, minibatch in enumerate(minibatches):  # 0 to N/M-1
             mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
-            d_seq[t+1, :] = - ((1 - beta) * mini_grad + beta * d_seq[t])
-            # update (internal) weights
-            y_seq[t+1, :] = y_seq[t, :] + alpha * d_seq[t+1, :]
+            # d_seq[t, :] = - mini_grad  # SGD
+            # t-1 may work because when t=0 gets the last element that is zero
+            d_seq[t, :] = - ((1 - beta0) * mini_grad + beta0 * d_seq[t-1, :])
+            y_seq[t+1, :] = y_seq[t, :] + alpha_seq[k] * d_seq[t, :]
         k += 1
         w_seq[k, :] = y_seq[-1, :]  # next weights
         fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
@@ -100,7 +95,8 @@ def sgd_m(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Fixed"):
     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], jac=grad_seq[k, :],
                           success=(k > 1), solver=solv, fun_per_it=fun_seq,
                           minibatch_size=M, nit=k, runtime=(end - start),
-                          step_0=alpha, step_k=alpha_seq[k-1], momentum=beta)
+                          step_0=alpha_seq[0], step_k=alpha_seq[k-1],
+                          momentum=beta0)
 
 # %% [1-2] SGD-Fixed/Decreasing
 
@@ -266,48 +262,7 @@ def armijo_method(x, d, X, y, lam, alpha, alpha0, M, t):
 
 
 # Minibatch Gradient Descent with Armijo line search
-def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
-    N, p = X.shape  # number of examples and features
-    # weights sequence, w\in\R^p
-    w_seq = np.zeros((epochs + 1, p))
-    w_seq[0, :] = w0
-    # full objective function and full gradient norm sequences
-    fun_seq = np.zeros(epochs + 1)
-    grad_seq = np.zeros((epochs + 1), p)
-    fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
-    start = time.time()
-    k = 0  # epochs counter
-    while stopping(fun_seq[k], grad_seq[k], k, epochs, tol):
-        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
-        # internal weights sequence
-        y_seq = np.zeros((len(minibatches) + 1, p))
-        y_seq[0, :] = w_seq[k]
-        # step-size for every minibatch
-        alpha_seq = np.zeros(len(minibatches) + 1)  # step-size per minibatch
-        alpha_seq[0] = alpha0
-        for t, minibatch in enumerate(minibatches):
-            mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
-            d_t = - mini_grad  # compute direction
-            # Armijo line search
-            alpha_seq[t+1], y_seq[t+1, :] = armijo_method(
-                y_seq[t, :], d_t, X, y, lam, alpha_seq[t], alpha0, M, t)
-        # Update sequence, objective function and gradient norm
-        k += 1
-        w_seq[k, :] = y_seq[-1, :]
-        fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
-    end = time.time()
-    return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :],
-                          success=(k > 1), solver="SGD-Armijo",
-                          grad=grad_seq[k, :], fun_per_it=fun_seq,
-                          minibatch_size=M, nit=k,
-                          runtime=(end - start),
-                          step_size=alpha0, momentum=0)
-
-
-# %%
-
-# TODO: refactor line search methods
-# def sgd_sls(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Armijo"):
+# def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
 #     N, p = X.shape  # number of examples and features
 #     # weights sequence, w\in\R^p
 #     w_seq = np.zeros((epochs + 1, p))
@@ -345,45 +300,90 @@ def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
 #                           step_size=alpha0, momentum=0)
 
 
+# %% [3,5a,5b] SGD-Armijo, MSL-SGDM-C/R
+
+
+# def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, tol, solv="SGD-Armijo"):
+#     N, p = X.shape  # number of examples and features
+#     # weights sequence
+#     w_seq = np.zeros((epochs + 1, p))
+#     w_seq[0, :] = w0
+#     # full objective function and full gradient norm sequences
+#     fun_seq = np.zeros(epochs + 1)
+#     grad_seq = np.zeros((epochs + 1), p)
+#     fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
+#     start = time.time()  # timer
+#     k = 0  # epochs counter
+#     while stopping(fun_seq[k], grad_seq[k], k, epochs, tol):
+#         minibatches = shuffle_dataset(N, k, M)  # get random minibatches
+#         y_seq = np.zeros((len(minibatches) + 1, p))  # internal updates
+#         y_seq[0, :] = w_seq[k]  # y0 = wk
+#         d_seq = np.zeros((len(minibatches) + 1, p))  # internal directions
+#         d_seq[0, :] = np.zeros_like(w_seq[k])
+#         if solv == 
+#         alpha_seq = np.zeros(len(minibatches) + 1)  # step-size per minibatch
+#         alpha_seq[0] = alpha
+#         beta_seq = np.zeros(len(minibatches) + 1)  # momentum per minibatch
+#         beta_seq[0] = beta0
+#         for t, minibatch in enumerate(minibatches):
+#             mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
+#             d_t = - mini_grad  # compute direction
+            
+            
+#             # Armijo line search [3,5a,5b]
+#             alpha_seq[t+1], y_seq[t+1, :] = armijo_method(
+#                 y_seq[t, :], d_t, X, y, lam, alpha_seq[t], alpha0, M, t)
+#         # Update sequence, objective function and gradient norm
+#         k += 1
+#         w_seq[k, :] = y_seq[-1, :]
+#         fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
+#     end = time.time()  # timer
+#     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :], jac=grad_seq[k, :],
+#                           success=(k > 1), solver=solv, fun_per_it=fun_seq,
+#                           minibatch_size=M, nit=k, runtime=(end - start),
+#                           step_0=alpha_seq[k-1], step_k=alpha_seq[k-1],
+#                           momentum=beta)
+
+
 # %% [4] SGDM
 
 
 # Minibatch Gradient Descent with Momentum, fixed step-size and momentum term
-def sgdm(w0, X, y, lam, M, alpha, beta, epochs, tol):
-    N, p = X.shape  # number of examples and features
-    # weights sequence
-    w_seq = np.zeros((epochs + 1, p))
-    w_seq[0, :] = w0
-    # full objective function and full gradient norm sequences
-    fun_seq = np.zeros(epochs + 1)
-    grad_seq = np.zeros((epochs + 1), p)
-    fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
-    start = time.time()
-    k = 0  # epochs counter
-    while stopping(fun_seq[k], grad_seq[k], k, epochs, tol):
-        minibatches = shuffle_dataset(N, k, M)  # get random minibatches
-        # internal weights sequence
-        y_seq = np.zeros((len(minibatches) + 1, p))
-        y_seq[0, :] = w_seq[k]
-        # internal direction sequence, every direction has its own y_t
-        d_seq = np.zeros((len(minibatches) + 1, p))
-        d_seq[0, :] = np.zeros_like(w_seq[k])
-        for t, minibatch in enumerate(minibatches):
-            mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
-            # Compute direction
-            d_seq[t+1, :] = - ((1 - beta) * mini_grad + beta * d_seq[t])
-            y_seq[t+1, :] = y_seq[t, :] + alpha * d_seq[t+1, :]
-        # Update sequence, objective function and gradient norm
-        k += 1
-        w_seq[k, :] = y_seq[-1, :]
-        fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
-    end = time.time()
-    return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :],
-                          success=(k > 1), solver="SGDM",
-                          grad=grad_seq[k, :], fun_per_it=fun_seq,
-                          minibatch_size=M, nit=k,
-                          runtime=(end - start),
-                          step_size=alpha, momentum=beta)
+# def sgdm(w0, X, y, lam, M, alpha, beta, epochs, tol):
+#     N, p = X.shape  # number of examples and features
+#     # weights sequence
+#     w_seq = np.zeros((epochs + 1, p))
+#     w_seq[0, :] = w0
+#     # full objective function and full gradient norm sequences
+#     fun_seq = np.zeros(epochs + 1)
+#     grad_seq = np.zeros((epochs + 1), p)
+#     fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
+#     start = time.time()
+#     k = 0  # epochs counter
+#     while stopping(fun_seq[k], grad_seq[k], k, epochs, tol):
+#         minibatches = shuffle_dataset(N, k, M)  # get random minibatches
+#         # internal weights sequence
+#         y_seq = np.zeros((len(minibatches) + 1, p))
+#         y_seq[0, :] = w_seq[k]
+#         # internal direction sequence, every direction has its own y_t
+#         d_seq = np.zeros((len(minibatches) + 1, p))
+#         d_seq[0, :] = np.zeros_like(w_seq[k])
+#         for t, minibatch in enumerate(minibatches):
+#             mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
+#             # Compute direction
+#             d_seq[t+1, :] = - ((1 - beta) * mini_grad + beta * d_seq[t])
+#             y_seq[t+1, :] = y_seq[t, :] + alpha * d_seq[t+1, :]
+#         # Update sequence, objective function and gradient norm
+#         k += 1
+#         w_seq[k, :] = y_seq[-1, :]
+#         fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
+#     end = time.time()
+#     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :],
+#                           success=(k > 1), solver="SGDM",
+#                           grad=grad_seq[k, :], fun_per_it=fun_seq,
+#                           minibatch_size=M, nit=k,
+#                           runtime=(end - start),
+#                           step_size=alpha, momentum=beta)
 
 # %% [5] MSL-SGDM-C/R
 

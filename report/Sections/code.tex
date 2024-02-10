@@ -3,18 +3,22 @@
 \section{Pseudo-code}\label{sc:code}
 % ***************************************************** %
 
+\newcommand{\forcond}{$t=0$ \KwTo $N/M-1$}
+\newcommand{\shuffleDB}{shuffle $\set{1,\dots,N}$ and split $B_0,\dots,B_{N/M-1}$ s.t. $1<\abs{B_t}=M\ll N$}
+\newcommand{\algGrad}{$\nabla f_{i_t}(y_t) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)$}
+
 \begin{algorithm}
 \caption{Mini-batch Gradient Descent with fixed or decreasing step-size}\label{code:SGD-fix-decr}
 \KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$}
 $k \gets 0$\;
 \While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	\shuffleDB\;
 	$y_0 \gets w^k$\;
 	\For{\forcond}{
 		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
-		$y_t \gets y_{t-1}+\alpha_kd_t$\;
+		\algGrad\;
+		$d_t \gets -\nabla f_{i_t}(y_t)$\;
+		$y_{t+1} \gets y_t+\alpha_kd_t$\;
 	}
 	$w^{k+1} \gets y_{N/M}$\;
 	$k \gets k+1$\;
@@ -106,12 +110,13 @@ $k \gets 0$\;
 \KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$, $\set{\beta_k}$}
 $k \gets 0$\;
 \While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	\shuffleDB\;
 	$y_0 \gets w^k$\;
+	$d_{-1}\gets0$\;
 	\For{\forcond}{
 		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
+		\algGrad\;
+		$d_t\gets-\bigl((1-\beta)\nabla f_t(y_t)+\beta d_{t-1}\bigr)$\;
 		$y_t \gets y_{t-1}+\alpha_kd_t$\;
 	}
 	$w^{k+1} \gets y_{N/M}$\;

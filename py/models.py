@@ -2,7 +2,7 @@
 import numpy as np
 from sklearn.metrics import accuracy_score
 from solvers import (l_bfgs_b, newton_cg, cg,
-                     sgd_m, sgd_armijo, msl_sgdm_c, msl_sgdm_r)
+                     sgd_m)
 from ml_utils import predict
 
 
@@ -26,9 +26,9 @@ class LogisticRegression():
         N = X_train.shape[0]
         # dictionary of callables
         solver_dict = {"L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
-                       "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m,
-                       "SGD-Armijo": sgd_armijo, "SGDM": sgd_m,
-                       "MSL-SGDM-C": msl_sgdm_c, "MSL-SGDM-R": msl_sgdm_r}
+                       "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m, "SGDM": sgd_m}
+                       # "SGD-Armijo": sgd_armijo, ,
+                       # "MSL-SGDM-C": msl_sgdm_c, "MSL-SGDM-R": msl_sgdm_r}
         if self.solver in ["L-BFGS", "Newton-CG", "CG"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C)
             self.opt_result = model
