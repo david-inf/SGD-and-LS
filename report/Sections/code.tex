@@ -5,6 +5,7 @@
 
 \newcommand{\forcond}{$t=0$ \KwTo $N/M-1$}
 \newcommand{\shuffleDB}{shuffle $\set{1,\dots,N}$ and split $B_0,\dots,B_{N/M-1}$ s.t. $1<\abs{B_t}=M\ll N$}
+\newcommand{\getIdx}{get indices $i_t$ from $B_t$}
 \newcommand{\algGrad}{$\nabla f_{i_t}(y_t) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)$}
 
 \begin{algorithm}
@@ -15,7 +16,7 @@ $k \gets 0$\;
 	\shuffleDB\;
 	$y_0 \gets w^k$\;
 	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
+		\getIdx\;
 		\algGrad\;
 		$d_t \gets -\nabla f_{i_t}(y_t)$\;
 		$y_{t+1} \gets y_t+\alpha_kd_t$\;
@@ -41,22 +42,22 @@ $k \gets 0$\;
 \KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
 $k \gets 0$\;
 \While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+	\shuffleDB\;
 	$y_0 \gets w^k$\;
 	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
+		\getIdx\;
+		\algGrad\;
+		$d_t \gets -\nabla f_{i_t}(y_t)$\;
 		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
 		%		$\alpha\gets\alpha_0$\;
 		$q\gets0$\;
-		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q<q^\ast$}{
+		\While{$f_{i_t}(y_{t+1})>f_{i_t}(y_t)+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q<q^\ast$}{
 			$\alpha\gets\delta\alpha$\;
-			$y_t \gets y_{t-1}+\alpha d_t$\;
+			$y_{t+1} \gets y_t+\alpha d_t$\;
 			$q\gets q+1$\;
 		}
 		$\alpha_t\gets\alpha$\;
-		$y_t\gets y_{t-1}+\alpha_td_t$
+		$y_{t+1}\gets y_t+\alpha_td_t$
 	}
 	$w^{k+1} \gets y_{N/M}$\;
 	$k \gets k+1$\;
@@ -117,7 +118,7 @@ $k \gets 0$\;
 		get indices $i_t$ from $B_t$\;
 		\algGrad\;
 		$d_t\gets-\bigl((1-\beta)\nabla f_t(y_t)+\beta d_{t-1}\bigr)$\;
-		$y_t \gets y_{t-1}+\alpha_kd_t$\;
+		$y_{t+1} \gets y_t+\alpha_kd_t$\;
 	}
 	$w^{k+1} \gets y_{N/M}$\;
 	$k \gets k+1$\;

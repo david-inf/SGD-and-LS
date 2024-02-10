@@ -2,12 +2,12 @@
 #%% Packages
 # import time
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 # from myLogisticRegression import myLogRegr
 # from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
 #                     sgdm, msl_sgdm_c, msl_sgdm_r)
-from ml_utils import set_accuracy, optim_data, diagnostic, test_plots, optim_bench
+from ml_utils import set_accuracy, optim_data, diagnostic, optim_bench
 
 from models import LogisticRegression
 
@@ -44,6 +44,25 @@ model3_1 = LogisticRegression(solver="SGDM", C=1)
 model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1, momentum=0.9)
 
+model4_1 = LogisticRegression(solver="SGD-Armijo", C=1)
+model4_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=1)
+
+model5_1 = LogisticRegression(solver="MSL-SGDM-C", C=1)
+model5_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1, momentum=0.9)
+
+model6_1 = LogisticRegression(solver="MSL-SGDM-R", C=1)
+model6_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1, momentum=0.9)
+
+
+models1_data = optim_data([model1_1, model2_1, model3_1, model4_1, model5_1, model6_1])
+models1_bench = optim_bench([model0_1, model0_2, model0_3])
+
+diagnostic(models1_data)
+
+
 
 # model1_2 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
@@ -52,8 +71,6 @@ model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 # model1_3 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 #     step_size=0.05)
-
-
 
 # model2_2 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
@@ -80,12 +97,6 @@ model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
 #     step_size=0.1, momentum=0.9)
 
 # diagnostic_plots([model1, model2, model3])
-
-
-
-models1_data = optim_data([model1_1, model2_1, model3_1])
-
-diagnostic(models1_data)
 
 #%% Benchmark solver
 
