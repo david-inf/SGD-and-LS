@@ -2,11 +2,11 @@
 #%% Packages
 # import time
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 # from myLogisticRegression import myLogRegr
-from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
-                    sgdm, msl_sgdm_c, msl_sgdm_r)
+# from solvers import(l_bfgs_b, sgd_fixed, sgd_decreasing, sgd_armijo,
+#                     sgdm, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import set_accuracy, optim_data, diagnostic, test_plots, optim_bench
 
 from models import LogisticRegression
@@ -32,29 +32,36 @@ model0_3 = LogisticRegression(solver="CG").fit(w0, X_train_apple, y_train_apple,
 
 #%%
 
-model1_1 = LogisticRegression(solver="SGD-Fixed", C=1).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+model1_1 = LogisticRegression(solver="SGD-Fixed", C=1)
+model1_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1)
 
-model1_2 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.01)
+model2_1 = LogisticRegression(solver="SGD-Decreasing", C=1)
+model2_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=1)
 
-model1_3 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.05)
+model3_1 = LogisticRegression(solver="SGDM", C=1)
+model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1, momentum=0.9)
 
-model2_1 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.1)
 
-model2_2 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.01)
+# model1_2 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.01)
 
-model2_3 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
-    w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.05)
+# model1_3 = LogisticRegression(solver="SGD-Fixed", C=0.5).fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.05)
+
+
+
+# model2_2 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.01)
+
+# model2_3 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
+#     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.05)
 
 # model3 = LogisticRegression(solver="SGD-Armijo", C=0.5).fit(
 #     w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
@@ -74,8 +81,9 @@ model2_3 = LogisticRegression(solver="SGD-Decreasing", C=0.5).fit(
 
 # diagnostic_plots([model1, model2, model3])
 
-models1_data = optim_data([model1_1, model1_2, model1_3,
-                           model2_1, model2_2, model2_3])
+
+
+models1_data = optim_data([model1_1, model2_1, model3_1])
 
 diagnostic(models1_data)
 

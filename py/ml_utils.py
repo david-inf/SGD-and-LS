@@ -1,9 +1,23 @@
 
 import numpy as np
 import pandas as pd
+# import matplotlib
+# matplotlib.use("pgf")
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from solvers_utils import sigmoid
+
+# matplotlib.rcParams.update({
+#     "pgf.texsystem": "pdflatex",
+#     'font.family': 'serif',
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+#     "pgf.preamble": "\n".join([
+#          r"\usepackage{lmodern}",
+#          r"\usepackage[utf8]{inputenc}",
+#          r"\usepackage[T1]{fontenc}",
+#     ]),
+# })
 
 
 def predict(X, w, thresh=0.5):
@@ -26,7 +40,8 @@ def optim_data(models):
             "Solver": [model.solver for model in models],
             "C": [model.C for model in models],
             "Minibatch": [model.minibatch for model in models],
-            "Step-size": [model.opt_result.step_size for model in models],
+            "Step_0": [model.opt_result.step_0 for model in models],
+            "Step_k": [model.opt_result.step_k for model in models],
             "Momentum": [model.opt_result.momentum for model in models],
             "Solution": [np.round(model.coef_, 4) for model in models],
             "Loss": [model.loss for model in models],
@@ -163,7 +178,7 @@ def test_plots(data):
 def diagnostic(data):
     fig, ax = plt.subplots(layout="constrained", figsize=(6.4, 4.8))
     df = data
-    df["labels"] = df["Solver"] + "(" + df["Step-size"].astype(str) + ")"
+    df["labels"] = df["Solver"] + "(" + df["Step_0"].astype(str) + ")"
     # 1) Training loss
     start = 1
     end = df["Loss/Epochs"][0].shape[0]
@@ -176,6 +191,7 @@ def diagnostic(data):
     ax.grid(True, which="both", axis="both")
     ax.set_ylim(top=10 ** 0)  # bug
     # ax.set_clip_on(True)
+    # plt.show()
 
 # test_plots(models1_data)
 

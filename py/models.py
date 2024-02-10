@@ -2,8 +2,7 @@
 import numpy as np
 from sklearn.metrics import accuracy_score
 from solvers import (l_bfgs_b, newton_cg, cg,
-                     sgd_fixed, sgd_decreasing, sgd_armijo,
-                     sgdm, msl_sgdm_c, msl_sgdm_r)
+                     sgd_m, sgd_armijo, msl_sgdm_c, msl_sgdm_r)
 from ml_utils import predict
 
 
@@ -27,8 +26,8 @@ class LogisticRegression():
         N = X_train.shape[0]
         # dictionary of callables
         solver_dict = {"L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
-                       "SGD-Fixed": sgd_fixed, "SGD-Decreasing": sgd_decreasing,
-                       "SGD-Armijo": sgd_armijo, "SGDM": sgdm,
+                       "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m,
+                       "SGD-Armijo": sgd_armijo, "SGDM": sgd_m,
                        "MSL-SGDM-C": msl_sgdm_c, "MSL-SGDM-R": msl_sgdm_r}
         if self.solver in ["L-BFGS", "Newton-CG", "CG"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C)
@@ -39,21 +38,22 @@ class LogisticRegression():
             self.epochs = None
             self.tol = None
             self.minibatch = None
-        elif self.solver in ["SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"]:
+        elif self.solver in ["SGD-Fixed", "SGD-Decreasing", "SGDM"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-                    self.minibatch, step_size, self.epochs, self.tol)
+                    self.minibatch, step_size, momentum,
+                    self.epochs, self.tol, self.solver)
             self.opt_result = model
             self.coef_ = model.x
             self.loss = model.fun
-            self.grad = model.grad
+            self.grad = np.linalg.norm(model.jac)
             self.loss_seq = model.fun_per_it / N
-        elif self.solver in ["SGDM", "MSL-SGDM-C", "MSL-SGDM-R"]:
+        elif self.solver in ["MSL-SGDM-C", "MSL-SGDM-R"]:
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum, self.epochs, self.tol)
             self.opt_result = model
             self.coef_ = model.x
             self.loss = model.fun
-            self.grad = model.grad
+            self.grad = np.linalg.norm(model.jac)
             self.loss_seq = model.fun_per_it / N
         self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
         self.accuracy_test = accuracy_score(y_test, self.predict(X_test))
