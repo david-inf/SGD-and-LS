@@ -63,7 +63,7 @@ def stopping(fun_k, grad_k, nit, max_iter, tol):
 # SGD-Fixed, SGD-Decreasing, SGDM
 def sgd_m(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Fixed"):
     alpha_seq = np.zeros(epochs)
-    if solv == "SGD-Fixed" or solv == "SGDM":
+    if solv in ("SGD-Fixed", "SGDM"):
         alpha_seq += alpha  # same step-size for every epoch
     elif solv == "SGD-Decreasing":
         np.arange(epochs)
@@ -302,6 +302,48 @@ def sgd_armijo(w0, X, y, lam, M, alpha0, epochs, tol):
                           minibatch_size=M, nit=k,
                           runtime=(end - start),
                           step_size=alpha0, momentum=0)
+
+
+# %%
+
+# TODO: refactor line search methods
+# def sgd_sls(w0, X, y, lam, M, alpha, beta, epochs, tol, solv="SGD-Armijo"):
+#     N, p = X.shape  # number of examples and features
+#     # weights sequence, w\in\R^p
+#     w_seq = np.zeros((epochs + 1, p))
+#     w_seq[0, :] = w0
+#     # full objective function and full gradient norm sequences
+#     fun_seq = np.zeros(epochs + 1)
+#     grad_seq = np.zeros((epochs + 1), p)
+#     fun_seq[0], grad_seq[0, :] = f_and_df(w0, X, y, lam)
+#     start = time.time()
+#     k = 0  # epochs counter
+#     while stopping(fun_seq[k], grad_seq[k], k, epochs, tol):
+#         minibatches = shuffle_dataset(N, k, M)  # get random minibatches
+#         # internal weights sequence
+#         y_seq = np.zeros((len(minibatches) + 1, p))
+#         y_seq[0, :] = w_seq[k]
+#         # step-size for every minibatch
+#         alpha_seq = np.zeros(len(minibatches) + 1)  # step-size per minibatch
+#         alpha_seq[0] = alpha0
+#         for t, minibatch in enumerate(minibatches):
+#             mini_grad = minibatch_gradient(y_seq[t, :], X, y, lam, minibatch)
+#             d_t = - mini_grad  # compute direction
+#             # Armijo line search
+#             alpha_seq[t+1], y_seq[t+1, :] = armijo_method(
+#                 y_seq[t, :], d_t, X, y, lam, alpha_seq[t], alpha0, M, t)
+#         # Update sequence, objective function and gradient norm
+#         k += 1
+#         w_seq[k, :] = y_seq[-1, :]
+#         fun_seq[k], grad_seq[k, :] = f_and_df(y_seq[-1, :], X, y, lam)
+#     end = time.time()
+#     return OptimizeResult(fun=fun_seq[k], x=w_seq[k, :],
+#                           success=(k > 1), solver="SGD-Armijo",
+#                           grad=grad_seq[k, :], fun_per_it=fun_seq,
+#                           minibatch_size=M, nit=k,
+#                           runtime=(end - start),
+#                           step_size=alpha0, momentum=0)
+
 
 # %% [4] SGDM
 

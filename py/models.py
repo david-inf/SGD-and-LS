@@ -38,7 +38,7 @@ class LogisticRegression():
             self.epochs = None
             self.tol = None
             self.minibatch = None
-        elif self.solver in ["SGD-Fixed", "SGD-Decreasing", "SGDM"]:
+        elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum,
                     self.epochs, self.tol, self.solver)
@@ -47,7 +47,7 @@ class LogisticRegression():
             self.loss = model.fun
             self.grad = np.linalg.norm(model.jac)
             self.loss_seq = model.fun_per_it / N
-        elif self.solver in ["MSL-SGDM-C", "MSL-SGDM-R"]:
+        elif self.solver in ("MSL-SGDM-C", "MSL-SGDM-R"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum, self.epochs, self.tol)
             self.opt_result = model
