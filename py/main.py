@@ -32,17 +32,17 @@ model0_3 = LogisticRegression(solver="CG").fit(w0, X_train_apple, y_train_apple,
 
 #%%
 
-model1_1 = LogisticRegression(solver="SGD-Fixed", C=1)
-model1_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.1)
+# model1_1 = LogisticRegression(solver="SGD-Fixed", C=1)
+# model1_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1)
 
-model2_1 = LogisticRegression(solver="SGD-Decreasing", C=1)
-model2_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=1)
+# model2_1 = LogisticRegression(solver="SGD-Decreasing", C=1)
+# model2_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=1)
 
-model3_1 = LogisticRegression(solver="SGDM", C=1)
-model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
-    step_size=0.1, momentum=0.9)
+# model3_1 = LogisticRegression(solver="SGDM", C=1)
+# model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+#     step_size=0.1, momentum=0.9)
 
 model4_1 = LogisticRegression(solver="SGD-Armijo", C=1)
 model4_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
