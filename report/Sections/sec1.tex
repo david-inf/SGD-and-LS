@@ -9,12 +9,12 @@
 This report summarizes the analysis performed in order to investigate the behaviour of the algorithms retrieved from the scientific literature. The optimization problem that we aim to solve is that of the Logistic Regression with $\ell_2\text{-regularization}$ term added.
 
 The implemented algorithms are
-\begin{itemize}
-\item Mini-batch Gradient Descent with fixed and decreasing step-size, algorithm~\vref{code:SGD-fix-decr};
-\item Mini-batch Gradient Descent with Armijo-type line search, algorithm~\vref{code:SGD-Armijo};
-\item Mini-batch Gradient Descent with fixed step-size and momentum, algorithm~\vref{code:SGDM};
-\item Mini-batch Gradient Descent with with Armijo-type line search and momentum correction and restart, algorithms~\ref{code:MSL-SGDM-C} and~\vref{code:MSL-SGDM-R}.
-\end{itemize}
+%\begin{itemize}
+%\item Mini-batch Gradient Descent with fixed and decreasing step-size (\texttt{SGD-Fixed}, \texttt{SGD-Decreasing}), algorithm~\vref{alg:SGD-fix-decr};
+%\item Mini-batch Gradient Descent with Armijo-type line search (\texttt{SGD-Armijo}), algorithm~\vref{alg:SGD-Armijo};
+%\item Mini-batch Gradient Descent with fixed step-size and momentum (\texttt{SGDM}), algorithm~\vref{alg:SGDM};
+%\item Mini-batch Gradient Descent with with Armijo-type line search and momentum correction and restart (\texttt{MSL-SGDM-C}, \texttt{MSL-SGDM-R}), algorithms~\ref{alg:MSL-SGDM-C} and~\vref{alg:MSL-SGDM-R}.
+%\end{itemize}
 
 After that, the efficiency of the algorithms is tested on different datasets.
 
@@ -70,13 +70,13 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$.% We can see that every $x^{(i)}$ is a column vector
+the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$. A compact definition for the dataset matrix is $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
 
 The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
 \begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
 \func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
-\nabla\func(w) &= \frac{1}{N}X^Tr+\lambda w \label{subeq:jacobian} \\
+\nabla\func(w) &= \frac{1}{N}Xr+\lambda w \label{subeq:jacobian} \\
 \nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
 \end{subequations}

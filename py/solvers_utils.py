@@ -40,7 +40,7 @@ def logistic(w, X, y, lam=1):
     return L + lam * O
 
 
-def logistic_der(w, X, y, lam=1, coeff=1):
+def logistic_der(w, X, y, lam=1):
     """
     Parameters
     ----------
@@ -58,7 +58,7 @@ def logistic_der(w, X, y, lam=1, coeff=1):
     r = - y * sigmoid(z)
     dL = np.dot(r, X)
     dO = w
-    return dL + coeff * lam * dO
+    return dL + lam * dO
 
 
 def f_and_df(w, X, y, lam=1):

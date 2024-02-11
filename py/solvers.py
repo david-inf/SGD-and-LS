@@ -32,11 +32,21 @@ def cg(w0, X, y, lam):
 def minibatch_gradient(x, X, y, lam, minibatch):
     # x: evaluate gradient at this value
     M = minibatch.shape[0]
-    samples_x = X[minibatch, :]
-    samples_y = y[minibatch]
+    samples_x = X[minibatch, :]  # matrix
+    samples_y = y[minibatch]  # vector
     # in oder to sum over the gradients, regularization term is multiplied by M
-    grad_sum = logistic_der(x, samples_x, samples_y, lam, M)  # check
+    grad_sum = logistic_der(x, samples_x, samples_y, lam * M)  # check
     return grad_sum / M
+
+
+# def minibatch_gradient(x, X, y, lam, minibatch):
+#     # x: evaluate gradient at this value
+#     M = minibatch.shape[0]
+#     samples_x = X[minibatch, :]  # matrix
+#     samples_y = y[minibatch]  # vector
+#     # in oder to sum over the gradients, regularization term is multiplied by M
+#     grad_sum = logistic_der(x, samples_x, samples_y, lam, M)  # check
+#     return grad_sum / M
 
 
 def shuffle_dataset(N, k, M):
