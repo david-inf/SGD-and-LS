@@ -186,20 +186,30 @@ def test_plots(data):
 
 
 def diagnostic(data):
-    fig, ax = plt.subplots(layout="constrained", figsize=(6.4, 4.8))
-    df = data
-    df["labels"] = df["Solver"] + "(" + df["Step-size"].astype(str) + ")"
-    # 1) Training loss
-    start = 1
-    end = df["Loss/Epochs"][0].shape[0]
-    for loss in df["Loss/Epochs"]:
-        ax.plot(np.arange(start, end), loss[start:end])
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Training loss")
-    ax.set_yscale("log")
-    ax.legend(df["labels"])
-    ax.grid(True, which="both", axis="both")
-    ax.set_ylim(top=10 ** 0)  # bug
+    fig, axs = plt.subplots(nrows=1, ncols=2, layout="constrained",
+                           figsize=(6.4*2, 4.8))
+    df1 = data.iloc[:6]
+    df2 = data.iloc[6:]
+    df1["labels"] = df1["Solver"] + "(" + df1["Step-size"].astype(str) + ")"
+    df2["labels"] = df2["Solver"] + "(" + df2["Step-size"].astype(str) + ")"
+    start = 0
+    end = df1["Loss/Epochs"][0].shape[0]
+    for loss in df1["Loss/Epochs"]:
+        axs[0].plot(np.arange(start, end), loss[start:end])
+    axs[0].set_xlabel("Epochs")
+    axs[0].set_ylabel("Training loss")
+    axs[0].set_yscale("log")
+    axs[0].legend(df1["labels"])
+    axs[0].grid(True, which="both", axis="both")
+    axs[0].set_ylim(top=10 ** 0)
+    for loss in df2["Loss/Epochs"]:
+        axs[1].plot(np.arange(start, end), loss[start:end])
+    axs[1].set_xlabel("Epochs")
+    # axs[1].set_ylabel("Training loss")
+    axs[1].set_yscale("log")
+    axs[1].legend(df2["labels"])
+    axs[1].grid(True, which="both", axis="both")
+    axs[1].set_ylim(top=10 ** 0)
     # ax.set_clip_on(True)
     # plt.show()
 

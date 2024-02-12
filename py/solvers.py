@@ -189,7 +189,7 @@ def armijo_condition(x, d, X, y, lam, alpha):
 def armijo_method(x, d, X, y, lam, alpha):
     alpha_start = alpha
     q = 0  # step-size rejections counter
-    while armijo_condition(x, d, X, y, lam, alpha) and q < 20:
+    while armijo_condition(x, d, X, y, lam, alpha) and q < 10:
         alpha_start = 0.5 * alpha_start  # reduce step-size
         q += 1
     return alpha_start

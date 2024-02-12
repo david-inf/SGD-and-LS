@@ -35,29 +35,48 @@ model0_3 = LogisticRegression(solver="CG").fit(w0, X_train_apple, y_train_apple,
 model1_1 = LogisticRegression(solver="SGD-Fixed", C=1)
 model1_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1)
+model1_2 = LogisticRegression(solver="SGD-Fixed", C=1)
+model1_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.01)
 
 model2_1 = LogisticRegression(solver="SGD-Decreasing", C=1)
 model2_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=1)
+model2_2 = LogisticRegression(solver="SGD-Decreasing", C=1)
+model2_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1)
 
 model3_1 = LogisticRegression(solver="SGDM", C=1)
 model3_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1, momentum=0.9)
+model3_2 = LogisticRegression(solver="SGDM", C=1)
+model3_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.01, momentum=0.9)
 
 model4_1 = LogisticRegression(solver="SGD-Armijo", C=1)
 model4_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=1)
+model4_2 = LogisticRegression(solver="SGD-Armijo", C=1)
+model4_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=0.1)
 
 model5_1 = LogisticRegression(solver="MSL-SGDM-C", C=1)
 model5_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=1, momentum=0.9)
+model5_2 = LogisticRegression(solver="MSL-SGDM-C", C=1)
+model5_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1, momentum=0.9)
 
 model6_1 = LogisticRegression(solver="MSL-SGDM-R", C=1)
 model6_1.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
+    step_size=1, momentum=0.9)
+model6_2 = LogisticRegression(solver="MSL-SGDM-R", C=1)
+model6_2.fit(w0, X_train_apple, y_train_apple, X_test_apple, y_test_apple,
     step_size=0.1, momentum=0.9)
 
 
-# models1_data = optim_data([model1_1, model2_1, model3_1, model4_1, model5_1, model6_1])
+models1_data = optim_data([model1_1, model1_2, model2_1, model2_2, model3_1, model3_2,
+                           model4_1, model4_2, model5_1, model5_2, model6_1, model6_2])
 # models1_bench = optim_bench([model0_1, model0_2, model0_3])
 
-# diagnostic(models1_data)
+diagnostic(models1_data)
