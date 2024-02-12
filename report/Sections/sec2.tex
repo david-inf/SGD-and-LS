@@ -3,13 +3,13 @@
 \section{Mini-batch gradient descent variants}
 % ***************************************************** %
 
-In this section we tackle the algorithmic part, the SGD-type chosen is the Mini-batch Gradient Descent where the mini-batch size $M$ is greater than 1 and much less than the dataset size. For simplicity, we will call it SGD anyway.
+In this section we tackle the algorithmic part, the SGD-type chosen is the Mini-batch Gradient Descent where the mini-batch size $M$ is greater than 1 and much less than the dataset size, i.e. $1<\abs{B_t}=M\ll N$. For simplicity, we will call it SGD anyway.
 
 The basic SGD performs steps of the form
 \begin{equation}\label{eq:sgd_step}
 w^{k+1}=w^k+\alpha_kd_k,\quad d_k=-\nabla f_{i_k}(w^k)
 \end{equation}
-where the direction $d_k$ is equal to the \emph{anti-gradient} evaluated on the considered sample (a random mini-batch extracted from the dataset), knowing that $\numberset{E}\bigl[\nabla f_{i_k}(w^k)\bigr]=\nabla\func(w)$, $d_k$ is a \emph{descent direction}. Also sue to the global convergence, the algorithm can start from an arbitrary $w^0\in\R^{(p+1)}$.
+where the direction $d_k$ is equal to the \emph{anti-gradient} evaluated on the considered sample (a random mini-batch extracted from the dataset), knowing that $\numberset{E}\bigl[\nabla f_{i_k}(w^k)\bigr]=\nabla\func(w)$, $d_k$ is a \emph{descent direction}. Also due to the global convergence, the algorithm can start from an arbitrary $w^0\in\R^{(p+1)}$.
 
 Using this step-size form, without a line search method for choosing the optimal step-size $\alpha_k$, the objective function value doesn't decrease necessarily at each step, thus making the method \emph{non-monotonous}.
 
@@ -21,17 +21,41 @@ In order to use the SGD algorithm, it is necessary to make further assumptions o
 \item other than twice continuously differentiable, we assume that $f$ has Lipschitz-continuous gradients with constant $L>0$, one can also say that $f$ is $L\text{-smooth}$.
 \end{itemize}
 
+\subsubsection*{Stopping criterion and failures}
+
 Regarding the implementation of the algorithm, it is essential to define a stopping criterion. The first choice is always
 \begin{equation}\label{eq:stopping1}
 \norma{\nabla\func(w^k)}\leq\epsilon,\quad\epsilon>0
 \end{equation}
-unless there is a small tolerance $\epsilon$, the algorithm reaches a stationary point.
+unless there is a small tolerance $\epsilon$, the algorithm reaches a stationary point. Another choice could be
+\begin{equation}\label{eq:stopping2}
+\norma{\nabla\func(w^k)}\leq\epsilon\bigl(1+\abs{\underbrace{\func(w^k)}_{\geq0\,\forall w^k}}\bigr)=\epsilon\bigl(1+\func(w^k)\bigr)
+\end{equation}
+unlike the previous criterion~\eqref{eq:stopping1}, this one in independent from the scale of the objective function.
 
 Other than this, we can add conditions of premature termination like
 \begin{itemize}
 \item exceeding a threshold for the epochs number $k^\ast$ or function and gradient evaluations;
-\item internal failures when computing $w^{k+1}$, for example during the line search.
+\item internal failures when computing $w^{k+1}$, for example exceeding $q^\ast$ iterations during the line search.
 \end{itemize}
+
+
+\subsubsection*{Mini-batch gradient}
+
+Now we spend a few words about the computation of the mini-batch gradient evaluated on a point using the pseudo-code notation. Given a mini-batch $B_t$ at iteration $t$ with indices $i_t$ and the previous weights $y_t$, we want to compute
+\begin{equation*}
+%\begin{split}
+%\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)\\
+% &= \frac{1}{M}\sum_{j\in B_t}\bigl(x^{(j)}r_j+\lambda y\bigr) \\
+% &= \frac{1}{M}\biggl(\sum_{j\in B_t}x^{(j)}r_j+M\lambda y\biggr) \\
+% &= \frac{1}{M}\bigl(\underbrace{Xr}_{i_t\in B_t}+\lambda' y\bigr)
+%\end{split}
+\begin{split}
+\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)=\frac{1}{M}\sum_{j\in B_t}\bigl(x^{(j)}r_j+\lambda y\bigr)= \frac{1}{M}\biggl(\sum_{j\in B_t}x^{(j)}r_j+M\lambda y\biggr) \\
+ &= \frac{1}{M}\bigl(\underbrace{Xr}_{i_t\in B_t}+\lambda' y\bigr)
+\end{split}
+\end{equation*}
+so we use the same expression as the full gradient except that the dataset matrix contains just the mini-batch samples (and so the $r$ vector), and the regularization coefficient is redefined as $\lambda'=M\lambda$ where $M$ is the size of the considered mini-batch.
 
 % ---------------------------------------------------- %
 \subsection{Stochastic gradient descent}
@@ -39,10 +63,10 @@ Other than this, we can add conditions of premature termination like
 
 The SGD-type variants differs by the selection of the step-size. Particularly the basic version has two possible choices
 \begin{itemize}
-\item \emph{constant step-size} $\alpha_k=\alpha$;
+\item \emph{constant step-size} $\alpha_k=\alpha_0$;
 \item \emph{decreasing step-size} $\alpha_k=\frac{\alpha_0}{k+1}$.
 \end{itemize}
-the second choice has such form in order to ensure the convergence of the algorithm; this two version are shown in algorithm~\vref{code:SGD-fix-decr}. The iteration~\eqref{eq:sgd_step} sees the index $k$ changed to $t$, the former is the index of the \emph{epochs} while the latter is the index of the mini-batches.
+the second choice has such form in order to ensure the convergence of the algorithm; this two version are shown in algorithm~\vref{alg:SGD-F-D-M}. The iteration~\eqref{eq:sgd_step} sees index $k$ changed to $t$, the former is the index of the \emph{epochs} while the latter is the index of the mini-batches.
 
 % ---------------------------------------------------- %
 \subsubsection{Stochastic line search}
@@ -66,9 +90,9 @@ as already said, $d_k$ is a \emph{descent direction}. The constant $\gamma$ is a
 
 As the standard Armijo method, the proposed line search uses a \emph{backtracking} technique that iteratively decreases the initial step-size $\alpha_0$ by a constant factor $\delta$ usually set to $1/2$ until the condition is satisfied.
 
-The authors also gave heuristics in order to avoid unnecessary function evaluations by \emph{restarting} at each iteration the step-size, see algorithm~\vref{code:reset-step}.\footnote{\emph{Iterations} is defined as the total number of mini-batches extracted from the dataset, while one \emph{epoch} is when the entire dataset is passed forward.}
+The authors also gave heuristics in order to avoid unnecessary function evaluations by \emph{restarting} at each iteration the step-size, see algorithm~\vref{alg:reset-step}.\footnote{\emph{Iterations} is defined as the total number of mini-batches extracted from the dataset, while one \emph{epoch} is when the entire dataset is passed forward.}
 
-The SGD with Stochastic Line Search is shown in algorithm~\vref{code:SGD-Armijo}.
+The SGD with Stochastic Line Search is shown in algorithm~\vref{alg:SGD-SLS-M}.
 
 % ---------------------------------------------------- %
 \subsection{Adding momentum term}
@@ -82,13 +106,13 @@ in a finite-sum problem the momentum term must be selected from a specific range
 \begin{equation}\label{eq:sgdm-step}
 w^{k+1}=w^k-\alpha_k\bigl((1-\beta)\nabla f_{i_k}(w^k+\beta d_{k-1})\bigr)
 \end{equation}
-which is applied in algorithm~\vref{code:SGDM}.
+which is applied in algorithm~\vref{alg:SGD-F-D-M}.
 
-As the paper \texttt{bib2} says, when using the momentum term together with a line search, $\beta$ complicates the selection of a suitable step-size; using the algorithm~\ref{code:SGD-Armijo}, the approach is not robust to the choice of the momentum term.
+As the paper \texttt{bib2} says, when using the momentum term together with a line search, $\beta$ complicates the selection of a suitable step-size; using the algorithm~\ref{alg:SGD-SLS-M}, the approach is not robust to the choice of the momentum term.
 
 Like the stochastic line search approach in section ..., the Armijo condition added to the SGDM algorithm has the form
 \begin{equation}\label{eq:armijo-sgdm}
-f_{i_k}(w^k+\alpha_kd_k)\leq f_{i_k}(w^k)-\gamma\alpha_k\nabla f_{i_k}(w^k)^T\bigl((1-\beta)\nabla f_{i_k}(w^k+\beta d_{k-1})\bigr)
+f_{i_k}(w^k+\alpha_kd_k)\leq f_{i_k}(w^k)-\gamma\alpha_k\nabla f_{i_k}(w^k)^T\bigl((1-\beta)\nabla f_{i_k}(w^k)+\beta d_{k-1}\bigr)
 \end{equation}
 placing $d_{i_k}=-\nabla f_{i_k}(w^k)$ we obtain the equation~\eqref{eq:armijo-sls}.
 
@@ -104,6 +128,18 @@ The problem is that $\nabla f_{i_k}(w^k)^Td_{i_k}<0$ isn't always guaranteed, i.
 \draw[-latex] (C.east) -- ++(0.2,0) -- node[right, font=\footnotesize] {\texttt{check}} ++(0,{5.5em*sin(40)}) -- (A.east);
 \end{tikzpicture}
 \end{center}
-in algorithmic terms, while the direction is not descent, damp the momentum term by a factor $\delta_m$ usually set to $1/2$. Using this procedure, a descent direction $d_{i_k}$ is guaranteed, and is called \emph{momentum correction}, see algorithm~\vref{code:MSL-SGDM-C}.
+in algorithmic terms, while the direction is not descent, damp the momentum term by a factor $\delta_m$ usually set to $1/2$. Using this procedure, a descent direction $d_{i_k}$ is guaranteed, and is called \emph{momentum correction}, see algorithm~\vref{alg:SGD-SLS-M}.
 
-This procedure can be expensive, so the paper suggests another approach called \emph{momentum restart}, when descent direction condition for $d_k$ isn't satisfied, the procedure sets $d_{k-1}=d_0=0$, see algorithm~\vref{code:MSL-SGDM-R}.
+This procedure can be expensive, so the paper suggests another approach called \emph{momentum restart}, when descent direction condition for $d_k$ isn't satisfied, the procedure restarts that direction by setting $d_{k-1}=d_0$, the paper suggests $d_0=0$, in general
+\begin{center}
+\begin{tikzpicture}
+\node (A) at (0,0) {$\nabla\func(x^k)^Td_k$};
+\node (B) at (-140:5.5em) {\texttt{evaluate}~\eqref{eq:armijo-sgdm}};
+\node (C) at (-40:5.5em) {$d_{k-1}=d_0$};
+\node (D) at ($(C) + (0,-1.5)$) {\texttt{evaluate}~\eqref{eq:armijo-sgdm}};
+\draw[-latex] (A) -- node[left=2.5ex] {$<0$} (B);
+\draw[-latex] (A) -- node[right=2.5ex] {$\geq0$} (C);
+\draw[-latex] (C) -- node[right=1ex] {$d_k=-\bigl((1-\beta)\nabla f_{i_k}(w^k)+\beta d_0\bigr)$} (D);
+\end{tikzpicture}
+\end{center}
+so if $d_0=0$ the direction will be $d_k=-(1-\beta)\nabla f_{i_k}(w^k)$, see algorithm~\vref{alg:SGD-SLS-M}.

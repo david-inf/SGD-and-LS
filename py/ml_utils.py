@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import pandas as pd
@@ -40,8 +41,7 @@ def optim_data(models):
             "Solver": [model.solver for model in models],
             "C": [model.C for model in models],
             "Minibatch": [model.minibatch for model in models],
-            "Step_0": [model.opt_result.step_0 for model in models],
-            "Step_k": [model.opt_result.step_k for model in models],
+            "Step-size": [model.opt_result.step_size for model in models],
             "Momentum": [model.opt_result.momentum for model in models],
             "Solution": [np.round(model.coef_, 4) for model in models],
             "Loss": [model.loss for model in models],
@@ -57,33 +57,43 @@ def optim_data(models):
     return models_data
 
 
-def optim_bench(model):
+def optim_bench(models):
     data = pd.DataFrame(
         {
-            "Solver": model.solver,
-            "C": model.C,
+            "Solver": [model.solver for model in models],
+            "C": [model.C for model in models],
             "Minibatch": np.nan,
             "Step-size": np.nan,
             "Momentum": np.nan,
-            "Solution": [np.round(model.coef_, 4)],
-            "Loss": model.loss,
-            "Grad norm": model.grad,
+            "Solution": [np.round(model.coef_, 4) for model in models],
+            "Loss": [model.loss for model in models],
+            "Grad norm": [model.grad for model in models],
             "Run-time": np.nan,
-            "Iterations": model.opt_result.nit,
+            "Iterations": [model.opt_result.nit for model in models],
             # "Termination": model.message,
-            "Train accuracy": model.accuracy_train,
-            "Test accuracy": model.accuracy_test,
+            "Train accuracy": [model.accuracy_train for model in models],
+            "Test accuracy": [model.accuracy_test for model in models],
             "Loss/Epochs": np.nan
         }
     )
     return data
 
 
+def models_summary(custom, bench):
+    models_data = pd.concat([bench.drop(columns={"Loss/Epochs"}),
+                             custom.drop(columns={"Loss/Epochs"})],
+                            ignore_index=True)
+    models_data["Distance (L-BFGS)"] = models_data["Solution"].apply(
+        lambda x: np.linalg.norm(x - bench.loc[0]["Solution"]))
+    return models_data.drop(columns="Solution")
+
+
 def plot_loss(models, labels, title=None, start=0, end=200):
     fig, ax1 = plt.subplots(ncols=1, layout="constrained")
     i = 0
     for model in models:
-        ax1.plot(np.arange(start, end), model.fun_per_it[start:end], label=labels[i])
+        ax1.plot(np.arange(start, end),
+                 model.fun_per_it[start:end], label=labels[i])
         # ax1.plot(model.fun_per_it[start:], label=labels[i])
         i += 1
     ax1.set_title(title)
@@ -178,7 +188,7 @@ def test_plots(data):
 def diagnostic(data):
     fig, ax = plt.subplots(layout="constrained", figsize=(6.4, 4.8))
     df = data
-    df["labels"] = df["Solver"] + "(" + df["Step_0"].astype(str) + ")"
+    df["labels"] = df["Solver"] + "(" + df["Step-size"].astype(str) + ")"
     # 1) Training loss
     start = 1
     end = df["Loss/Epochs"][0].shape[0]
@@ -194,7 +204,6 @@ def diagnostic(data):
     # plt.show()
 
 # test_plots(models1_data)
-
 
 
 # def diagnostic_plots(models, start_loss=5, end_loss=101):
@@ -241,8 +250,7 @@ def diagnostic(data):
     # axs[2].legend()
     # axs[2].set_ylim([0, 1])
     # axs[2].grid(True)
-    
-    
+
 
 # def train_comparison(optimizer, *args, **kwargs):
 #     # optimizer: callable
@@ -256,13 +264,5 @@ def diagnostic(data):
 #         set_accuracy(model, args[0], args[1], args[2], args[3])
 #         models.append(model)
 #     return models
-    
+
 # train_comparison(minibatch_gd_fixed, , w0=w0, alpha[1, 0.1])
-
-
-
-
-
-
-
-

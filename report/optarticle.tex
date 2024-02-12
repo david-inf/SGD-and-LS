@@ -106,8 +106,11 @@
 % Code
 % -------------------------------- %
 \input{./optarticle-code.tex}
-\usepackage[ruled]{algorithm2e}
-\newcommand{\forcond}{$t=1$ \KwTo $N/M$}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\SetNlSty{texttt}{}{}
+\SetKw{Or}{or}
+\SetKw{And}{and}
+\SetKw{Not}{not}
 % -------------------------------- %
 % Miscellaneous
 % -------------------------------- %
@@ -176,9 +179,9 @@ However, the stochastic line search is not immediately employable when the momen
 % MAINMATTER %
 % ************************************************************************************* %
 \input{./Sections/sec1.tex}
-\input{./Sections/sec2.tex}
+\input{./Sections/sec2.tex}\input{./Sections/code.tex}
 \input{./Sections/sec3.tex}
-\input{./Sections/code.tex}
+%\input{./Sections/code.tex}
 % ************************************************************************************* %
 % BACKMATTER %
 % ************************************************************************************* %

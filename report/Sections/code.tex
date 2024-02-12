@@ -1,20 +1,31 @@
 % !TeX spellcheck = en_GB
 % ***************************************************** %
-\section{Pseudo-code}\label{sc:code}
+%\section{Pseudo-code}\label{sc:code}
 % ***************************************************** %
 
+\newcommand{\forcond}{$t=0$ \KwTo $N/M-1$}
+%\newcommand{\shuffleDB}{shuffle $\set{1,\dots,N}$ and split $B_0,\dots,B_{N/M-1}$ s.t. $1<\abs{B_t}=M\ll N$}
+\newcommand{\shuffleDB}{create mini-batches $B_0,\dots,B_{N/M-1}$}
+\newcommand{\getIdx}{get indices $i_t$ from $B_t$}
+\newcommand{\algGrad}{$\nabla f_{i_t}(y_t) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)$}
+\newcommand{\stopping}{$\norma{\nabla\func(w^k)}>\epsilon$ \And $k<k^\ast$}
+
 \begin{algorithm}
-\caption{Mini-batch Gradient Descent with fixed or decreasing step-size}\label{code:SGD-fix-decr}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$}
+\caption{\texttt{SGD-Fixed}, \texttt{SGD-Decreasing}, \texttt{SGDM}}\label{alg:SGD-F-D-M}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
+\uIf{\texttt{SGD-Fixed}}{$\set{\alpha_k}\gets\alpha_0$, $\set{\beta_k}\gets0$\;}
+\uElseIf{\texttt{SGD-Decreasing}}{$\set{\alpha_k}\gets\frac{\alpha_0}{k+1}$, $\set{\beta_k}\gets0$\;}
+\ElseIf{\texttt{SGDM}}{$\set{\alpha_k}\gets\alpha_0$, $\set{\beta_k}\gets\beta_0$\;}
 $k \gets 0$\;
-\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
+\While{\stopping}{
+	\shuffleDB\;
 	$y_0 \gets w^k$\;
+	$d_{-1}\gets0$\;
 	\For{\forcond}{
 		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
-		$y_t \gets y_{t-1}+\alpha_kd_t$\;
+		\algGrad\;
+		$d_t\gets-\bigl((1-\beta_0)\nabla f_t(y_t)+\beta_0d_{t-1}\bigr)$\;
+		$y_{t+1} \gets y_t+\alpha_kd_t$\;
 	}
 	$w^{k+1} \gets y_{N/M}$\;
 	$k \gets k+1$\;
@@ -22,165 +33,90 @@ $k \gets 0$\;
 \end{algorithm}
 
 \begin{algorithm}
-\caption{Procedure for resetting the step-size in the line search setting}\label{code:reset-step}
-\KwData{$\alpha$, $\alpha_0$, $a$, $M$, $N$, $t$, $\mathtt{opt}$}
-\uIf{$t=1$}{\KwRet{$\alpha_0$}}
+\caption{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C}, \texttt{MSL-SGDM-R}}\label{alg:SGD-SLS-M}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0$, $\beta_0$}
+$k \gets 0$\;
+\While{\stopping}{
+	\shuffleDB\;
+	$y_0 \gets w^k$\;
+	$d_{-1}\gets0$\;
+	\For{\forcond}{
+		\getIdx\;
+		\algGrad\;
+		\uIf{\texttt{SGD-Armijo}}{$d_t\gets-\nabla f_{i_t}(y_t)$\;}
+		\uElseIf{\texttt{MSL-SGDM-C}}{$d_t\gets\mathtt{correction(}\beta_0,\nabla f_{i_t}(y_t),d_{t-1}\mathtt{)}$ see~\ref{alg:m-correction}\;}
+		\ElseIf{\texttt{MSL-SGDM-R}}{$d_t\gets\mathtt{restart(}\beta_0,\nabla f_{i_t}(y_t),d_{t-1}\mathtt{)}$ see~\ref{alg:m-restart}\;}
+		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,M,N,t\mathtt{)}/\delta$ see~\ref{alg:reset-step}\; 
+		$\alpha_t\gets\mathtt{armijo(}y_t,d_t,\alpha\mathtt{)}$ see~\ref{alg:armijo}\;
+		$y_{t+1}\gets y_t+\alpha_td_t$
+	}
+	$w^{k+1} \gets y_{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}
+
+\noindent%
+\begin{minipage}[t]{0.35\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{reset}}\label{alg:reset-step}
+\KwData{$a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+\KwIn{$\alpha$, $\alpha_0$, $M$, $N$, $t$}
+\uIf{$t=0$}{\KwRet{$\alpha_0$}}
 \uElseIf{$\mathtt{opt}=0$}{$\alpha\gets\alpha$}
 \uElseIf{$\mathtt{opt}=1$}{$\alpha\gets\alpha_0$}
 \ElseIf{$\mathtt{opt}=2$}{$\alpha\gets\alpha a^{M/N}$}
-\KwRet{$\alpha$}
+\KwOut{$\alpha$}
 \end{algorithm}
-
-\begin{algorithm}
-\caption{Mini-batch Gradient Descent with Armijo line search}\label{code:SGD-Armijo}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$}
-\KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
-$k \gets 0$\;
-\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
-	$y_0 \gets w^k$\;
-	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
-		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
-		%		$\alpha\gets\alpha_0$\;
-		$q\gets0$\;
-		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q<q^\ast$}{
-			$\alpha\gets\delta\alpha$\;
-			$y_t \gets y_{t-1}+\alpha d_t$\;
-			$q\gets q+1$\;
-		}
-		$\alpha_t\gets\alpha$\;
-		$y_t\gets y_{t-1}+\alpha_td_t$
-	}
-	$w^{k+1} \gets y_{N/M}$\;
-	$k \gets k+1$\;
+\end{minipage}%
+\begin{minipage}[t]{0.65\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{armijo}}\label{alg:armijo}
+\KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $q^\ast$}
+\KwIn{$y_t$, $d_t$, $\alpha$}
+$\alpha_t\gets\alpha$\;
+$q\gets0$\;
+\Repeat{$f_{i_t}(y_{t+1})\leq f_{i_t}(y_t)+\gamma\alpha_t\nabla f_{i_t}(y_{t-1})^Td_t$ \Or $q\geq q^\ast$}{
+	$\alpha_t\gets\delta\alpha_t$\;
+	$y_{t+1} \gets y_t+\alpha_td_t$\;
+	$q\gets q+1$\;
 }
+\KwOut{$\alpha_t$}
 \end{algorithm}
+\end{minipage}
 
-%\noindent%
-%\fbox{\begin{minipage}{0.3\textwidth}
-%\begin{algorithm}[H]
-%\caption{Procedure for resetting the step-size in the line search setting}\label{code:reset-step2}
-%\KwData{$\alpha$, $\alpha_0$, $a$, $M$, $N$, $t$, $\mathtt{opt}$}
-%\uIf{$t=1$}{\KwRet{$\alpha_0$}}
-%\uElseIf{$\mathtt{opt}=0$}{$\alpha\gets\alpha$}
-%\uElseIf{$\mathtt{opt}=1$}{$\alpha\gets\alpha_0$}
-%\ElseIf{$\mathtt{opt}=2$}{$\alpha\gets\alpha a^{M/N}$}
-%\KwRet{$\alpha$}
-%\end{algorithm}
-%\end{minipage}}\hfill\noindent%
-%\fbox{\begin{minipage}{0.75\textwidth}
-%\begin{algorithm}[H]
-%\caption{Mini-batch Gradient Descent with Armijo line search}\label{code:SGD-Armijo2}
-%\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$}
-%\KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
-%$k \gets 0$\;
-%\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-%	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
-%	$y_0 \gets w^k$\;
-%	\For{\forcond}{
-%		get indices $i_t$ from $B_t$\;
-%		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-%		$d_t \gets -\nabla f_{i_t}(y_{t-1})$\;
-%		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
-%		%		$\alpha\gets\alpha_0$\;
-%		$q\gets0$\;
-%		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q<q^\ast$}{
-%			$\alpha\gets\delta\alpha$\;
-%			$y_t \gets y_{t-1}+\alpha d_t$\;
-%			$q\gets q+1$\;
-%		}
-%		$\alpha_t\gets\alpha$\;
-%		$y_t\gets y_{t-1}+\alpha_td_t$
-%	}
-%	$w^{k+1} \gets y_{N/M}$\;
-%	$k \gets k+1$\;
-%}
-%\end{algorithm}
-%\end{minipage}}
-
-\begin{algorithm}
-\caption{Mini-batch Gradient Descent with fixed Momentum term and step-size}\label{code:SGDM}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\set{\alpha_k}$, $\set{\beta_k}$}
-$k \gets 0$\;
-\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
-	$y_0 \gets w^k$\;
-	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
-		$y_t \gets y_{t-1}+\alpha_kd_t$\;
-	}
-	$w^{k+1} \gets y_{N/M}$\;
-	$k \gets k+1$\;
+\noindent%
+\begin{minipage}[t]{0.5\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{correction}}\label{alg:m-correction}
+\KwData{$\delta\in(0,1)$, $q^\ast$}
+\KwIn{$\beta_0$, $\nabla f_{i_t}(y_t)$, $d_{t-1}$}
+$\beta\gets\beta_0$\;
+$q\gets0$\;
+\Repeat{$\nabla f_{i_t}(y_t)^Td_t<0$ \Or $q\geq q^\ast$}{
+	$\beta\gets\delta\beta$\;
+	$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_t)+\beta d_{t-1}\bigr)$\;
+	$q\gets q+1$\;
 }
+$\beta_t\gets\beta$\;
+$d_t\gets-\bigl((1-\beta_t)\nabla f_{i_t}(y_t)+\beta_td_{t-1}\bigr)$\;
+\KwOut{$d_t$}
 \end{algorithm}
-
-\begin{algorithm}
-\caption{Mini-batch Gradient Descent with Armijo line search and Momentum correction}\label{code:MSL-SGDM-C}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
-\KwData{$\gamma\in(0,1)$, $\delta_a\in(0,1)$, $\delta_b\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
-$k \gets 0$\;
-\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
-	$y_0 \gets w^k$\;
-	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$\beta\gets\beta_0$\;
-		$q_m\gets0$\;
-		\While{$\nabla f_{i_t}(y_{t-1})^Td_t\geq0\wedge q_m<q_m^\ast$}{
-			$\beta\gets\delta_m\beta$\;
-			$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
-			$q_m\gets q_m+1$\;
-		}
-		$\beta_t\gets\beta$\;
-		$d_t\gets-\bigl((1-\beta_t)\nabla f_{i_t}(y_{t-1})+\beta_td_{t-1}\bigr)$\;
-		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
-		$q_a\gets0$\;
-		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q_a<q_a^\ast$}{
-			$\alpha\gets\delta_m\alpha$\;
-			$y_t \gets y_{t-1}+\alpha d_t$\;
-			$q_a\gets q_a+1$\;
-		}
-		$\alpha_t\gets\alpha$\;
-		$y_t\gets y_{t-1}+\alpha_td_t$
-	}
-	$w^{k+1} \gets y_{N/M}$\;
-	$k \gets k+1$\;
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{restart}}\label{alg:m-restart}
+\KwData{$d_0$}
+\KwIn{$\beta_0$, $\nabla f_{i_t}(y_t)$, $d_{t-1}$}
+$q\gets0$\;
+$d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(y_t)+\beta_0d_{t-1}\bigr)$\;
+\If{\Not$\nabla f_{i_t}(y_t)^Td_t<0$}{
+	$d_{t-1}\gets d_0$\;
+	$d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(y_t)+\beta_0d_{t-1}\bigr)$\;
 }
+\KwOut{$d_t$}
 \end{algorithm}
-
-\begin{algorithm}
-\caption{Mini-batch Gradient Descent with Armijo line search and Momentum restart}\label{code:MSL-SGDM-R}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta\in(0,1)$}
-\KwData{$\gamma\in(0,1)$, $\delta_a\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
-$k \gets 0$\;
-$d_0\gets0$\;
-\While{$\norma{\nabla\func(w^k)}\leq\epsilon\wedge k<k^\ast$}{
-	shuffle $\set{1,\dots,N}$ and split $B_1,\dots,B_{N/M}$ s.t. $1<\abs{B_t}=M\ll N$\;
-	$y_0 \gets w^k$\;
-	\For{\forcond}{
-		get indices $i_t$ from $B_t$\;
-		$\nabla f_{i_t}(w) \gets \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_{t-1})$\;
-		$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_{t-1})+\beta d_{t-1}\bigr)$\;
-		\If{$\nabla f_{i_t}(y_{t-1})^Td_t\geq0$}{
-			$d_t\gets d_0$\;
-		}
-		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}$\;
-		$q_a\gets0$\;
-		\While{$f_{i_t}(y_t)>f_{i_t}(y_{t-1})+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t\wedge q_a<q_a^\ast$}{
-			$\alpha\gets\delta_m\alpha$\;
-			$y_t \gets y_{t-1}+\alpha d_t$\;
-			$q_a\gets q_a+1$\;
-		}
-		$\alpha_t\gets\alpha$\;
-		$y_t\gets y_{t-1}+\alpha_td_t$
-	}
-	$w^{k+1} \gets y_{N/M}$\;
-	$k \gets k+1$\;
-}
-\end{algorithm}
+\end{minipage}

@@ -8,12 +8,10 @@
 
 This report summarizes the analysis performed in order to investigate the behaviour of the algorithms retrieved from the scientific literature. The optimization problem that we aim to solve is that of the Logistic Regression with $\ell_2\text{-regularization}$ term added.
 
-The implemented algorithms are
+Follows a list of the suggested algorithms from the literature, since those methods share many computations, we decided to implement just two algorithms
 \begin{itemize}
-\item Mini-batch Gradient Descent with fixed and decreasing step-size, algorithm~\vref{code:SGD-fix-decr};
-\item Mini-batch Gradient Descent with Armijo-type line search, algorithm~\vref{code:SGD-Armijo};
-\item Mini-batch Gradient Descent with fixed step-size and momentum, algorithm~\vref{code:SGDM};
-\item Mini-batch Gradient Descent with with Armijo-type line search and momentum correction and restart, algorithms~\ref{code:MSL-SGDM-C} and~\vref{code:MSL-SGDM-R}.
+\item Mini-batch Gradient Descent with fixed step-size and momentum, and decreasing step-size, algorithm~\vref{alg:SGD-F-D-M};
+\item Mini-batch Gradient Descent with Armijo line search and momentum restart or correction, algorithm~\vref{alg:SGD-SLS-M};
 \end{itemize}
 
 After that, the efficiency of the algorithms is tested on different datasets.
@@ -50,9 +48,11 @@ figure~\vref{subfig:log-loss} shows a plot of the loss function where $u=y^{(i)}
 
 Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using Stochastic Gradient Descent (SGD) algorithm variants
 \begin{equation}\label{eq:opt-prob}
-\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
+%\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
+\min_{w\in\R^{(p+1)}}\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \end{equation}
-where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept. The $1/N$ term isn't always used, we choose to use that term for scaling issues. We define the matrix associated to the dataset and the model weights as follows
+where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
+We define the matrix associated to the dataset and the model weights as follows
 \[
 X^T=
 \begin{pmatrix}
@@ -70,14 +70,17 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$.% We can see that every $x^{(i)}$ is a column vector
+the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$. A compact definition for the dataset matrix is $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
 
 The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
 \begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
-\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
-\nabla\func(w) &= \frac{1}{N}X^Tr+\lambda w \label{subeq:jacobian} \\
-\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
+%\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
+\func(w) &= \sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
+%\nabla\func(w) &= \frac{1}{N}Xr+\lambda w \label{subeq:jacobian} \\
+\nabla\func(w) &= Xr+\lambda w \label{subeq:jacobian} \\
+%\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
+\nabla^2\func(w) &= XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
 \end{subequations}
 where $r\in\R^N$ is a vector of the same length as the total number of sample, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$.
