@@ -33,9 +33,8 @@ def logistic(w, X, y, lam=1):
     -------
     scalar
     """
-    # N = X.shape[0]
-    L_vec = np.log(1 + np.exp(- y * np.dot(X, w)))
-    L = np.sum(L_vec)  # loss
+    z = - y * np.dot(X, w)
+    L = np.sum(np.log(1 + np.exp(z)))  # loss
     O = 0.5 * np.linalg.norm(w) ** 2  # regularizer
     return L + lam * O
 
@@ -53,22 +52,21 @@ def logistic_der(w, X, y, lam=1):
     -------
     vector like w.shape[0]
     """
-    # N = X.shape[0]
     z = - y * np.dot(X, w)
-    r = - y * sigmoid(z)
-    dL = np.dot(r, X)
-    dO = w
+    dL = np.dot(- y * sigmoid(z), X)  # loss derivative
+    dO = w  # regularizer derivative
     return dL + lam * dO
 
 
-def f_and_df(w, X, y, lam=1):
+def f_and_df(w, X, y, lam):
     # fun, jac = f_and_df()
-    # fun, _ = f_and_df()
-    # _, jac = f_and_df()
-    # N = X.shape[0]
     z = - y * np.dot(X, w)  # once for twice
-    return (np.sum(np.log(1 + np.exp(z))) + lam * 0.5 * np.linalg.norm(w) ** 2,  # objective
-            np.dot(- y * sigmoid(z), X) + lam * w)  # gradient
+    L = np.sum(np.log(1 + np.exp(z)))  # loss
+    O = 0.5 * np.linalg.norm(w) ** 2  # regularizer
+    dL = np.dot(- y * sigmoid(z), X)  # loss derivative
+    dO = w  # regularizer derivative
+    return (L + lam * O,  # objective function
+            dL + lam * dO)  # jacobian
 
 
 # def f_and_dfnorm(w, X, y, lam=1):
@@ -78,7 +76,7 @@ def f_and_df(w, X, y, lam=1):
 #             np.linalg.norm(np.dot(- y * sigmoid(z), X) + lam * w))  # gradient norm
 
 
-def logistic_hess(w, X, y, lam=1):
+def logistic_hess(w, X, y, lam):
     """
     Parameters
     ----------

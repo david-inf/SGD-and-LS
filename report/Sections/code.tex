@@ -34,8 +34,7 @@ $k \gets 0$\;
 
 \begin{algorithm}
 \caption{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C}, \texttt{MSL-SGDM-R}}\label{alg:SGD-SLS-M}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0$, $\beta_0$,\\
-	$\gamma\in(0,1)$, $\delta\in(0,1)$, $a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0$, $\beta_0$}
 $k \gets 0$\;
 \While{\stopping}{
 	\shuffleDB\;
@@ -47,14 +46,8 @@ $k \gets 0$\;
 		\uIf{\texttt{SGD-Armijo}}{$d_t\gets-\nabla f_{i_t}(y_t)$\;}
 		\uElseIf{\texttt{MSL-SGDM-C}}{$d_t\gets\mathtt{correction(}\beta_0,\nabla f_{i_t}(y_t),d_{t-1}\mathtt{)}$ see~\ref{alg:m-correction}\;}
 		\ElseIf{\texttt{MSL-SGDM-R}}{$d_t\gets\mathtt{restart(}\beta_0,\nabla f_{i_t}(y_t),d_{t-1}\mathtt{)}$ see~\ref{alg:m-restart}\;}
-		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,a,M,N,t,\mathtt{opt)}/\beta$ see~\ref{alg:reset-step}\; 
-		$q\gets0$\;
-		\Repeat{$f_{i_t}(y_{t+1})\leq f_{i_t}(y_t)+\gamma\alpha\nabla f_{i_t}(y_{t-1})^Td_t$ \Or $q\geq q^\ast$}{
-			$\alpha\gets\delta\alpha$\;
-			$y_{t+1} \gets y_t+\alpha d_t$\;
-			$q\gets q+1$\;
-		}
-		$\alpha_t\gets\alpha$\;
+		$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,M,N,t\mathtt{)}/\delta$ see~\ref{alg:reset-step}\; 
+		$\alpha_t\gets\mathtt{armijo(}y_t,d_t,\alpha\mathtt{)}$ see~\ref{alg:armijo}\;
 		$y_{t+1}\gets y_t+\alpha_td_t$
 	}
 	$w^{k+1} \gets y_{N/M}$\;
@@ -62,35 +55,43 @@ $k \gets 0$\;
 }
 \end{algorithm}
 
-\begin{algorithm}
+\noindent%
+\begin{minipage}[t]{0.35\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
 \caption{\texttt{reset}}\label{alg:reset-step}
-\KwIn{$\alpha$, $\alpha_0$, $a$, $M$, $N$, $t$, $\mathtt{opt}$}
+\KwData{$a\in\R^+$, $\mathtt{opt}\in\set{0,1,2}$}
+\KwIn{$\alpha$, $\alpha_0$, $M$, $N$, $t$}
 \uIf{$t=0$}{\KwRet{$\alpha_0$}}
 \uElseIf{$\mathtt{opt}=0$}{$\alpha\gets\alpha$}
 \uElseIf{$\mathtt{opt}=1$}{$\alpha\gets\alpha_0$}
 \ElseIf{$\mathtt{opt}=2$}{$\alpha\gets\alpha a^{M/N}$}
 \KwOut{$\alpha$}
 \end{algorithm}
+\end{minipage}%
+\begin{minipage}[t]{0.65\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{armijo}}\label{alg:armijo}
+\KwData{$\gamma\in(0,1)$, $\delta\in(0,1)$, $q^\ast$}
+\KwIn{$y_t$, $d_t$, $\alpha$}
+$\alpha_t\gets\alpha$\;
+$q\gets0$\;
+\Repeat{$f_{i_t}(y_{t+1})\leq f_{i_t}(y_t)+\gamma\alpha_t\nabla f_{i_t}(y_{t-1})^Td_t$ \Or $q\geq q^\ast$}{
+	$\alpha_t\gets\delta\alpha_t$\;
+	$y_{t+1} \gets y_t+\alpha_td_t$\;
+	$q\gets q+1$\;
+}
+\KwOut{$\alpha_t$}
+\end{algorithm}
+\end{minipage}
 
 \noindent%
 \begin{minipage}[t]{0.5\textwidth}
 \vspace{0pt}
 \begin{algorithm}[H]
-\caption{\texttt{restart}}\label{alg:m-restart}
-\KwIn{$\beta_0$, $\nabla f_{i_t}(y_t)$, $d_{t-1}$}
-$q\gets0$\;
-$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_t)+\beta d_{t-1}\bigr)$\;
-\If{$\nabla f_{i_t}(y_{t-1})^Td_t\geq 0$}{
-	$d_{t-1}\gets d_0$\;
-	$d_t\gets-(1-\beta)\nabla f_{i_t}(y_t)$\;
-}
-\KwOut{$d_t$}
-\end{algorithm}
-\end{minipage}%
-\begin{minipage}[t]{0.5\textwidth}
-\vspace{0pt}
-\begin{algorithm}[H]
 \caption{\texttt{correction}}\label{alg:m-correction}
+\KwData{$\delta\in(0,1)$, $q^\ast$}
 \KwIn{$\beta_0$, $\nabla f_{i_t}(y_t)$, $d_{t-1}$}
 $\beta\gets\beta_0$\;
 $q\gets0$\;
@@ -103,49 +104,19 @@ $\beta_t\gets\beta$\;
 $d_t\gets-\bigl((1-\beta_t)\nabla f_{i_t}(y_t)+\beta_td_{t-1}\bigr)$\;
 \KwOut{$d_t$}
 \end{algorithm}
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+\vspace{0pt}
+\begin{algorithm}[H]
+\caption{\texttt{restart}}\label{alg:m-restart}
+\KwData{$d_0$}
+\KwIn{$\beta_0$, $\nabla f_{i_t}(y_t)$, $d_{t-1}$}
+$q\gets0$\;
+$d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(y_t)+\beta_0d_{t-1}\bigr)$\;
+\If{\Not$\nabla f_{i_t}(y_t)^Td_t<0$}{
+	$d_{t-1}\gets d_0$\;
+	$d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(y_t)+\beta_0d_{t-1}\bigr)$\;
+}
+\KwOut{$d_t$}
+\end{algorithm}
 \end{minipage}
-
-%\noindent%
-%\begin{minipage}[t]{0.24\textwidth}
-%\vspace{0pt}
-%\begin{algorithm}[H]
-%\caption{\texttt{reset}}\label{alg:reset-step2}
-%\KwIn{$\alpha$, $\alpha_0$, $a$,\\$M$, $N$, $t$, $\mathtt{opt}$}
-%\uIf{$t=0$}{\KwRet{$\alpha_0$}}
-%\uElseIf{$\mathtt{opt}=0$}{$\alpha\gets\alpha$}
-%\uElseIf{$\mathtt{opt}=1$}{$\alpha\gets\alpha_0$}
-%\ElseIf{$\mathtt{opt}=2$}{$\alpha\gets\alpha a^{M/N}$}
-%\KwOut{$\alpha$}
-%\end{algorithm}
-%\end{minipage}%
-%\begin{minipage}[t]{0.38\textwidth}
-%\vspace{0pt}
-%\begin{algorithm}[H]
-%\caption{\texttt{restart}}\label{alg:m-restart2}
-%\KwIn{$\beta_0$,\\$\nabla f_{i_t}(y_t)$, $d_{t-1}$}
-%$q\gets0$\;
-%$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_t)+\beta d_{t-1}\bigr)$\;
-%\If{$\nabla f_{i_t}(y_{t-1})^Td_t\geq 0$}{
-%	$d_{t-1}\gets d_0$\;
-%	$d_t\gets-(1-\beta)\nabla f_{i_t}(y_t)$\;
-%}
-%\KwOut{$d_t$}
-%\end{algorithm}
-%\end{minipage}%
-%\begin{minipage}[t]{0.38\textwidth}
-%\vspace{0pt}
-%\begin{algorithm}[H]
-%\caption{\texttt{correction}}\label{alg:m-correction2}
-%\KwIn{$\beta_0$,\\$\nabla f_{i_t}(y_t)$, $d_{t-1}$}
-%$\beta\gets\beta_0$\;
-%$q\gets0$\;
-%\Repeat{$\nabla f_{i_t}(y_t)^Td_t<0$ \Or $q\geq q^\ast$}{
-%	$\beta\gets\delta\beta$\;
-%	$d_t\gets-\bigl((1-\beta)\nabla f_{i_t}(y_t)+\beta d_{t-1}\bigr)$\;
-%	$q\gets q+1$\;
-%}
-%$\beta_t\gets\beta$\;
-%$d_t\gets-\bigl((1-\beta_t)\nabla f_{i_t}(y_t)+\beta_td_{t-1}\bigr)$\;
-%\KwOut{$d_t$}
-%\end{algorithm}
-%\end{minipage}

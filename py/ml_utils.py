@@ -79,11 +79,21 @@ def optim_bench(models):
     return data
 
 
+def models_summary(custom, bench):
+    models_data = pd.concat([bench.drop(columns={"Loss/Epochs"}),
+                             custom.drop(columns={"Loss/Epochs"})],
+                            ignore_index=True)
+    models_data["Distance (L-BFGS)"] = models_data["Solution"].apply(
+        lambda x: np.linalg.norm(x - bench.loc[0]["Solution"]))
+    return models_data.drop(columns="Solution")
+
+
 def plot_loss(models, labels, title=None, start=0, end=200):
     fig, ax1 = plt.subplots(ncols=1, layout="constrained")
     i = 0
     for model in models:
-        ax1.plot(np.arange(start, end), model.fun_per_it[start:end], label=labels[i])
+        ax1.plot(np.arange(start, end),
+                 model.fun_per_it[start:end], label=labels[i])
         # ax1.plot(model.fun_per_it[start:], label=labels[i])
         i += 1
     ax1.set_title(title)
@@ -196,7 +206,6 @@ def diagnostic(data):
 # test_plots(models1_data)
 
 
-
 # def diagnostic_plots(models, start_loss=5, end_loss=101):
 #     # models: list of LogisticRegression
 #     fig, axs = plt.subplots(3, 1, layout="constrained",
@@ -241,8 +250,7 @@ def diagnostic(data):
     # axs[2].legend()
     # axs[2].set_ylim([0, 1])
     # axs[2].grid(True)
-    
-    
+
 
 # def train_comparison(optimizer, *args, **kwargs):
 #     # optimizer: callable
@@ -256,13 +264,5 @@ def diagnostic(data):
 #         set_accuracy(model, args[0], args[1], args[2], args[3])
 #         models.append(model)
 #     return models
-    
+
 # train_comparison(minibatch_gd_fixed, , w0=w0, alpha[1, 0.1])
-
-
-
-
-
-
-
-
