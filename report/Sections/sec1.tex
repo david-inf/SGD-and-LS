@@ -6,17 +6,15 @@
 % problem identification
 % solutions
 
-This report summarizes the analysis performed in order to investigate the behaviour of the algorithms retrieved from the scientific literature. The optimization problem that we aim to solve is that of the Logistic Regression with $\ell_2\text{-regularization}$ term added.
+Different SGD-type algorithms proposed by the literature were implemented and tested on different datasets for solving the $\ell_2\text{-regularized}$ Logistic Regression training problem.
 
-Follows a list of the suggested algorithms from the literature, since those methods share many computations, we decided to implement just two algorithms
+Those algorithms can be divided in basic SGD and SGD with line search due to common computations, follows a list of the implemented algorithms
 \begin{itemize}
-\item Mini-batch Gradient Descent with fixed step-size and momentum, and decreasing step-size, algorithm~\vref{alg:SGD-F-D-M};
-\item Mini-batch Gradient Descent with Armijo line search and momentum restart or correction, algorithm~\vref{alg:SGD-SLS-M};
+\item Mini-batch Gradient Descent with fixed step-size and momentum term, and decreasing step-size, algorithm~\vref{alg:SGD-F-D-M};
+\item Mini-batch Gradient Descent with Armijo line search and momentum term restart and correction, algorithm~\vref{alg:SGD-SLS-M};
 \end{itemize}
 
-After that, the efficiency of the algorithms is tested on different datasets.
-
-In this section the Machine Learning (ML) problem and the relative optimization problem are shown shown, proving the existence and uniqueness of the optimal solution.
+This section describes the Machine Learning (ML) problem and the related optimization problem, then section ... summarizes the approaches proposed from the retrieved papers. Section ... describes the experiments performed for showing the behaviour of the algorithms.
 
 % ---------------------------------------------------- %
 \subsection{Classification task}
@@ -26,21 +24,21 @@ Given a dataset as follows
 \[
 \mathcal{D}=\set{(x^{(i)},\,y^{(i)})\mid x^{(i)}\in\mathcal{X},\,y^{(i)}\in\mathcal{Y},\,i=1,2,\dots,N}
 \]
-the general machine learning optimization problem in the context of \emph{supervised learning} is formulated as follows
+the general machine learning optimization problem in the context of \emph{supervised learning} is
 \[
-\min_{w}\func(w)=L(w)+\lambda\Omega(w)\rightarrow
+\min_{w}\func(w)=L(w)+\lambda\Omega(w)\longrightarrow
 \begin{cases}
 L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
 \Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
 \end{cases}
 \]
-where $L(w)$ is called \emph{loss function} and $\Omega(w)$ it's the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
+where $L(w)$ is the \emph{loss function} and $\Omega(w)$ is the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
 
-The task performed is the \emph{binary classification}, where $\mathcal{Y}=\set{-1,1}$ are the allowed values for the response variable, i.e. negative and positive class; the adopted machine learning model is Logistic Regression. Every ML model has its loss function, the logistic regression uses the \emph{log-loss}, for a sample of the dataset the loss function is as follows
+The task performed is the \emph{binary classification}, using the Logistic Regression model. The selected loss function is the \emph{log-loss}, for one dataset sample is
 \begin{equation}\label{eq:sample_loss}
 \ell_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)
 \end{equation}
-figure~\vref{subfig:log-loss} shows a plot of the loss function where $u=y^{(i)}$ and $v=w^Tx^{(i)}$, so the resulting function $\ell(uv)=\log\bigl(1+\exp(-uv)\bigr)$.
+figure~\vref{subfig:log-loss} shows a plot of the loss function $\ell(uv)=\log\bigl(1+\exp(-uv)\bigr)$ where $u=y^{(i)}$ and $v=w^Tx^{(i)}$.
 
 % ---------------------------------------------------- %
 \subsection{Optimization problem}
@@ -51,7 +49,7 @@ Putting together the loss function and the regularization term, we can obtain th
 %\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \min_{w\in\R^{(p+1)}}\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \end{equation}
-where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
+where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept and $\mathcal{Y}=\set{-1,1}$ are the allowed values for the response variable, i.e. negative and positive class. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
 We define the matrix associated to the dataset and the model weights as follows
 \[
 X^T=
@@ -70,7 +68,7 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is added for the intercept, also known as \emph{bias}, as the $b$ weight in vector $w$. A compact definition for the dataset matrix is $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
+the constant column is meant for the intercept, also known as \emph{bias}, the $b$ weight in vector $w$. A compact definition for the dataset matrix is $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
 
 The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
 \begin{subequations}\label{eq:f-df-ddf}
@@ -83,26 +81,9 @@ The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)}
 \nabla^2\func(w) &= XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
 \end{subequations}
-where $r\in\R^N$ is a vector of the same length as the total number of sample, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$.
+where $r\in\R^N$ is a vector of the same length as the total number of samples, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$.
 
-%\[
-%\begin{array}{@{}l@{}}
-%\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)}),\,r\in\R^N \\[1ex]
-%\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w \\[1ex]
-%\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I_{(p+1)},\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)}),D\in\R^{N\times N}
-%\end{array}
-%\]
-
-%\[
-%\nabla\func(w)=\frac{1}{N}X^Tr+\lambda w,\quad r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})
-%\]
-
-%\[
-%\nabla^2\func(w)=\frac{1}{N}XDX^T+\lambda I,\quad d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})
-%\]
-%$r\in\R^N$, $D\in\R^{N\times N}$
-
-The next proposition allows to address the optimization problem.
+The next proposition allows to solve the optimization problem.
 
 \begin{prop}
 Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
@@ -110,21 +91,21 @@ Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \begin{proof}
 We need to prove the existence and the uniqueness of the global minimum.
 
-\noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is coercive, in fact $\forall\set{w^k}$ such that $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
+\noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is coercive, in fact $\forall\set{w^k}$ s.t. $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
 \[
 \lim_{k\to\infty}\func(w^k)\geq\lim_{k\to\infty}\lambda\frac{1}{2}\norma{w^k}^2=\infty\Rightarrow\lim_{k\to\infty}\func(w^k)=\infty
 \]
-hence by a corollary of the Weirstrass theorem (see theorem~\vref{cor:weirs1}) the problem admits global minimum in $\R^{(p+1)}$.
+hence by a corollary of the Weirstrass theorem, the problem admits global minimum in $\R^{(p+1)}$.
 
 \noindent$(ii)$ \emph{Unicity} of the optimal solution. We now prove that the hessian matrix~\eqref{subeq:hessian} is positive definite
 \[
 w^T\nabla^2\func(w)w=w^TXDX^Tw+\lambda w^TIw=\underbrace{y^TDy}_{\geq0}+\lambda\norma{w}^2\geq\lambda\norma{w}^2>0\quad\forall w
 \]
-the hessian matrix positive definite implies that the objective function is strictly convex (see definition~\ref{def:conv_fun}) and that implies that the global minimum, if exists, is unique (see proposition~\ref{prop:min_unique}). Being in the convex case, the global minimum is a $w^\ast\in\R^{(p+1)}$ such that $\nabla\func(w^\ast)=0$ (see proposition~\ref{prop:opt_second}).\qedhere
+the hessian matrix positive definite implies that the objective function is strictly convex and that implies that the global minimum, if exists, is unique. Being in the convex case, the global minimum is a $w^\ast\in\R^{(p+1)}$ s.t. $\nabla\func(w^\ast)=0$ for first-order optimality conditions.\qedhere
 \end{proof}
 
 \begin{rmk}
-Since the log-loss is convex, the regularization term makes the objective function \emph{strongly convex}, this should speed up the optimization process.
+Since the log-loss is convex, the regularization term makes the objective function also \emph{strongly convex}, this should speed up the optimization process.
 \end{rmk}
 
 %\begin{rmk}
@@ -138,68 +119,6 @@ Since the log-loss is convex, the regularization term makes the objective functi
 %\item the $\ell_2$ regularization implies that the objective function is strongly convex, this speeds up the convergence
 %\item further more we can assume that $\nabla\func(w)$ is Lipschitz-continuous with constant $L$
 %\end{itemize}
-
-%\[
-%y=
-%\begin{pmatrix}
-%y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)}
-%\end{pmatrix}\in\set{-1,1}
-%\]
-
-%\[
-%\begin{array}{ll}
-%%\func(w)\in\R & \nabla\func(w)\in\R^{(p+1)} \\
-%\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) & f_i(w)=\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr) \\
-%\nabla f_i(w)=\frac{1}{N}x^{(i)}r_i+\lambda w
-%\end{array}
-%\]
-
-%\begin{figure}
-%\centering
-%\begin{tikzpicture}
-%\begin{axis}[xlabel=$uv$,ylabel=$\ell$]
-%\addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
-%\addplot[dotted] {0};
-%\end{axis}
-%\end{tikzpicture}
-%\caption{Log-loss}
-%\label{fig:log-loss}
-%\end{figure}
-
-%\begin{figure}
-%\centering
-%\subfloat[][\emph{Log-loss, see equation~\eqref{eq:sample_loss}. If $uv\gg0$ then the example is labelled correctly; if $uv\ll0$ then the label is the wrong one.}\label{subfig:log-loss}]%
-%{\begin{tikzpicture}
-%\begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
-%\addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
-%\addplot[dashed] {1};
-%\end{axis}
-%\end{tikzpicture}} \quad
-%\subfloat[][\emph{Sigmoid function}\label{subfig:sigmoid}]%
-%{\begin{tikzpicture}
-%\begin{axis}[xlabel=$z$,ylabel={$\sigma(z)$},axis lines=middle,enlargelimits,width=0.45\textwidth]
-%\addplot[samples=200,red,smooth] {1/(1+exp(-x))};
-%\addplot[dashed] {1};
-%\end{axis}
-%\end{tikzpicture}}
-%\caption{Log-loss and sigmoid function plots}
-%\label{fig:log-sigma}
-%\end{figure}
-
-%\begin{figure}
-%\centering
-%\begin{tikzpicture}
-%\begin{axis}[xlabel=$uv$,ylabel={$\ell(u,v)$},axis lines=middle,enlargelimits,width=0.45\textwidth,legend style={nodes={scale=0.5, transform shape}}]
-%\addplot[samples=200,blue,smooth] {ln(1+exp(-x))+0.5*x^2};
-%\addplot[samples=200,red,smooth] {ln(1+exp(-x))+0.5*0.5*x^2};
-%\addplot[samples=200,green,smooth] {ln(1+exp(-x))+0.5*0.1*x^2};
-%\addplot[dashed] {1};
-%\legend{$\lambda=1$, $\lambda=0.5$, $\lambda=0.1$}
-%\end{axis}
-%\end{tikzpicture}
-%\caption{Influence of the regularization term on the objective function~\eqref{eq:opt-prob}}
-%\label{fig:loss_regul}
-%\end{figure}
 
 \begin{figure}
 \centering

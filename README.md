@@ -25,6 +25,13 @@ Ottimizzazione:
 - criteri di arresto
     - qualcosa per metodi non monotoni?
 
+Benchmarking
+- sgd fix con armijo
+- sgd decre con armijo
+- sgdm con mslc
+- sgdm con mslr
+- migliore di ognuno
+
 Logistic regression - python
 - python class? like in scikit?
 - class
