@@ -29,7 +29,7 @@ class LogisticRegression():
                        "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m, "SGDM": sgd_m,
                         "SGD-Armijo": sgd_sls, "MSL-SGDM-C": sgd_sls,
                         "MSL-SGDM-R": sgd_sls}
-        if self.solver in ["L-BFGS", "Newton-CG", "CG"]:
+        if self.solver in ("L-BFGS", "Newton-CG", "CG"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C)
             self.opt_result = model
             self.coef_ = model.x

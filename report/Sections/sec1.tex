@@ -14,7 +14,7 @@ Those algorithms can be divided in basic SGD and SGD with line search due to com
 \item Mini-batch Gradient Descent with Armijo line search and momentum term restart and correction, algorithm~\vref{alg:SGD-SLS-M};
 \end{itemize}
 
-This section describes the Machine Learning (ML) problem and the related optimization problem, then section ... summarizes the approaches proposed from the retrieved papers. Section ... describes the experiments performed for showing the behaviour of the algorithms.
+This section describes the Machine Learning (ML) problem and the related optimization problem, then section~\vref{sc:intro} summarizes the approaches proposed from the retrieved papers. Section~\vref{sc:exp} describes the experiments performed for showing the behaviour of the algorithms on different datasets.
 
 % ---------------------------------------------------- %
 \subsection{Classification task}
@@ -128,7 +128,6 @@ Since the log-loss is convex, the regularization term makes the objective functi
 \begin{axis}[xlabel=$uv$,ylabel={$\ell(uv)$},axis lines=middle,enlargelimits,width=0.41\textwidth]
 \addplot[samples=200,blue,smooth] {ln(1+exp(-x))};
 \addplot[dashed] {1};
-%\addplot[dashed] {ln(2)} node[right, font=\small] {$\log(2)$};
 \addplot [black, mark=-, nodes near coords=$\log(2)$, font={\scriptsize}, every node near coord/.style={anchor=180}] coordinates {(0,{ln(2)})};
 \end{axis}
 \end{tikzpicture}%
