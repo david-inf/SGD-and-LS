@@ -7,11 +7,10 @@ from ml_utils import predict
 
 
 class LogisticRegression():
-    def __init__(self, C=1, solver="L-BFGS", epochs=200, tol=1e-4, minibatch=16):
+    def __init__(self, C=1, solver="L-BFGS", epochs=200, minibatch=16):
         self.C = C  # lambda
         self.solver = solver
         self.epochs = epochs
-        self.tol = tol
         self.minibatch = minibatch
         self.opt_result = None
         self.coef_ = None
@@ -22,8 +21,9 @@ class LogisticRegression():
         self.accuracy_train = None
         self.accuracy_test = None
 
-    def fit(self, w0, X_train, y_train, X_test, y_test, step_size=1, momentum=0):
+    def fit(self, X_train, y_train, X_test, y_test, step_size=1, momentum=0):
         N = X_train.shape[0]
+        w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
         # dictionary of callables
         solver_dict = {"L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
                        "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m, "SGDM": sgd_m,
@@ -41,16 +41,17 @@ class LogisticRegression():
         elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum,
-                    self.epochs, self.tol, self.solver)
+                    self.epochs, self.solver)
             self.opt_result = model
             self.coef_ = model.x
             self.loss = model.fun
             self.grad = np.linalg.norm(model.jac)
             self.loss_seq = model.fun_per_it / N
+            # TODO: non è del tutto corretto dividere tutta la obj per N
         elif self.solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
                     self.minibatch, step_size, momentum,
-                    self.epochs, self.tol, self.solver)
+                    self.epochs, self.solver)
             self.opt_result = model
             self.coef_ = model.x
             self.loss = model.fun

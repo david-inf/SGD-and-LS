@@ -6,33 +6,29 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-# def call_f(w0, X, y, args=()):
-#     return logistic(w0, X, y, *args)
-
-
 def logistic(w, X, y, lam):
     z = - y * np.dot(X, w)
-    L = np.sum(np.logaddexp(0, z))  # loss
-    O = 0.5 * np.linalg.norm(w) ** 2  # regularizer
-    return L + lam * O
+    loss = np.sum(np.logaddexp(0, z))  # loss
+    regul = 0.5 * np.linalg.norm(w) ** 2  # regularizer
+    return loss + lam * regul
 
 
 def logistic_der(w, X, y, lam):
     z = - y * np.dot(X, w)
-    dL = np.dot(- y * sigmoid(z), X)  # loss derivative
-    dO = w  # regularizer derivative
-    return dL + lam * dO
+    loss_der = np.dot(- y * sigmoid(z), X)  # loss derivative
+    regul_der = w  # regularizer derivative
+    return loss_der + lam * regul_der
 
 
 def f_and_df(w, X, y, lam):
     # fun, jac = f_and_df()
     z = - y * np.dot(X, w)  # once for twice
-    L = np.sum(np.logaddexp(0, z))  # loss
-    O = 0.5 * np.linalg.norm(w) ** 2  # regularizer
-    dL = np.dot(- y * sigmoid(z), X)  # loss derivative
-    dO = w  # regularizer derivative
-    return (L + lam * O,  # objective function
-            dL + lam * dO)  # jacobian
+    loss = np.sum(np.logaddexp(0, z))  # loss
+    regul = 0.5 * np.linalg.norm(w) ** 2  # regularizer
+    loss_der = np.dot(- y * sigmoid(z), X)  # loss derivative
+    regul_der = w  # regularizer derivative
+    return (loss + lam * regul,  # objective function
+            loss_der + lam * regul_der)  # jacobian
 
 
 def logistic_hess(w, X, y, lam):
@@ -41,3 +37,7 @@ def logistic_hess(w, X, y, lam):
     ddL = np.dot(np.dot(D, X).T, X)
     ddO = lam * np.eye(w.shape[0])
     return ddL + ddO
+
+
+# def call_f(w0, X, y, args=()):
+#     return logistic(w0, X, y, *args)
