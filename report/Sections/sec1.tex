@@ -32,7 +32,7 @@ L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
 \Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
 \end{cases}
 \]
-where $L(w)$ is the \emph{loss function} and $\Omega(w)$ is the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
+where $L(w)$ is the \emph{loss function} which is dived by the total number of samples in the dataset and $\Omega(w)$ is the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
 
 The task performed is the \emph{binary classification}, using the Logistic Regression model. The selected loss function is the \emph{log-loss}, for one dataset sample is
 \begin{equation}\label{eq:sample_loss}
@@ -47,7 +47,7 @@ figure~\vref{subfig:log-loss} shows a plot of the loss function $\ell(uv)=\log\b
 Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using Stochastic Gradient Descent (SGD) algorithm variants
 \begin{equation}\label{eq:opt-prob}
 %\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
-\min_{w\in\R^{(p+1)}}\func(w)=\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
+\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \end{equation}
 where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept and $\mathcal{Y}=\set{-1,1}$ are the allowed values for the response variable, i.e. negative and positive class. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
 We define the matrix associated to the dataset and the model weights as follows
@@ -74,14 +74,14 @@ The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)}
 \begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
 %\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
-\func(w) &= \sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
+\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
 %\nabla\func(w) &= \frac{1}{N}Xr+\lambda w \label{subeq:jacobian} \\
-\nabla\func(w) &= Xr+\lambda w \label{subeq:jacobian} \\
+\nabla\func(w) &= \frac{1}{N}Xr+\lambda w \label{subeq:jacobian} \\
 %\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
-\nabla^2\func(w) &= XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
+\nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
 \end{subequations}
-where $r\in\R^N$ is a vector of the same length as the total number of samples, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$.
+where $r\in\R^N$ is a vector of the same length as the total number of samples, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function as shown in figure~\vref{subfig:sigmoid}, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$. Dividing by $N$ means dividing by the total number of samples involved.
 
 The next proposition allows to solve the optimization problem.
 

@@ -56,20 +56,29 @@ y_{t+1}=y_t+\alpha_td_t
 \end{equation}
 the update uses information from the mini-batch $B_t$ in the direction $d_t$ and the step-size $\alpha_t$ follows a certain rule.\footnote{\emph{Iterations} is defined as the total number of mini-batches extracted from the dataset, while one \emph{epoch} is when the entire dataset is passed forward. The counter for the mini-batch currently processed is $t$ while $k$ is for the epoch.}
 
-The direction is an expression involving the gradient, so we want to compute the gradient w.r.t. $y_t$ on the mini-batch $B_t$ whose indices are randomly chosen $i_t\subset\set{1,\dots,N}$
-\begin{equation*}
+%The direction is an expression involving the gradient, so we want to compute the gradient w.r.t. $y_t$ on the mini-batch $B_t$ whose indices are randomly chosen $i_t\subset\set{1,\dots,N}$
+%\begin{equation*}
+%%\begin{split}
+%%\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)\\
+%% &= \frac{1}{M}\sum_{j\in B_t}\bigl(x^{(j)}r_j+\lambda y\bigr) \\
+%% &= \frac{1}{M}\biggl(\sum_{j\in B_t}x^{(j)}r_j+M\lambda y\biggr) \\
+%% &= \frac{1}{M}\bigl(\underbrace{Xr}_{i_t\in B_t}+\lambda' y\bigr)
+%%\end{split}
 %\begin{split}
-%\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{j\in B_t}\nabla f_j(y_t)\\
-% &= \frac{1}{M}\sum_{j\in B_t}\bigl(x^{(j)}r_j+\lambda y\bigr) \\
-% &= \frac{1}{M}\biggl(\sum_{j\in B_t}x^{(j)}r_j+M\lambda y\biggr) \\
-% &= \frac{1}{M}\bigl(\underbrace{Xr}_{i_t\in B_t}+\lambda' y\bigr)
+%\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{i\in B_t}\nabla f_i(y_t)=\frac{1}{M}\sum_{i\in B_t}\bigl(x^{(i)}r_i+\lambda y\bigr)= \frac{1}{M}\biggl(\sum_{i\in B_t}x^{(i)}r_i+M\lambda y\biggr) \\
+%&= \frac{1}{M}\bigl(\underbrace{Xr}_{i\in B_t}+\lambda'y\bigr)
 %\end{split}
+%\end{equation*}
+%the expression is the same as the full gradient~\eqref{subeq:jacobian} except that the dataset matrix contains just the mini-batch samples (and so the $r$ vector), and the regularization coefficient is redefined as $\lambda'=M\lambda$ where $M$ is the size of the considered mini-batch. This expression will be used in the implementation.
+
+The direction is an expression involving the gradient, so we want to compute the gradient w.r.t. $y_t$ on the mini-batch $B_t$ whose indices are randomly chosen $i_t\subset\set{1,\dots,N}$. Knowing that $\nabla f_i(w^k)=x^{(i)}r_i+\lambda w^k$
+\begin{equation}\label{eq:mini-grad}
 \begin{split}
-\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{i\in B_t}\nabla f_i(y_t)=\frac{1}{M}\sum_{i\in B_t}\bigl(x^{(i)}r_i+\lambda y\bigr)= \frac{1}{M}\biggl(\sum_{i\in B_t}x^{(i)}r_i+M\lambda y\biggr) \\
-&= \frac{1}{M}\bigl(\underbrace{Xr}_{i\in B_t}+\lambda'y\bigr)
+\nabla f_{i_t}(y_t) &= \frac{1}{M}\sum_{i\in B_t}\nabla \ell_i(y_t)+\lambda\nabla\Omega(y_t) \\
+ &= \frac{1}{M}\underbrace{Xr}_{i\in B_t}+\lambda y_t
 \end{split}
-\end{equation*}
-the expression is the same as the full gradient~\eqref{subeq:jacobian} except that the dataset matrix contains just the mini-batch samples (and so the $r$ vector), and the regularization coefficient is redefined as $\lambda'=M\lambda$ where $M$ is the size of the considered mini-batch. This expression will be used in the implementation.
+\end{equation}
+the expression is the same as the full gradient~\eqref{subeq:jacobian} except that the dataset matrix contains just the mini-batch samples, so the $r$ vector.
 
 %Being on epoch $k$ and iteration $t$, the next ``internal'' weight obtained from the mini-batch $B_t$, whose indices are $i_t$, is
 
