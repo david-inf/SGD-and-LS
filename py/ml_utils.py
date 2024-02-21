@@ -6,7 +6,7 @@ import pandas as pd
 # matplotlib.use("pgf")
 import matplotlib.pyplot as plt
 # from sklearn.metrics import accuracy_score
-from solvers_utils import sigmoid
+# from solvers_utils import sigmoid
 
 # matplotlib.rcParams.update({
 #     "pgf.texsystem": "pdflatex",
@@ -19,19 +19,6 @@ from solvers_utils import sigmoid
 #          r"\usepackage[T1]{fontenc}",
 #     ]),
 # })
-
-
-def predict(X, w, thresh=0.5):
-    y_proba = sigmoid(np.dot(X, w))
-    y_proba[y_proba > thresh] = 1
-    y_proba[y_proba <= thresh] = -1
-    return y_proba
-
-
-# def set_accuracy(model, X_train, y_train, X_test, y_test):
-#     # model: OptimizeResult
-#     model.accuracy_train = accuracy_score(y_train, predict(X_train, model.x))
-#     model.accuracy_test = accuracy_score(y_test, predict(X_test, model.x))
 
 
 def optim_data(models):
@@ -49,8 +36,8 @@ def optim_data(models):
             "Run-time": [model.opt_result.runtime for model in models],
             "Iterations": [model.opt_result.nit for model in models],
             # "Termination": [model.message for model in models],
-            "Train accuracy": [model.accuracy_train for model in models],
-            "Test accuracy": [model.accuracy_test for model in models],
+            "Train score": [model.accuracy_train for model in models],
+            "Test score": [model.accuracy_test for model in models],
             "Loss/Epochs": [model.loss_seq for model in models]
         }
     )
@@ -71,8 +58,8 @@ def optim_bench(models):
             "Run-time": np.nan,
             "Iterations": [model.opt_result.nit for model in models],
             # "Termination": model.message,
-            "Train accuracy": [model.accuracy_train for model in models],
-            "Test accuracy": [model.accuracy_test for model in models],
+            "Train score": [model.accuracy_train for model in models],
+            "Test score": [model.accuracy_test for model in models],
             "Loss/Epochs": np.nan
         }
     )
@@ -81,9 +68,16 @@ def optim_bench(models):
 
 def models_summary(custom, bench):
     models_data = pd.concat([bench, custom], ignore_index=True)
+
     models_data["Distance (L-BFGS)"] = models_data["Solution"].apply(
         lambda x: np.linalg.norm(x - bench.loc[0]["Solution"]))
+    models_data["Sol norm"] = models_data["Solution"].apply(
+        lambda x: np.linalg.norm(x))
+
     return models_data.drop(columns={"Solution", "Loss/Epochs"})
+        # .style.format(
+        # {"Train score": "{:,.3f}", "Test score": "{:,.3f}",
+        #  "Run-time": "{:,.4f}"}, )
 
 
 # def plot_accuracy(models, ticks):
@@ -129,27 +123,48 @@ def models_summary(custom, bench):
 
 def plot_loss(ax, data):
     df = data.copy()
-    df.loc[:, "labels"] = df["Solver"] + "(" + df["Step-size"].astype(str) + ")"
-    start = 0
-    end = data["Loss/Epochs"][0].shape[0]
+    df.loc[:, "labels"] = df["Solver"] + \
+        "(" + df["Step-size"].astype(str) + ")"
+
+    start = 1
+    end = data["Loss/Epochs"][0].shape[0] + 1
+
     R = data.shape[0]
     for i in range(R//2):
         ax.plot(np.arange(start, end), df["Loss/Epochs"][i], linestyle="dashed")
+
     for i in range(R//2, R):
         ax.plot(np.arange(start, end), df["Loss/Epochs"][i], linestyle="solid")
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Train loss")
+
+    # ax.set_xlabel("Epochs")
+    ax.set_xscale("log")
+
+    # ax.set_ylabel("Train loss")
     ax.set_yscale("log")
+    # ax.set_ylim(top=np.mean(df["Loss/Epochs"][0]))
+
     ax.grid(True, which="both", axis="both")
-    ax.set_ylim(top=10 ** 0)
     ax.legend(df["labels"], fontsize="x-small")
 
 
-def diagnostic(data1, data2, data3, data4):
+def diagnostic(data1, data2, data3, data4, bench):
     models = [data1, data2, data3, data4]
+    E = data1["Loss/Epochs"][0].shape[0]
+
     fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
                             figsize=(6.4, 4.8))
+
     i = 0
     for ax in axs.flat:
         plot_loss(ax, models[i])
+
+        ax.axhline(y=bench.loss, color="k", linestyle="dashed")
+        ax.text(E*0.25, bench.loss*1.02, bench.solver, fontsize=8, ha="center")
+
         i += 1
+
+    axs[1,0].set_xlabel("Epochs")
+    axs[1,1].set_xlabel("Epochs")
+
+    axs[0,0].set_ylabel("Train loss")
+    axs[1,0].set_ylabel("Train loss")
