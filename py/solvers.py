@@ -33,15 +33,16 @@ def cg(w0, X, y, lam):
 
 # %% [1,2,4] SGD-Fixed/Decreasing, SGDM
 
-# TODO: time per epoch
 
 # SGD-Fixed, SGD-Decreasing, SGDM
 def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
     # p = X.shape[1]  # features number
 
+    # allocate sequences
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
     fun_seq = np.empty(epochs + 1)  # full objective function sequence
     # grad_seq = np.empty_like(w_seq) # full gradient sequence
+    time_seq = np.empty_like(fun_seq)  # time to epoch sequence
 
     w_k = w0.copy()
     # w_seq[0, :] = w_k.copy()
@@ -49,6 +50,7 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
     fun_k, jac_k = f_and_df(w_k, X, y, lam)
     fun_seq[0] = fun_k.copy()
     # grad_seq[0, :] = jac_k.copy()
+    time_seq[0] = 0
 
     start = time.time()
     k = 0  # epochs counter
@@ -74,6 +76,9 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 
         k += 1
 
+        # time to epoch
+        time_seq[k] = time.time() - start
+
         w_k = z_t.copy()
         # w_seq[k, :] = w_k.copy()
 
@@ -81,12 +86,12 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
         fun_seq[k] = fun_k.copy()
         # grad_seq[k, :] = jac_k.copy()
 
-    end = time.time()
-
     result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(),
                             jac=jac_k.copy(), success=(k > 1),
                             solver=solver, minibatch_size=M,
-                            nit=k, runtime=(end - start), step_size=alpha0,
+                            nit=k, step_size=alpha0,
+                            runtime=time_seq[-1],
+                            time_per_epoch=time_seq,
                             momentum=beta0, fun_per_it=fun_seq)
     return result
 
@@ -97,9 +102,11 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
     # p = X.shape[1]  # features number
 
+    # allocate sequences
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
     fun_seq = np.empty(epochs + 1)  # full objective function sequence
     # grad_seq = np.empty_like(w_seq) # full gradient sequence
+    time_seq = np.empty_like(fun_seq)  # time to epoch sequence
 
     w_k = w0.copy()
     # w_seq[0, :] = w_k.copy()
@@ -107,6 +114,7 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
     fun_k, jac_k = f_and_df(w_k, X, y, lam)
     fun_seq[0] = fun_k.copy()
     # grad_seq[0, :] = jac_k.copy()
+    time_seq[0] = 0
 
     start = time.time()
     k = 0
@@ -133,6 +141,9 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 
         k += 1
 
+        # time to epoch
+        time_seq[k] = time.time() - start
+
         w_k = z_t.copy()
         # w_seq[k, :] = w_k.copy()
 
@@ -140,12 +151,12 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
         fun_seq[k] = fun_k.copy()
         # grad_seq[k, :] = jac_k.copy()
 
-    end = time.time()
-
     result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(),
                             jac=jac_k.copy(), success=(k > 1),
                             solver=solver, minibatch_size=M,
-                            nit=k, runtime=(end - start), step_size=alpha0,
+                            nit=k, step_size=alpha0,
+                            runtime=time_seq[-1],
+                            time_per_epoch=time_seq,
                             momentum=beta0, fun_per_it=fun_seq)
     return result
 
@@ -212,25 +223,29 @@ def select_direction1(beta0, jac, d, t):
 
 def select_direction2(solver, beta0, jac, d):
     if solver == "SGD-Armijo":
-        d = - jac  # anti-gradient
+        # set negative gradient as the direction
+        d = - jac
 
     elif solver == "MSL-SGDM-C":
+        # update momentum until the direction is descent
         d = momentum_correction(beta0, jac, d)
 
     elif solver == "MSL-SGDM-R":
+        # if not descent set direction to damped negative gradient
         d = momentum_restart(beta0, jac, d)
 
     return d
 
 
 def momentum_correction(beta0, jac, d):
-    beta = beta0
+    beta = beta0  # initial momentum
+    delta = 0.5  # momentum damping factor
 
     d_next = - ((1 - beta) * jac + beta * d)  # starting direction
 
     q = 0  # momentum term rejections counter
     while not np.dot(jac, d_next) < 0 and q < 10:
-        beta = 0.5 * beta  # reduce momentum term
+        beta = delta * beta  # reduce momentum term
 
         # update direction with reduced momentum term
         d_next = - ((1 - beta) * jac + beta * d)
@@ -256,7 +271,7 @@ def momentum_restart(beta0, jac, d):
 def reset_step(N, alpha, alpha0, M, t):
     # alpha: previous iteration step-size
     # alpha0: initial step-size
-    opt = 2
+    opt = 2  # step-size restart rule
     a = 2
 
     if t == 0 or opt == 1:
@@ -273,7 +288,8 @@ def reset_step(N, alpha, alpha0, M, t):
 
 def armijo_method(z, d, X, y, lam, alpha_old, alpha_init, M, t):
     # returns: selected step-size and model update
-    delta = 0.9  # step-size damping factor
+    delta = 0.5  # step-size damping factor
+    gamma = 0.5  # Armijo condition coefficient
 
     # reset step-size
     alpha = reset_step(X.shape[0], alpha_old, alpha_init, M, t) / delta
@@ -283,10 +299,10 @@ def armijo_method(z, d, X, y, lam, alpha_old, alpha_init, M, t):
     fun_next = logistic(z_next, X, y, lam)  # w.r.t. potential next z
 
     # general Armijo condition
-    condition = fun_next - (fun + 0.5 * alpha * np.dot(jac, d))
+    condition = fun_next - (fun + gamma * alpha * np.dot(jac, d))
 
     q = 0  # step-size rejections counter
-    while not condition <= 0 and q < 50:
+    while not condition <= 0 and q < 10:
         alpha = delta * alpha  # reduce step-size
 
         z_next = z + alpha * d  # update model with reduced step-size

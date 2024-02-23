@@ -8,11 +8,9 @@ from solvers_utils import sigmoid
 
 
 class LogisticRegression():
-    def __init__(self, C=1, solver="L-BFGS", epochs=200, minibatch=16):
+    def __init__(self, solver="L-BFGS", C=1):
         self.C = C  # lambda
         self.solver = solver
-        self.epochs = epochs  # maximum number of epochs
-        self.minibatch = minibatch
 
         self.opt_result = None
 
@@ -24,11 +22,17 @@ class LogisticRegression():
         self.accuracy_train = None
         self.accuracy_test = None
 
-    def fit(self, X_train, y_train, X_test, y_test, step_size=1, momentum=0):
-        # N = X_train.shape[0]
+    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0):
+        # dataset = (X_train_X, y_train_X, X_test_X, y_test_X)
+        X_train = dataset[0]
+        y_train = dataset[1]
+        X_test = dataset[2]
+        y_test = dataset[3]
+
         w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
 
-        solver_dict = {  # dictionary of callables
+        # dictionary of callables
+        solver_dict = {
             "L-BFGS": l_bfgs_b, "Newton-CG": newton_cg, "CG": cg,
             "SGD-Fixed": sgd_m, "SGD-Decreasing": sgd_m, "SGDM": sgd_m,
             "SGD-Armijo": sgd_sls, "MSL-SGDM-C": sgd_sls, "MSL-SGDM-R": sgd_sls}
@@ -40,12 +44,11 @@ class LogisticRegression():
             self.coef_ = model.x
             self.loss = model.fun
             self.grad = np.linalg.norm(model.jac)
-            self.epochs = None
-            self.minibatch = None
 
         elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-                    self.minibatch, step_size, momentum, self.epochs, self.solver)
+                    batch_size, step_size, momentum, max_epochs, self.solver)
+            # sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
 
             self.opt_result = model
             self.coef_ = model.x
@@ -55,7 +58,8 @@ class LogisticRegression():
 
         elif self.solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-                    self.minibatch, step_size, momentum, self.epochs, self.solver)
+                    batch_size, step_size, momentum, max_epochs, self.solver)
+            # sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
 
             self.opt_result = model
             self.coef_ = model.x
@@ -76,3 +80,16 @@ class LogisticRegression():
         y_pred[y_pred <= thresh] = -1
 
         return y_pred
+
+
+# class LinearRegression():
+#     def __init__(self, solver="L-BFGS", C=1):
+#         self.C = C  # lambda
+#         self.solver = solver
+
+#         self.opt_result = None
+
+#         self.coef_ = None
+#         self.loss = None
+#         self.loss_seq = None
+#         self.grad = None

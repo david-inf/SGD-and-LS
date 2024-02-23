@@ -2,12 +2,140 @@
 #%% Packages
 # import time
 # import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 
+from load_datasets import load_diabetes
 from models import LogisticRegression
-from ml_utils import optim_data, diagnostic, optim_bench, models_summary
+from ml_utils import (optim_data, optim_bench, models_summary,
+                      diagnostic_epochs, diagnostic_time,
+                      plot_loss_time, plot_loss_epochs)
 # from solvers_utils import f_and_df, logistic, logistic_der
+
+# %% Diabetes
+
+data_diab = load_diabetes()
+
+CDiab = 1
+MDiab = 8
+kDiab = 200
+
+
+benchDiab1 = LogisticRegression("L-BFGS", C=CDiab)
+benchDiab1.fit(dataset=data_diab)
+
+benchDiab2 = LogisticRegression("Newton-CG", C=CDiab)
+benchDiab2.fit(dataset=data_diab)
+
+benchDiab3 = LogisticRegression("CG", C=CDiab)
+benchDiab3.fit(dataset=data_diab)
+
+
+benchDiab_data = optim_bench([benchDiab1, benchDiab2, benchDiab3])
+
+# %%% SGD-Fixed
+
+sgdDiab_fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
+sgdDiab_fixed1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.2)
+
+sgdDiab_fixed2 = LogisticRegression("SGD-Fixed", C=CDiab)
+sgdDiab_fixed2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01)
+
+sgdDiab_fixed3 = LogisticRegression("SGD-Fixed", C=CDiab)
+sgdDiab_fixed3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.001)
+
+# %%% SGD-Decreasing
+
+sgdDiab_decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
+sgdDiab_decre1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=1)
+
+sgdDiab_decre2 = LogisticRegression("SGD-Decreasing", C=CDiab)
+sgdDiab_decre2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.1)
+
+sgdDiab_decre3 = LogisticRegression("SGD-Decreasing", C=CDiab)
+sgdDiab_decre3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01)
+
+# %%% SGDM
+
+sgdmDiab1 = LogisticRegression("SGDM", C=CDiab)
+sgdmDiab1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=1, momentum=0.9)
+
+sgdmDiab2 = LogisticRegression("SGDM", C=CDiab)
+sgdmDiab2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.1, momentum=0.9)
+
+sgdmDiab3 = LogisticRegression("SGDM", C=CDiab)
+sgdmDiab3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01, momentum=0.9)
+
+# %%% SGD-Armijo
+
+sgdDiab_armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
+sgdDiab_armijo1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=1)
+
+sgdDiab_armijo2 = LogisticRegression("SGD-Armijo", C=CDiab)
+sgdDiab_armijo2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.1)
+
+sgdDiab_armijo3 = LogisticRegression("SGD-Armijo", C=CDiab)
+sgdDiab_armijo3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01)
+
+# %%% MSL-SGDM-C
+
+mslcDiab1 = LogisticRegression("MSL-SGDM-C", C=CDiab)
+mslcDiab1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=1, momentum=0.9)
+
+mslcDiab2 = LogisticRegression("MSL-SGDM-C", C=CDiab)
+mslcDiab2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.1, momentum=0.9)
+
+mslcDiab3 = LogisticRegression("MSL-SGDM-C", C=CDiab)
+mslcDiab3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01, momentum=0.9)
+
+# %%% MSL-SGDM-R
+
+mslrDiab1 = LogisticRegression("MSL-SGDM-R", C=CDiab)
+mslrDiab1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=1, momentum=0.9)
+
+mslrDiab2 = LogisticRegression(solver="MSL-SGDM-R", C=CDiab)
+mslrDiab2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.1, momentum=0.9)
+
+mslrDiab3 = LogisticRegression(solver="MSL-SGDM-R", C=CDiab)
+mslrDiab3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01, momentum=0.9)
+
+# %%% Diagnostic
+
+modelsDiab_data = optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdmDiab1, sgdmDiab2, sgdmDiab3,
+                              sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3, mslcDiab1, mslcDiab2, mslcDiab3, mslrDiab1, mslrDiab2, mslrDiab3])
+
+
+
+diagnostic_epochs(
+    optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
+    optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
+    optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslcDiab1, mslcDiab2, mslcDiab3]),
+    optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslrDiab1, mslrDiab2, mslrDiab3]),
+    benchDiab1)
+
+diagnostic_time(
+    optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
+    optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
+    optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslcDiab1, mslcDiab2, mslcDiab3]),
+    optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslrDiab1, mslrDiab2, mslrDiab3]),
+    benchDiab1)
+
+# models = [optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3]),
+#           optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3])]
+
+# fig, axs = plt.subplots(2, 2, sharey=True, layout="constrained", figsize=(6.4, 4.8))
+# # i = 0
+# # for ax in axs.flat:
+# plot_loss_time(axs[0,0], models[0])
+# plot_loss_epochs(axs[1,0], models[0])
+
+# plot_loss_time(axs[0,1], models[1])
+# plot_loss_epochs(axs[1,1], models[1])
+#     # i += 1
+
+# diagnostic_epochs(data1, data2, data3, data4, bench)
+
+
 
 #%% Apple quality dataset
 
