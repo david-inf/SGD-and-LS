@@ -7,8 +7,8 @@ import pandas as pd
 
 from load_datasets import load_diabetes
 from models import LogisticRegression
-from ml_utils import (optim_data, optim_bench, models_summary,
-                      diagnostic_epochs, diagnostic_time,
+from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
+                      models_summary, diagnostic_epochs, diagnostic_time,
                       plot_loss_time, plot_loss_epochs)
 # from solvers_utils import f_and_df, logistic, logistic_der
 
@@ -20,29 +20,12 @@ CDiab = 1
 MDiab = 8
 kDiab = 200
 
-
-benchDiab1 = LogisticRegression("L-BFGS", C=CDiab)
-benchDiab1.fit(dataset=data_diab)
-
-benchDiab2 = LogisticRegression("Newton-CG", C=CDiab)
-benchDiab2.fit(dataset=data_diab)
-
-benchDiab3 = LogisticRegression("CG", C=CDiab)
-benchDiab3.fit(dataset=data_diab)
-
-
-benchDiab_data = optim_bench([benchDiab1, benchDiab2, benchDiab3])
+benchDiab = run_bench(data_diab, CDiab)
+benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-sgdDiab_fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
-sgdDiab_fixed1.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.2)
-
-sgdDiab_fixed2 = LogisticRegression("SGD-Fixed", C=CDiab)
-sgdDiab_fixed2.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.01)
-
-sgdDiab_fixed3 = LogisticRegression("SGD-Fixed", C=CDiab)
-sgdDiab_fixed3.fit(dataset=data_diab, max_epochs=kDiab, batch_size=MDiab, step_size=0.001)
+sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.01, 0.001))
 
 # %%% SGD-Decreasing
 

@@ -18,16 +18,10 @@ def dataset_distrib(y_train):
     return dict(zip(values, counts / samples))
 
 
-def dataset_info(data):
-    print(f"""
-          X_train = {data[0].shape}, y_train = {data[1].shape}
-          X_test = {data[2].shape}, y_test = {data[3].shape}
-          Class distribution: {dataset_distrib(data[1])}""")
-
-
 """ dataset_X = load_X() """
 
-# Diabetes
+
+# %% Diabetes
 
 def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
@@ -40,11 +34,14 @@ def load_diabetes():  # ok
 
     # split dataset
     X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
-    
+
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
     return X_train, y_train, X_test, y_test
 
 
-# Breast cancer
+# %% Breast cancer
 
 def load_breast_cancer():  # ok
     path = "datasets/LIBSVM/breast-cancer_scale.txt"
@@ -61,11 +58,14 @@ def load_breast_cancer():  # ok
 
     # split dataset
     X_train, X_test, y_train, y_test = train_test_split(X_prep, y_prep, test_size=0.2, random_state=42)
-    
+
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
     return X_train, y_train, X_test, y_test
 
 
-# svmguide1
+# %% svmguide1
 
 def load_svmguide1():  # ok
     path_train = "datasets/LIBSVM/svmguide1.txt"
@@ -92,10 +92,13 @@ def load_svmguide1():  # ok
     y_train_prep = 2 * encoder.fit_transform(y_train) - 1
     y_test_prep = 2 * encoder.fit_transform(y_test) - 1
 
+    print(f"X_train = {X_train_prep.shape}, y_train = {y_train_prep.shape}")
+    print(f"X_test = {X_test_prep.shape}, y_test = {y_test_prep.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train_prep)}")
     return X_train_prep, y_train_prep, X_test_prep, y_test_prep
 
 
-# Australian
+# %% Australian
 
 def load_australian():  # ok
     path = "datasets/LIBSVM/australian_scale.txt"
@@ -107,11 +110,14 @@ def load_australian():  # ok
 
     # split dataset
     X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
-    
+
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
     return X_train, y_train, X_test, y_test
 
 
-# Mushrooms
+# %% Mushrooms
 
 def load_mushrooms():  # ok
     path = "datasets/LIBSVM/mushrooms.txt"
@@ -129,10 +135,13 @@ def load_mushrooms():  # ok
     # split dataset
     X_train, X_test, y_train, y_test = train_test_split(X_prep, y_prep, test_size=0.2, random_state=42)
 
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
     return X_train, y_train, X_test, y_test
 
 
-# a5a
+# %% a5a
 
 def load_a5a():  # ok
     path_train = "datasets/LIBSVM/a5a.txt"
@@ -149,16 +158,7 @@ def load_a5a():  # ok
     X_train_prep = np.hstack((np.ones((X_train_arr.shape[0],1)), X_train_arr))
     X_test_prep = np.hstack((np.ones((X_test_arr.shape[0],1)), X_test_arr))
 
+    print(f"X_train = {X_train_prep.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test_prep.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
     return X_train_prep, y_train, X_test_prep, y_test
-
-
-
-
-
-
-
-
-
-
-
-

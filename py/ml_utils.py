@@ -6,6 +6,8 @@ import pandas as pd
 # matplotlib.use("pgf")
 import matplotlib.pyplot as plt
 # from sklearn.metrics import accuracy_score
+
+from models import LogisticRegression
 # from solvers_utils import sigmoid
 
 # matplotlib.rcParams.update({
@@ -19,6 +21,22 @@ import matplotlib.pyplot as plt
 #          r"\usepackage[T1]{fontenc}",
 #     ]),
 # })
+
+
+def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
+    solver1 = LogisticRegression(solver, C=C)
+    solver1.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
+                step_size=step_size[0], momentum=momentum[0])
+
+    solver2 = LogisticRegression(solver, C=C)
+    solver2.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
+                step_size=step_size[1], momentum=momentum[1])
+
+    solver3 = LogisticRegression(solver, C=C)
+    solver3.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
+                step_size=step_size[2], momentum=momentum[2])
+
+    return [solver1, solver2, solver3]
 
 
 def optim_data(models):
@@ -43,6 +61,14 @@ def optim_data(models):
         }
     )
     return models_data
+
+
+def run_bench(dataset, C):
+    bench1 = LogisticRegression("L-BFGS", C=C).fit(dataset=dataset)
+    bench2 = LogisticRegression("Newton-CG", C=C).fit(dataset=dataset)
+    bench3 = LogisticRegression("CG", C=C).fit(dataset=dataset)
+
+    return [bench1, bench2, bench3]
 
 
 def optim_bench(models):
@@ -78,9 +104,6 @@ def models_summary(custom, bench):
         lambda x: np.linalg.norm(x))
 
     return models_data.drop(columns={"Solution", "Loss/Epochs", "Time/Epochs"})
-        # .style.format(
-        # {"Train score": "{:,.3f}", "Test score": "{:,.3f}",
-        #  "Run-time": "{:,.4f}"}, )
 
 
 def plot_loss_epochs(ax, data):
