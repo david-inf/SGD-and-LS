@@ -109,7 +109,7 @@ The first choice sees the same step-size between the epochs and so the iteration
 \subsubsection{Stochastic line search}
 
 %Other than $\mathcal{L}_0=\set{w\in\R^{(p+1)}\mid\func(w)\leq\func(w^0)}$ being a \emph{compact set}, since the function is coercive (see\dots)
-Now we move forward to the approach by \texttt{bib1}. For using the algorithm proposed by the paper, one more assumption is needed, that is, the model is able to \emph{interpolate} the data, this property requires that the gradient w.r.t. each samples converges to zero at the optimal solution
+Now we move forward to the approach by~\textcite{vaswani_painless_2019}. For using the algorithm proposed by the paper, one more assumption is needed, that is, the model is able to \emph{interpolate} the data, this property requires that the gradient w.r.t. each samples converges to zero at the optimal solution
 \[
 \text{if}\,\,\,w^\ast\mid\nabla\func(w^\ast)=0\Rightarrow\nabla f_i(w^\ast)=0\,\,\,\forall i=1,\dots,N
 \]
@@ -172,7 +172,7 @@ which is applied as the general update rule in algorithm~\vref{alg:SGD-F-D-M}, i
 
 \subsubsection{Stochastic line search}
 
-As the paper \texttt{bib2} says, when using the momentum term together with a line search, $\beta_0$ complicates the selection of a suitable step-size. The Armijo line search applied to the \texttt{SGDM} algorithm has the following condition
+As the paper by~\textcite{fan_msl_2023} says, when using the momentum term together with a line search, $\beta_0$ complicates the selection of a suitable step-size. The Armijo line search applied to the \texttt{SGDM} algorithm has the following condition
 \begin{equation}\label{eq:armijo-sgdm}
 f_{i_t}(y_{t+1})\leq f_{i_t}(y_t)-\gamma\alpha_t\nabla f_{i_t}(y_t)^T\bigl((1-\beta_0)\nabla f_{i_t}(y_t)+\beta_0d_{t-1}\bigr)
 \end{equation}
@@ -190,7 +190,7 @@ The problem is that $\nabla f_{i_t}(y_t)^Td_t<0$ isn't always guaranteed, i.e. t
 \draw[-latex] (C.east) -- ++(0.2,0) -- node[right, font=\footnotesize] {\texttt{check}} ++(0,{5.5em*sin(40)}) -- (A.east);
 \end{tikzpicture}
 \end{center}
-in algorithmic terms, until the direction is descent, damp the momentum term by a factor $\delta$, which is usually set to $1/2$ like in the line search. Using this procedure, a descent direction $d_t$ is guaranteed and it is possible to apply the algorithm~\ref{alg:armijo}, the procedure is called \emph{momentum correction}, see algorithm~\vref{alg:m-correction}. The resulting algorithm is \texttt{MSL-SGDM-C}.
+in algorithmic terms, until the direction is descent, damp the momentum term by a factor $\delta$, which is usually set to \num{0.5} like in the line search. Using this procedure, a descent direction $d_t$ is guaranteed and it is possible to apply the algorithm~\ref{alg:armijo}, the procedure is called \emph{momentum correction}, see algorithm~\vref{alg:m-correction}. The resulting algorithm is \texttt{MSL-SGDM-C}.
 
 This procedure can be expensive, so the paper suggests another approach called \emph{momentum restart}, when the descent direction condition for $d_t$ isn't satisfied, the procedure restarts that direction by setting $d_{t-1}=d_0$, the paper suggests $d_0=0$, in general
 \begin{center}
@@ -205,3 +205,5 @@ This procedure can be expensive, so the paper suggests another approach called \
 \end{tikzpicture}
 \end{center}
 so if $d_0=0$ the direction will be $d_t=-(1-\beta_0)\nabla f_{i_t}(y_t)$ that is a descent direction, see algorithm~\vref{alg:m-restart}. The resulting algorithm is \texttt{MSL-SGDM-R}.
+
+The authors suggest to set the momentum term to $\beta_0=0.9$.

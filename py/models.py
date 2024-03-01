@@ -22,7 +22,7 @@ class LogisticRegression():
         self.accuracy_train = None
         self.accuracy_test = None
 
-    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0):
+    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0, stop=0):
         # dataset = (X_train_X, y_train_X, X_test_X, y_test_X)
         X_train = dataset[0]
         y_train = dataset[1]
@@ -47,7 +47,7 @@ class LogisticRegression():
 
         elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-                    batch_size, step_size, momentum, max_epochs, self.solver)
+                batch_size, step_size, momentum, max_epochs, self.solver, stop)
             # sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
 
             self.opt_result = model
@@ -58,7 +58,7 @@ class LogisticRegression():
 
         elif self.solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-                    batch_size, step_size, momentum, max_epochs, self.solver)
+                batch_size, step_size, momentum, max_epochs, self.solver, stop)
             # sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
 
             self.opt_result = model

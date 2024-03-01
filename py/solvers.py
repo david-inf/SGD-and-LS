@@ -35,7 +35,7 @@ def cg(w0, X, y, lam):
 
 
 # SGD-Fixed, SGD-Decreasing, SGDM
-def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
+def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
     # p = X.shape[1]  # features number
 
     # allocate sequences
@@ -54,7 +54,7 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 
     start = time.time()
     k = 0  # epochs counter
-    while stopping(fun_k, jac_k, k, epochs):
+    while stopping(fun_k, jac_k, k, epochs, criterion=stop):
         # split dataset indices randomly
         minibatches = shuffle_dataset(X.shape[0], k, M)
 
@@ -99,7 +99,7 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 # %% [3,5a,5b] SGD-Armijo, MSL-SGDM-C/R
 
 
-def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
+def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
     # p = X.shape[1]  # features number
 
     # allocate sequences
@@ -118,7 +118,7 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 
     start = time.time()
     k = 0
-    while stopping(fun_k, jac_k, k, epochs):
+    while stopping(fun_k, jac_k, k, epochs, criterion=stop):
         # split dataset indices randomly
         minibatches = shuffle_dataset(X.shape[0], k, M)  # get random minibatches
 
@@ -164,13 +164,18 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver):
 # %% utils
 
 
-def stopping(fun_k, grad_k, nit, max_iter):
+def stopping(fun_k, grad_k, nit, max_iter, criterion):
     # fun and grad already evaluated
-    # tol = 1e-2
-    # return (np.linalg.norm(grad_k) > tol) and (nit < max_iter)
-    # return (np.linalg.norm(grad_k) > tol * (1 + fun_k)) and (nit < max_iter)
-    # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
-    return (nit < max_iter)
+    tol = 1e-3
+    if criterion == 0:
+        return (nit < max_iter)
+
+    if criterion == 1:
+        return (np.linalg.norm(grad_k) > tol) and (nit < max_iter)
+
+    if criterion == 2:
+        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
+        return (np.linalg.norm(grad_k) > tol * (1 + fun_k)) and (nit < max_iter)
 
 
 def batch_jac(z, X, y, lam, minibatch):
@@ -244,7 +249,7 @@ def momentum_correction(beta0, jac, d):
     d_next = - ((1 - beta) * jac + beta * d)  # starting direction
 
     q = 0  # momentum term rejections counter
-    while not np.dot(jac, d_next) < 0 and q < 10:
+    while (not np.dot(jac, d_next) < 0) and (q < 10):
         beta = delta * beta  # reduce momentum term
 
         # update direction with reduced momentum term
@@ -302,7 +307,7 @@ def armijo_method(z, d, X, y, lam, alpha_old, alpha_init, M, t):
     condition = fun_next - (fun + gamma * alpha * np.dot(jac, d))
 
     q = 0  # step-size rejections counter
-    while not condition <= 0 and q < 10:
+    while (not condition <= 0) and (q < 10):
         alpha = delta * alpha  # reduce step-size
 
         z_next = z + alpha * d  # update model with reduced step-size

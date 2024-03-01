@@ -4,7 +4,8 @@
 % !TeX root = optarticle.tex
 \documentclass[10pt,a4paper,fleqn]{article}
 % -------------------------------- %
-\usepackage{lmodern}
+%\usepackage{lmodern}
+\usepackage{cfr-lm}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage[utf8]{inputenc}
@@ -66,11 +67,12 @@
 % -------------------------------- %
 % Numbers
 % -------------------------------- %
-%\usepackage{siunitx}
-%\sisetup{%
-%	output-decimal-marker={,},group-separator={\,},%
-%	round-mode=places%
-%}
+\usepackage{siunitx}
+\sisetup{%
+	output-decimal-marker={.},group-separator={\,},%
+%	round-mode=places,round-precision=6,%
+	table-parse-only,table-number-alignment=center%
+}
 % -------------------------------- %
 % Tikz and colors
 % -------------------------------- %
@@ -81,10 +83,10 @@
 \usetikzlibrary{calc}
 %%\usepackage{tikz} % + graphicx,keyval,xcolor
 %%\definecolor{Maroon}{cmyk}{0,0.87,0.68,0.32}
-%\definecolor{RoyalBlue}{cmyk}{1,0.50,0,0}
+\definecolor{RoyalBlue}{cmyk}{1,0.50,0,0}
 %%\definecolor{halfgray}{gray}{0.55}
-%\definecolor{webgreen}{rgb}{0,0.5,0}
-%\definecolor{webbrown}{rgb}{0.6,0,0}
+\definecolor{webgreen}{rgb}{0,0.5,0}
+\definecolor{webbrown}{rgb}{0.6,0,0}
 \definecolor{lightergray}{gray}{0.99}
 % -------------------------------- %
 % Floating objects
@@ -93,11 +95,12 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 %\usepackage{multirow}
+\graphicspath{{./Figures/},{../py/plots/}}
 \usepackage{subfig}
 %\usepackage{wrapfig}
 \usepackage{caption}
 \captionsetup{format=hang,labelsep=colon,font={small,rm},labelfont={sf,bf}}
-%\captionsetup[table]{skip=0.2\medskipamount,position=top}
+\captionsetup[table]{skip=0.2\medskipamount,position=top}
 \captionsetup[figure]{position=bottom}
 \usepackage{flafter}
 \usepackage[english,nospace]{varioref}
@@ -144,19 +147,19 @@
 % -------------------------------- %
 % Bibliography
 % -------------------------------- %
-%\usepackage[autostyle,italian=guillemets,babel]{csquotes}
-%\usepackage[backend=biber,useprefix,style=ieee,backref,hyperref,defernumbers=true]{biblatex}
+\usepackage[autostyle,italian=guillemets,babel]{csquotes}
+\usepackage[backend=biber,useprefix,style=ieee,backref,hyperref,defernumbers=true]{biblatex}
 %\usepackage[backend=biber,useprefix,style=authoryear-comp,hyperref,defernumbers=true]{biblatex}
-%\addbibresource{optarticle-bib.bib}
+\addbibresource{optarticle-bib.bib}
 % -------------------------------- %
 \usepackage[hyperfootnotes=false]{hyperref}
 \hypersetup{%
-%	colorlinks,urlcolor=webbrown,linkcolor=RoyalBlue,citecolor=webgreen,%
+	colorlinks,urlcolor=webbrown,linkcolor=RoyalBlue,citecolor=webgreen,%
 	linktocpage,pdfstartpage=1,bookmarksnumbered,bookmarksopen,bookmarksopenlevel=2,%
 	pdftitle={\myTitle},pdfauthor={\myName},pdfsubject={\mySubject}%
 }
 % -------------------------------- %
-%\usepackage{showframe}
+\usepackage{showframe}
 \begin{document}
 \frenchspacing
 % ************************************************************************************* %
@@ -167,9 +170,9 @@
 \maketitle
 
 \begin{abstract}
-In recent years, tailored line search approaches have proposed to define the step-size, or learning rate, in SGD-type algorithms for finite-sum problems. In particular, a stochastic extension of standard Armijo line search has been proposed in \texttt{bib1}. The development of this kind of techniques is relevant, because it shall allow to enforce a stronger converging behaviour (due to the Armijo condition), similar to that of standard GD, within SGD methods that are commonly employed with large scale training problems.
+In recent years, tailored line search approaches have proposed to define the step-size, or learning rate, in SGD-type algorithms for finite-sum problems. In particular, a stochastic extension of standard Armijo line search has been proposed in~\textcite{vaswani_painless_2019}. The development of this kind of techniques is relevant, because it shall allow to enforce a stronger converging behaviour (due to the Armijo condition), similar to that of standard GD, within SGD methods that are commonly employed with large scale training problems.
 
-However, the stochastic line search is not immediately employable when the momentum term is part of the update equation, as the search direction might not be a descent direction (which is a necessary condition for the Armijo condition). This problem is addressed in \texttt{bib2}, where a strategy is proposed to guarantee the descent property with momentum.
+However, the stochastic line search is not immediately employable when the momentum term is part of the update equation, as the search direction might not be a descent direction (which is a necessary condition for the Armijo condition). This problem is addressed in~\textcite{fan_msl_2023}, where a strategy is proposed to guarantee the descent property with momentum.
 \end{abstract}
 
 \setcounter{tocdepth}{2}
@@ -179,13 +182,13 @@ However, the stochastic line search is not immediately employable when the momen
 % MAINMATTER %
 % ************************************************************************************* %
 \input{./Sections/sec1.tex}
-\input{./Sections/sec2.tex}\input{./Sections/code.tex}
-\input{./Sections/sec3.tex}
+\input{./Sections/sec2.tex}\input{./Sections/code.tex}\cleardoublepage
+\input{./Sections/sec3.tex}\cleardoublepage
 %\input{./Sections/code.tex}
 % ************************************************************************************* %
 % BACKMATTER %
 % ************************************************************************************* %
-%\phantomsection
-%\inToc{\refname}
-%\printbibliography
+\phantomsection
+\inToc{\refname}
+\printbibliography
 \end{document}

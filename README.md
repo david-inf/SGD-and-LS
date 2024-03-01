@@ -32,6 +32,10 @@ Benchmarking
 - sgdm con mslr
 - migliore di ognuno
 
+Benchmark
+- run degli algoritmi per un certo numero di epoche per vedere l'andamento al variare di un parametro
+- fine-tuning per vedere il migliore e stampare i dati su tabella
+
 Logistic regression - python
 - python class? like in scikit?
 - class
