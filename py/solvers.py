@@ -5,7 +5,7 @@ import time
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 
-from solvers_utils import logistic, logistic_der, f_and_df, logistic_hess
+from solvers_utils import logistic, loss_and_regul, logistic_der, f_and_df, logistic_hess
 
 # %% [0] L-BFGS-B / Newton-CG / CG
 
@@ -40,19 +40,23 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 
     # allocate sequences
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
-    fun_seq = np.empty(epochs + 1)  # full objective function sequence
+    # fun_seq = np.empty(epochs + 1)  # full objective function sequence
+    loss_seq = np.empty(epochs + 1)  # loss function sequence
     # grad_seq = np.empty_like(w_seq) # full gradient sequence
-    time_seq = np.empty_like(fun_seq)  # time to epoch sequence
+    time_seq = np.empty_like(loss_seq)  # time to epoch sequence
 
     w_k = w0.copy()
-    # w_seq[0, :] = w_k.copy()
+    # fun_k, jac_k = f_and_df(w_k, X, y, lam)
+    loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+    jac_k = logistic_der(w_k, X, y, lam)
 
-    fun_k, jac_k = f_and_df(w_k, X, y, lam)
-    fun_seq[0] = fun_k.copy()
+    # w_seq[0, :] = w_k.copy()
+    loss_seq[0] = loss_k.copy()
     # grad_seq[0, :] = jac_k.copy()
     time_seq[0] = 0
 
     start = time.time()
+
     k = 0  # epochs counter
     while stopping(fun_k, jac_k, k, epochs, criterion=stop):
         # split dataset indices randomly
@@ -76,23 +80,21 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 
         k += 1
 
-        # time to epoch
-        time_seq[k] = time.time() - start
-
         w_k = z_t.copy()
+        # fun_k, jac_k = f_and_df(w_k, X, y, lam)
+        loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+        jac_k = logistic_der(w_k, X, y, lam)
+
         # w_seq[k, :] = w_k.copy()
-
-        fun_k, jac_k = f_and_df(z_t, X, y, lam)
-        fun_seq[k] = fun_k.copy()
+        loss_seq[k] = loss_k.copy()
         # grad_seq[k, :] = jac_k.copy()
+        time_seq[k] = time.time() - start  # time to epoch
 
-    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(),
-                            jac=jac_k.copy(), success=(k > 1),
-                            solver=solver, minibatch_size=M,
-                            nit=k, step_size=alpha0,
-                            runtime=time_seq[-1],
-                            time_per_epoch=time_seq,
-                            momentum=beta0, fun_per_it=fun_seq)
+    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
+                            success=(k > 1), solver=solver, minibatch_size=M,
+                            nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
+                            step_size=alpha0, momentum=beta0,
+                            loss_per_it=loss_seq)
     return result
 
 
@@ -104,19 +106,23 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 
     # allocate sequences
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
-    fun_seq = np.empty(epochs + 1)  # full objective function sequence
+    # fun_seq = np.empty(epochs + 1)  # full objective function sequence
+    loss_seq = np.empty(epochs + 1)  # loss function sequence
     # grad_seq = np.empty_like(w_seq) # full gradient sequence
-    time_seq = np.empty_like(fun_seq)  # time to epoch sequence
+    time_seq = np.empty_like(loss_seq)  # time to epoch sequence
 
     w_k = w0.copy()
-    # w_seq[0, :] = w_k.copy()
+    # fun_k, jac_k = f_and_df(w_k, X, y, lam)
+    loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+    jac_k = logistic_der(w_k, X, y, lam)
 
-    fun_k, jac_k = f_and_df(w_k, X, y, lam)
-    fun_seq[0] = fun_k.copy()
+    # w_seq[0, :] = w_k.copy()
+    loss_seq[0] = loss_k.copy()
     # grad_seq[0, :] = jac_k.copy()
     time_seq[0] = 0
 
     start = time.time()
+
     k = 0
     while stopping(fun_k, jac_k, k, epochs, criterion=stop):
         # split dataset indices randomly
@@ -141,23 +147,21 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 
         k += 1
 
-        # time to epoch
-        time_seq[k] = time.time() - start
-
         w_k = z_t.copy()
+        # fun_k, jac_k = f_and_df(w_k, X, y, lam)
+        loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+        jac_k = logistic_der(w_k, X, y, lam)
+
         # w_seq[k, :] = w_k.copy()
-
-        fun_k, jac_k = f_and_df(z_t, X, y, lam)
-        fun_seq[k] = fun_k.copy()
+        loss_seq[k] = loss_k.copy()
         # grad_seq[k, :] = jac_k.copy()
+        time_seq[k] = time.time() - start  # time to epoch
 
-    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(),
-                            jac=jac_k.copy(), success=(k > 1),
-                            solver=solver, minibatch_size=M,
-                            nit=k, step_size=alpha0,
-                            runtime=time_seq[-1],
-                            time_per_epoch=time_seq,
-                            momentum=beta0, fun_per_it=fun_seq)
+    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
+                            success=(k > 1), solver=solver, minibatch_size=M,
+                            nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
+                            step_size=alpha0, momentum=beta0,
+                            loss_per_it=loss_seq)
     return result
 
 
@@ -168,7 +172,7 @@ def stopping(fun_k, grad_k, nit, max_iter, criterion):
     # fun and grad already evaluated
     tol = 1e-3
     if criterion == 0:
-        return (nit < max_iter)
+        return nit < max_iter
 
     if criterion == 1:
         return (np.linalg.norm(grad_k) > tol) and (nit < max_iter)

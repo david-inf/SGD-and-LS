@@ -7,6 +7,9 @@ from sklearn.datasets import load_svmlight_file
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
 
 
 # Utils
@@ -38,6 +41,15 @@ def load_diabetes():  # ok
     print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train, y_train, X_test, y_test
 
 
@@ -62,6 +74,15 @@ def load_breast_cancer():  # ok
     print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train, y_train, X_test, y_test
 
 
@@ -95,6 +116,15 @@ def load_svmguide1():  # ok
     print(f"X_train = {X_train_prep.shape}, y_train = {y_train_prep.shape}")
     print(f"X_test = {X_test_prep.shape}, y_test = {y_test_prep.shape}")
     print(f"Class distribution: {dataset_distrib(y_train_prep)}")
+
+    model = LogisticRegression().fit(X_train_prep, y_train_prep)
+    train_score = accuracy_score(y_train_prep, model.predict(X_train_prep))
+    test_score = accuracy_score(y_test_prep, model.predict(X_test_prep))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train_prep, y_train_prep, X_test_prep, y_test_prep
 
 
@@ -114,6 +144,15 @@ def load_australian():  # ok
     print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train, y_train, X_test, y_test
 
 
@@ -138,12 +177,21 @@ def load_mushrooms():  # ok
     print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train, y_train, X_test, y_test
 
 
 # %% German
 
-def load_german():
+def load_german():  # ok
     path = "datasets/LIBSVM/german.numer_scale.txt"
     X, y = load_svmlight_file(path)
     # transform to array from CSR sparse matrix
@@ -158,10 +206,49 @@ def load_german():
     print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+
     return X_train, y_train, X_test, y_test
 
 
 # %% More datasets
+
+
+def load_w2a():
+    path = "datasets/LIBSVM/w2a.txt"
+    X, y = load_svmlight_file(path)
+    # transform to array from CSR sparse matrix
+    X_arr = X.toarray()
+    return X_arr, y
+
+
+def load_a3a():  # ok
+    path_train = "datasets/LIBSVM/a3a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+    # transform to array from CSR sparse matrix
+    # X_train_arr = X_train.toarray()
+
+    path_test = "datasets/LIBSVM/a3a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+    # transform to array from CSR sparse matrix
+    # X_test_arr = X_test.toarray()
+
+    # add constant column
+    # X_train_prep = np.hstack((np.ones((X_train_arr.shape[0],1)), X_train_arr))
+    # X_test_prep = np.hstack((np.ones((X_test_arr.shape[0],1)), X_test_arr))
+
+    # print(f"X_train = {X_train_prep.shape}, y_train = {y_train.shape}")
+    # print(f"X_test = {X_test_prep.shape}, y_test = {y_test.shape}")
+    # print(f"Class distribution: {dataset_distrib(y_train)}")
+    # return X_train_prep, y_train, X_test_prep, y_test
+    return X_train.toarray(), y_train, X_test.toarray(), y_test
 
 
 def load_a5a():  # ok

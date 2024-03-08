@@ -25,7 +25,7 @@ benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.01, 0.001))
+sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001))
 
 # %%% SGD-Decreasing
 
@@ -33,7 +33,7 @@ sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1
 
 # %%% SGDM
 
-sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
+sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
 
@@ -63,15 +63,15 @@ mslr_diab = run_solvers("MSL-SGDM-R", CDiab, data_diab, kDiab, MDiab, step_size=
 #     optim_data(sgdm_diab + mslr_diab),
 #     benchDiab[0])
 
+models_diab = optim_data(sgdfixed_diab + sgddecre_diab + sgdm_diab + sgdarmijo_diab +
+                         mslc_diab + mslr_diab)
+
 diagnostic(
     optim_data(sgdfixed_diab + sgdarmijo_diab),
     optim_data(sgddecre_diab + sgdarmijo_diab),
     optim_data(sgdm_diab + mslc_diab),
     optim_data(sgdm_diab + mslr_diab),
     benchDiab[0])
-
-# modelsDiab_data = optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdmDiab1, sgdmDiab2, sgdmDiab3,
-#                               sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3, mslcDiab1, mslcDiab2, mslcDiab3, mslrDiab1, mslrDiab2, mslrDiab3])
 
 
 # fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,

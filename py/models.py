@@ -15,7 +15,7 @@ class LogisticRegression():
         self.opt_result = None
 
         self.coef_ = None
-        self.loss = None
+        self.fun = None
         self.loss_seq = None
         self.grad = None
 
@@ -42,7 +42,7 @@ class LogisticRegression():
 
             self.opt_result = model
             self.coef_ = model.x
-            self.loss = model.fun
+            self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
 
         elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
@@ -52,9 +52,9 @@ class LogisticRegression():
 
             self.opt_result = model
             self.coef_ = model.x
-            self.loss = model.fun
+            self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
-            self.loss_seq = model.fun_per_it# / N
+            self.loss_seq = model.loss_per_it
 
         elif self.solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
             model = solver_dict[self.solver](w0, X_train, y_train, self.C,
@@ -63,9 +63,9 @@ class LogisticRegression():
 
             self.opt_result = model
             self.coef_ = model.x
-            self.loss = model.fun
+            self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
-            self.loss_seq = model.fun_per_it# / N
+            self.loss_seq = model.loss_per_it
 
         self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
         self.accuracy_test = accuracy_score(y_test, self.predict(X_test))

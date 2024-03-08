@@ -25,20 +25,23 @@ The algorithm is globally convergent, so the starting point will be an arbitrary
 
 \subsubsection*{Stopping criterion and failures}
 
-Regarding the implementation of the algorithm, it is essential to define a stopping criterion. Given a small $\epsilon>0$ there are two possible choices
+Regarding the implementation of the algorithm, it is essential to define a stopping criterion. Given a small $\epsilon>0$ the chosen criterion is as follows
 %\begin{subequations}
 %\begin{align}
 %\norma{\nabla\func(w^k)} &\leq \epsilon \label{eq:stopping1} \\
 %\norma{\nabla\func(w^k)} &\leq \epsilon\bigl(1+\abs{\underbrace{\func(w^k)}_{\geq0\,\forall w^k}}\bigr)=\epsilon\bigl(1+\func(w^k)\bigr) \label{eq:stopping2}
 %\end{align}
 %\end{subequations}
-\[
-\norma{\nabla\func(w^k)}\leq
-\begin{cases}
-\epsilon \\
-\epsilon\bigl(1+\abs{\func(w^k)}\bigr)=\epsilon\bigl(1+\func(w^k)\bigr)
-\end{cases}
-\]
+%\[
+%\norma{\nabla\func(w^k)}\leq
+%\begin{cases}
+%\epsilon \\
+%\epsilon\bigl(1+\abs{\func(w^k)}\bigr)=\epsilon\bigl(1+\func(w^k)\bigr)
+%\end{cases}
+%\]
+\begin{equation}\label{eq:stopping}
+\norma{\nabla\func(w^k)}\leq\epsilon
+\end{equation}
 unlike the first one, the second is independent from the scale of the objective function. Note that the criterion uses the full gradient.
 
 Other than the stopping criterion, we can add conditions of premature termination like

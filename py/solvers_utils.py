@@ -5,16 +5,17 @@ import numpy as np
 
 def sigmoid(z):
     """ sigmoid function """
+
     return 1 / (1 + np.exp(-z))
 
 
 def logistic(w, X, y, lam):
     """ Log-loss with l2 regularization """
-    z = - y * np.dot(X, w)
-    N = y.size  # number of samples
+    samples = y.size
 
     # loss function
-    loss = np.sum(np.logaddexp(0, z)) / N
+    z = - y * np.dot(X, w)
+    loss = np.sum(np.logaddexp(0, z)) / samples
 
     # regularizer term
     regul = 0.5 * np.linalg.norm(w) ** 2
@@ -22,13 +23,28 @@ def logistic(w, X, y, lam):
     return loss + lam * regul
 
 
+def loss_and_regul(w, X, y, lam):
+    """ Log-loss and log-loss with l2 regularization term """
+    samples = y.size  # number of samples
+
+    # loss function
+    z = - y * np.dot(X, w)
+    loss = np.sum(np.logaddexp(0, z)) / samples
+
+    # regularizer term
+    regul = 0.5 * np.linalg.norm(w) ** 2
+
+    return (loss,                # log-loss
+            loss + lam * regul)  # log-loss with l2 regularization
+
+
 def logistic_der(w, X, y, lam):
     """ Log-loss with l2 regularization derivative """
-    z = - y * np.dot(X, w)
-    N = y.size  # number of samples
+    samples = y.size  # number of samples
 
     # loss function derivative
-    loss_der = np.dot(- y * sigmoid(z), X) / N
+    z = - y * np.dot(X, w)
+    loss_der = np.dot(- y * sigmoid(z), X) / samples
 
     # regularizer term derivative
     regul_der = w
@@ -39,14 +55,14 @@ def logistic_der(w, X, y, lam):
 def f_and_df(w, X, y, lam):
     """ Log-loss with l2 regularization and its derivative """
     z = - y * np.dot(X, w)  # once for twice
-    N = y.size  # number of samples
+    samples = y.size  # number of samples
 
     # loss function and regularizer term
-    loss = np.sum(np.logaddexp(0, z)) / N
+    loss = np.sum(np.logaddexp(0, z)) / samples
     regul = 0.5 * np.linalg.norm(w) ** 2
 
     # loss function and regularizer term derivatives
-    loss_der = np.dot(- y * sigmoid(z), X) / N
+    loss_der = np.dot(- y * sigmoid(z), X) / samples
     regul_der = w
 
     return (loss + lam * regul,          # objective function
@@ -56,13 +72,13 @@ def f_and_df(w, X, y, lam):
 def logistic_hess(w, X, y, lam):
     """ Log-loss with l2 regularization hessian """
     z = y * np.dot(X, w)
-    N = y.size  # number of samples
+    samples = y.size  # number of samples
 
     # diagnonal matrix NxN
     D = np.diag(sigmoid(z) * sigmoid(- z))
 
     # loss function hessian
-    loss_hess = np.dot(np.dot(D, X).T, X) / N
+    loss_hess = np.dot(np.dot(D, X).T, X) / samples
 
     # regularizer term hessian
     regul_hess = np.eye(w.shape[0])
