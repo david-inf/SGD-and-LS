@@ -64,7 +64,7 @@ def optim_data(models):
 
 
 def run_bench(dataset, C):
-    bench1 = LogisticRegression("L-BFGS", C=C).fit(dataset=dataset)
+    bench1 = LogisticRegression("L-BFGS-B", C=C).fit(dataset=dataset)
     bench2 = LogisticRegression("Newton-CG", C=C).fit(dataset=dataset)
     bench3 = LogisticRegression("CG", C=C).fit(dataset=dataset)
 

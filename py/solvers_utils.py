@@ -11,7 +11,7 @@ def sigmoid(z):
 
 def logistic(w, X, y, lam):
     """ Log-loss with l2 regularization """
-    samples = y.size
+    samples = y.size  # number of samples
 
     # loss function
     z = - y * np.dot(X, w)
@@ -52,7 +52,7 @@ def logistic_der(w, X, y, lam):
     return loss_der + lam * regul_der
 
 
-def f_and_df(w, X, y, lam):
+def f_and_df_log(w, X, y, lam):
     """ Log-loss with l2 regularization and its derivative """
     z = - y * np.dot(X, w)  # once for twice
     samples = y.size  # number of samples
@@ -81,10 +81,53 @@ def logistic_hess(w, X, y, lam):
     loss_hess = np.dot(np.dot(D, X).T, X) / samples
 
     # regularizer term hessian
-    regul_hess = np.eye(w.shape[0])
+    regul_hess = np.eye(w.size)
 
     return loss_hess + lam * regul_hess
 
 
-# def call_f(w0, X, y, args=()):
-#     return logistic(w0, X, y, *args)
+
+
+def linear(w, X, y, lam):
+    """ Quadratic-loss with l2 regularization """
+    samples = y.size  # number of samples
+
+    # loss function
+    # loss = 0.5 * np.linalg.norm(np.dot(X, w) - y)**2 / samples
+    XXw = np.dot(np.matmul(X.T, X), w)
+    yX = np.dot(y, X)
+    loss = 0.5 * (np.dot(w, XXw) - 2 * np.dot(yX, w) + np.linalg.norm(y)**2) / samples
+
+    # regularizer term
+    regul = 0.5 * np.linalg.norm(w) ** 2
+
+    return loss + lam * regul
+
+
+def linear_der(w, X, y, lam):
+    """ Quadratic-loss with l2 regularization derivative """
+    samples = y.size  # number of samples
+
+    # loss function derivative
+    loss_der = np.dot(np.matmul(X.T, X), w) - np.dot(y, X) / samples
+
+    # regularizer term derivative
+    regul_der = w
+
+    return loss_der + lam * regul_der
+
+
+# def f_and_df_linear(w, X, y, lam):
+
+
+def linear_hess(w, X, y, lam):
+    """ Quadratic-loss with l2 regularization hessian """
+    samples = y.size  # number of samples
+
+    # loss function hessian
+    loss_hess = np.matmul(X.T, X) / samples
+
+    # regularizer term hessian
+    regul_hess = np.eye(w.size)
+
+    return loss_hess + lam * regul_hess

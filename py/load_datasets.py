@@ -7,7 +7,7 @@ from sklearn.datasets import load_svmlight_file
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import accuracy_score
 
 
@@ -48,7 +48,8 @@ def load_diabetes():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train, y_train, X_test, y_test
 
@@ -81,7 +82,8 @@ def load_breast_cancer():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train, y_train, X_test, y_test
 
@@ -123,7 +125,8 @@ def load_svmguide1():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train_prep, y_train_prep, X_test_prep, y_test_prep
 
@@ -151,7 +154,8 @@ def load_australian():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train, y_train, X_test, y_test
 
@@ -184,7 +188,8 @@ def load_mushrooms():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train, y_train, X_test, y_test
 
@@ -213,7 +218,8 @@ def load_german():  # ok
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn sol norm: {np.linalg.norm(model.coef_)}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train, y_train, X_test, y_test
 
@@ -293,3 +299,24 @@ def load_a4a():
     # print(f"Class distribution: {dataset_distrib(y_train)}")
     # return X_train_prep, y_train, X_test_prep, y_test
     return X_train, y_train, X_test, y_test
+
+
+def load_mg():
+    path = "datasets/LIBSVM/mg_scale.txt"
+    X, y = load_svmlight_file(path)
+    # transform to array from CSR sparse matrix
+    X_arr = X.toarray()
+
+    # add constant column
+    X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
+
+    print(f"X = {X_prep.shape}, y = {y.shape}")
+
+    model = LinearRegression().fit(X_prep, y)
+    R2 = model.score(X_prep, y)
+
+    print(f"sklearn R2 score: {R2:.6f}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
+    
+    return X_prep, y
