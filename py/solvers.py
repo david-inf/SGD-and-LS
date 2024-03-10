@@ -52,14 +52,13 @@ def sgd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             # direction: anti-gradient or damped
             d_t = select_direction(solver, beta0, grad_t, d_t)
 
-            if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
-                # weights update without line search update
-                z_t += alpha_t * d_t
-
-            elif solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
+            if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
                 # weights update with line search
-                alpha_t, z_t = armijo_method(
+                alpha_t = armijo_method(
                     z_t, d_t, X, y, lam, alpha_t, alpha0, M, t, fun, f_and_df)
+
+            # update weights
+            z_t += alpha_t * d_t
 
         k += 1
 
@@ -163,10 +162,8 @@ def select_step(solver, alpha, k):
     returns: stepsize for the chosen solver
     """
 
-    if solver in ("SGD-Fixed", "SGDM", "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
-        pass  # return initial stepsize
-
-    elif solver == "SGD-Decreasing":
+    if solver == "SGD-Decreasing":
+        # decrease stepsize on every epoch
         alpha = alpha / (k + 1)
 
     return alpha
@@ -174,9 +171,12 @@ def select_step(solver, alpha, k):
 
 def select_direction(solver, beta0, grad_t, d_t):
     """
-    beta0: initial momentum term
-    grad_t: w.r.t. z_t
-    d_t: previous iteration direction
+    beta0:
+        initial momentum term
+    grad_t:
+        w.r.t. z_t
+    d_t:
+        previous iteration direction
 
     returns: current iteration direction
     """
@@ -300,7 +300,7 @@ def armijo_method(z_t, d_t, X, y, lam, alpha_old, alpha_init, M, t,
     fun, f_and_df:
         callables
 
-    returns: selected step-size and next iteration weights
+    returns: selected step-size
     """
 
     delta = 0.75  # step-size damping factor
@@ -309,23 +309,23 @@ def armijo_method(z_t, d_t, X, y, lam, alpha_old, alpha_init, M, t,
     # reset step-size
     alpha = reset_step(y.size, alpha_old, alpha_init, M, t) / delta
 
+    fun_t, grad_t = f_and_df(z_t, X, y, lam)  # w.r.t. z_t
     z_next = z_t + alpha * d_t                # model update
-    fun_z, grad_z = f_and_df(z_t, X, y, lam)  # w.r.t. z_t
     fun_next = fun(z_next, X, y, lam)         # w.r.t. potential next weights
 
     # general Armijo condition
-    condition = fun_next - (fun_z + gamma * alpha * np.dot(grad_z, d_t))
+    condition = fun_next - (fun_t + gamma * alpha * np.dot(grad_t, d_t))
 
     q = 0  # step-size rejections counter
     while (not condition <= 0) and (q < 20):
         alpha = delta * alpha  # reduce step-size
 
-        z_next = z_t + alpha * d_t         # model update
+        z_next += alpha * d_t              # model update
         fun_next = fun(z_next, X, y, lam)  # w.r.t. potential next weights
 
         # general Armijo condition
-        condition = fun_next - (fun_z + gamma * alpha * np.dot(grad_z, d_t))
+        condition = fun_next - (fun_t + gamma * alpha * np.dot(grad_t, d_t))
 
         q += 1
 
-    return alpha, z_next
+    return alpha
