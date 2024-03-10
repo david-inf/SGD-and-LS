@@ -54,8 +54,9 @@ def logistic_der(w, X, y, lam):
 
 def f_and_df_log(w, X, y, lam):
     """ Log-loss with l2 regularization and its derivative """
-    z = - y * np.dot(X, w)  # once for twice
     samples = y.size  # number of samples
+
+    z = - y * np.dot(X, w)  # once for twice
 
     # loss function and regularizer term
     loss = np.sum(np.logaddexp(0, z)) / samples
@@ -117,7 +118,21 @@ def linear_der(w, X, y, lam):
     return loss_der + lam * regul_der
 
 
-# def f_and_df_linear(w, X, y, lam):
+def f_and_df_linear(w, X, y, lam):
+    """ Quadratic-loss with l2 regularization and its derivative """
+    samples = y.size  # number of samples
+
+    XXw = np.dot(np.matmul(X.T, X), w)  # once for twice
+    yX = np.dot(y, X)  # once for twice
+
+    # loss function and regularizer term
+    
+
+    # loss function and regularizer term derivatives
+    
+
+    return (loss + lam * regul,          # objective function
+            loss_der + lam * regul_der)  # jacobian
 
 
 def linear_hess(w, X, y, lam):

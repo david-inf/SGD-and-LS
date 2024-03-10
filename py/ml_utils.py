@@ -10,18 +10,6 @@ import matplotlib.pyplot as plt
 from models import LogisticRegression
 # from solvers_utils import sigmoid
 
-# matplotlib.rcParams.update({
-#     "pgf.texsystem": "pdflatex",
-#     'font.family': 'serif',
-#     'text.usetex': True,
-#     'pgf.rcfonts': False,
-#     "pgf.preamble": "\n".join([
-#          r"\usepackage{lmodern}",
-#          r"\usepackage[utf8]{inputenc}",
-#          r"\usepackage[T1]{fontenc}",
-#     ]),
-# })
-
 
 def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
     solver1 = LogisticRegression(solver, C=C)
@@ -48,7 +36,7 @@ def optim_data(models):
             "Minibatch": [model.opt_result.minibatch_size for model in models],
             "Alpha0": [model.opt_result.step_size for model in models],
             "Beta0": [model.opt_result.momentum for model in models],
-            "Solution": [np.round(model.coef_, 4) for model in models],
+            "Solution": [model.coef_ for model in models],
             "l2-Loss": [model.fun for model in models],
             "Grad norm": [model.grad for model in models],
             "Run-time": [model.opt_result.runtime for model in models],
@@ -56,7 +44,7 @@ def optim_data(models):
             # "Termination": [model.message for model in models],
             "Train score": [model.accuracy_train for model in models],
             "Test score": [model.accuracy_test for model in models],
-            "Loss/Epochs": [model.loss_seq for model in models],
+            "Fun/Epochs": [model.fun_seq for model in models],
             "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
         }
     )
@@ -79,7 +67,7 @@ def optim_bench(models):
             "Minibatch": np.nan,
             "Alpha0": np.nan,
             "Beta0": np.nan,
-            "Solution": [np.round(model.coef_, 4) for model in models],
+            "Solution": [model.coef_ for model in models],
             "l2-Loss": [model.fun for model in models],
             "Grad norm": [model.grad for model in models],
             "Run-time": np.nan,
@@ -87,7 +75,7 @@ def optim_bench(models):
             # "Termination": model.message,
             "Train score": [model.accuracy_train for model in models],
             "Test score": [model.accuracy_test for model in models],
-            "Loss/Epochs": np.nan,
+            "Fun/Epochs": np.nan,
             "Time/Epochs": np.nan
         }
     )

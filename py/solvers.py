@@ -10,28 +10,92 @@ from solvers_utils import logistic, loss_and_regul, logistic_der, f_and_df_log, 
 # %% [0] L-BFGS-B / Newton-CG / CG
 
 
-def l_bfgs_b(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="L-BFGS-B",
-                   jac=True, bounds=None)
+# def l_bfgs_b(w0, X, y, lam):
+#     res = minimize(f_and_df_log, w0, args=(X, y, lam), method="L-BFGS-B",
+#                    jac=True, bounds=None)
 
-    return res
-
-
-def newton_cg(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="Newton-CG",
-                   jac=True, hess=logistic_hess, bounds=None)
-
-    return res
+#     return res
 
 
-def cg(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="CG",
-                   jac=True, bounds=None)
+# def newton_cg(w0, X, y, lam):
+#     res = minimize(f_and_df_log, w0, args=(X, y, lam), method="Newton-CG",
+#                    jac=True, hess=logistic_hess, bounds=None)
 
-    return res
+#     return res
+
+
+# def cg(w0, X, y, lam):
+#     res = minimize(f_and_df_log, w0, args=(X, y, lam), method="CG",
+#                    jac=True, bounds=None)
+
+#     return res
 
 
 # %% [1,2,4] SGD-Fixed/Decreasing, SGDM
+
+
+# # SGD-Fixed, SGD-Decreasing, SGDM
+# def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
+#     # p = X.shape[1]  # features number
+
+#     # allocate sequences
+#     # w_seq = np.empty((epochs + 1, p))  # weights sequence
+#     # fun_seq = np.empty(epochs + 1)  # full objective function sequence
+#     loss_seq = np.empty(epochs + 1)  # loss function sequence
+#     # grad_seq = np.empty_like(w_seq) # full gradient sequence
+#     time_seq = np.empty_like(loss_seq)  # time to epoch sequence
+
+#     w_k = w0.copy()
+#     # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
+#     loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+#     jac_k = logistic_der(w_k, X, y, lam)
+
+#     # w_seq[0, :] = w_k.copy()
+#     loss_seq[0] = loss_k.copy()
+#     # grad_seq[0, :] = jac_k.copy()
+#     time_seq[0] = 0
+
+#     start = time.time()
+
+#     k = 0  # epochs counter
+#     while stopping(fun_k, jac_k, k, epochs, criterion=stop):
+#         # split dataset indices randomly
+#         minibatches = shuffle_dataset(X.shape[0], k, M)
+
+#         z_t = w_k.copy()  # starting model
+#         d_t = np.zeros_like(z_t)  # initialize direction
+
+#         # fixed or decreasing step-size
+#         alpha = select_step1(solver, alpha0, k)
+
+#         for t, minibatch in enumerate(minibatches):  # 0 to N/M-1
+#             # compute gradient on the considered minibatch
+#             jac_t = batch_jac(z_t, X, y, lam, minibatch)
+
+#             # direction: anti-gradient or momentum
+#             d_t = -((1 - beta0) * jac_t + beta0 * d_t)
+
+#             # update model
+#             z_t += alpha * d_t
+
+#         k += 1
+
+#         w_k = z_t.copy()
+#         # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
+#         loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
+#         jac_k = logistic_der(w_k, X, y, lam)
+
+#         # w_seq[k, :] = w_k.copy()
+#         loss_seq[k] = loss_k.copy()
+#         # grad_seq[k, :] = jac_k.copy()
+#         time_seq[k] = time.time() - start  # time to epoch
+
+#     result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
+#                             success=(k > 1), solver=solver, minibatch_size=M,
+#                             nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
+#                             step_size=alpha0, momentum=beta0,
+#                             loss_per_epoch=loss_seq)
+#     return result
 
 
 """
@@ -43,25 +107,26 @@ _minimize_bfgs(fun, x0, args=(), jac=None, callback=None,
             hess_inv0=None, **unknown_options):
 """
 
-# SGD-Fixed, SGD-Decreasing, SGDM
-def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
-    # p = X.shape[1]  # features number
 
+# SGD-Fixed, SGD-Decreasing, SGDM
+# def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
+def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
+          fun=None, jac=None, f_and_df=None):
     # allocate sequences
+    # p = w0.size
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
-    # fun_seq = np.empty(epochs + 1)  # full objective function sequence
-    loss_seq = np.empty(epochs + 1)  # loss function sequence
-    # grad_seq = np.empty_like(w_seq) # full gradient sequence
-    time_seq = np.empty_like(loss_seq)  # time to epoch sequence
+    fun_seq = np.empty(epochs + 1)  # full objective function sequence
+    # jac_seq = np.empty_like(w_seq) # full gradient sequence
+    time_seq = np.empty_like(fun_seq)  # time per epoch sequence
 
     w_k = w0.copy()
-    # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-    loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-    jac_k = logistic_der(w_k, X, y, lam)
+    # fun_k = fun(w_k, X, y, lam)
+    # jac_k = jac(w_k, X, y, lam)
+    fun_k, jac_k = f_and_df(w_k, X, y, lam)
 
     # w_seq[0, :] = w_k.copy()
-    loss_seq[0] = loss_k.copy()
-    # grad_seq[0, :] = jac_k.copy()
+    fun_seq[0] = fun_k.copy()
+    # jac_seq[0, :] = jac_k.copy()
     time_seq[0] = 0
 
     start = time.time()
@@ -69,7 +134,7 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
     k = 0  # epochs counter
     while stopping(fun_k, jac_k, k, epochs, criterion=stop):
         # split dataset indices randomly
-        minibatches = shuffle_dataset(X.shape[0], k, M)
+        minibatches = shuffle_dataset(y.size, k, M)
 
         z_t = w_k.copy()  # starting model
         d_t = np.zeros_like(z_t)  # initialize direction
@@ -79,7 +144,7 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 
         for t, minibatch in enumerate(minibatches):  # 0 to N/M-1
             # compute gradient on the considered minibatch
-            jac_t = batch_jac(z_t, X, y, lam, minibatch)
+            jac_t = batch_jac(jac, z_t, X, y, lam, minibatch)
 
             # direction: anti-gradient or momentum
             d_t = -((1 - beta0) * jac_t + beta0 * d_t)
@@ -90,20 +155,20 @@ def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
         k += 1
 
         w_k = z_t.copy()
-        # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-        loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-        jac_k = logistic_der(w_k, X, y, lam)
+        # fun_k = fun(w_k, X, y, lam)
+        # jac_k = jac(w_k, X, y, lam)
+        fun_k, jac_k = f_and_df(w_k, X, y, lam)
 
         # w_seq[k, :] = w_k.copy()
-        loss_seq[k] = loss_k.copy()
-        # grad_seq[k, :] = jac_k.copy()
-        time_seq[k] = time.time() - start  # time to epoch
+        fun_seq[k] = fun_k.copy()
+        # jac_seq[k, :] = jac_k.copy()
+        time_seq[k] = time.time() - start  # time per epoch
 
     result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
                             success=(k > 1), solver=solver, minibatch_size=M,
                             nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
                             step_size=alpha0, momentum=beta0,
-                            loss_per_epoch=loss_seq)
+                            fun_per_epoch=fun_seq)
     return result
 
 
@@ -177,37 +242,6 @@ def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
 # %% utils
 
 
-def stopping(fun_k, grad_k, nit, max_iter, criterion):
-    # fun and grad already evaluated
-    tol = 1e-3
-    stop = False
-
-    if criterion == 0:
-        stop = nit < max_iter
-
-    if criterion == 1:
-        stop = (np.linalg.norm(grad_k) > tol) and (nit < max_iter)
-
-    if criterion == 2:
-        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
-        stop = (np.linalg.norm(grad_k) > tol * (1 + fun_k)) and (nit < max_iter)
-
-    return stop
-
-
-def batch_jac(z, X, y, lam, minibatch):
-    # z: gradient w.r.t.
-    # minibatch: array
-
-    samples_x = X[minibatch, :].copy()  # matrix
-    samples_y = y[minibatch].copy()     # vector
-
-    # compute minibatch gradient
-    grad_sum = logistic_der(z, samples_x, samples_y, lam)
-
-    return grad_sum
-
-
 def shuffle_dataset(N, k, M):
     batch = np.arange(N)  # dataset indices, reset every epoch
 
@@ -218,6 +252,38 @@ def shuffle_dataset(N, k, M):
     minibatches = np.array_split(batch, N / M)  # create the minibatches
 
     return minibatches  # list of numpy.ndarray
+
+
+def stopping(fun_k, jac_k, nit, max_iter, criterion):
+    # fun_k, jac_k: already evaluated
+    tol = 1e-3
+    stop = False
+
+    if criterion == 0:
+        stop = nit < max_iter
+
+    if criterion == 1:
+        stop = (np.linalg.norm(jac_k) > tol) and (nit < max_iter)
+
+    if criterion == 2:
+        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
+        stop = (np.linalg.norm(jac_k) > tol * (1 + fun_k)) and (nit < max_iter)
+
+    return stop
+
+
+def batch_jac(jac, z, X, y, lam, minibatch):
+    # jac: callable
+    # z: gradient w.r.t.
+    # minibatch: array of int32
+
+    samples_x = X[minibatch, :].copy()  # matrix
+    samples_y = y[minibatch].copy()     # vector
+
+    # compute minibatch gradient
+    mini_grad = jac(z, samples_x, samples_y, lam)
+
+    return mini_grad
 
 
 # %% utils basic
