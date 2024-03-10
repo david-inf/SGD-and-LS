@@ -2,13 +2,9 @@
 
 import numpy as np
 import pandas as pd
-# import matplotlib
-# matplotlib.use("pgf")
 import matplotlib.pyplot as plt
-# from sklearn.metrics import accuracy_score
 
 from models import LogisticRegression
-# from solvers_utils import sigmoid
 
 
 def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
