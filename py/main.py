@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from load_datasets import load_diabetes
+from load_datasets import load_diabetes, load_mg
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
@@ -25,7 +25,7 @@ benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001))
+sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
 # %%% SGD-Decreasing
 
@@ -33,7 +33,7 @@ sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1
 
 # %%% SGDM
 
-sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001), momentum=(0.9, 0.9, 0.9))
+sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
 
@@ -111,4 +111,12 @@ diagnostic(
 
 # %% Linear Regression
 
-linearbench1 = LinearRegression().fit(data_diab)
+data_mg = load_mg()
+
+# %% SGD-Fixed
+
+linearbench1 = LinearRegression().fit(data_mg)
+linearbench2 = LinearRegression("CG").fit(data_mg)
+linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
+
+linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)

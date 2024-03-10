@@ -91,7 +91,7 @@ def models_summary(custom, bench):
     models_data["Sol norm"] = models_data["Solution"].apply(
         lambda x: np.linalg.norm(x))
 
-    return models_data.drop(columns={"Solution", "Loss/Epochs", "Time/Epochs"})
+    return models_data.drop(columns={"Solution", "Fun/Epochs", "Time/Epochs"})
 
 
 def plot_loss_epochs(ax, data, scalexy):
@@ -100,14 +100,14 @@ def plot_loss_epochs(ax, data, scalexy):
         "(" + df["Alpha0"].astype(str) + ")"
 
     start = 1  # only in np.range
-    end = data["Loss/Epochs"][0].shape[0] + 1
+    end = data["Fun/Epochs"][0].shape[0] + 1
 
     R = data.shape[0]  # number of rows
     for i in range(R//2):
-        ax.plot(np.arange(start, end), df["Loss/Epochs"][i], linestyle="dashed")
+        ax.plot(np.arange(start, end), df["Fun/Epochs"][i], linestyle="dashed")
 
     for i in range(R//2, R):
-        ax.plot(np.arange(start, end), df["Loss/Epochs"][i], linestyle="solid")
+        ax.plot(np.arange(start, end), df["Fun/Epochs"][i], linestyle="solid")
 
     # ax.set_xlabel("Epochs")
     ax.set_xscale(scalexy[0])
@@ -122,7 +122,7 @@ def plot_loss_epochs(ax, data, scalexy):
 
 def diagnostic_epochs(data1, data2, data3, data4, bench, scalexy=("log", "log")):
     models = [data1, data2, data3, data4]
-    E = data1["Loss/Epochs"][0].shape[0]  # number of measurement
+    E = data1["Fun/Epochs"][0].shape[0]  # number of measurement
 
     fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
                             figsize=(6.4, 4.8))
@@ -153,15 +153,15 @@ def plot_loss_time(ax, data, scalexy):
     df.loc[:, "labels"] = df["Solver"] + \
         "(" + df["Alpha0"].astype(str) + ")"
 
-    end = data["Loss/Epochs"][0].shape[0]
+    end = data["Fun/Epochs"][0].shape[0]
     indices = np.arange(0, end, 10)
 
     R = data.shape[0]
     for i in range(R//2):
-        ax.plot(df["Time/Epochs"][i][indices], df["Loss/Epochs"][i][indices], linestyle="dashed")
+        ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="dashed")
 
     for i in range(R//2, R):
-        ax.plot(df["Time/Epochs"][i][indices], df["Loss/Epochs"][i][indices], linestyle="solid")
+        ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="solid")
 
     # ax.set_xlabel("Time")
     ax.set_xscale(scalexy[0])
@@ -231,7 +231,7 @@ def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear
     axs[1,1].set_xticks([1, 10, 100])
     axs[1,1].set_xticklabels(["1", "10", "100"])
 
-    ylabel1 = r"$L(w)$"
+    ylabel1 = r"$f(w)$"
     axs[0,0].set_ylabel(ylabel1)
     axs[1,0].set_ylabel(ylabel1)
 
