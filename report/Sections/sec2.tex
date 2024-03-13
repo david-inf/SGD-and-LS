@@ -109,6 +109,28 @@ Given an initial step-size $\alpha_0\in\R^+$, the first two basic version are
 \end{itemize}
 The first choice sees the same step-size between the epochs and so the iterations. The second choice changes the step-size at every epoch, while being constant between iterations, that particular form ensures the convergence. This two version are shown in algorithm~\vref{alg:SGD-F-D-M} which is a general version that includes the momentum term (see section~\ref{subsc:sgdm}), for this two cases we set $\beta_0=0$.
 
+\begin{figure}
+\centering
+\subfloat[][\emph{Inverse decay, starting with $\alpha_0=1$}]
+{%
+\begin{tikzpicture}
+\begin{axis}[xlabel=$k$,ylabel={$\alpha=\frac{\alpha_0}{k+1}$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
+\addplot[samples=200,domain=0:200,blue,smooth] {1/(x+1)};
+\end{axis}
+\end{tikzpicture}
+} \quad
+\subfloat[][\emph{Exponential decay, starting with $\alpha_0=1$ and decay rate $\gamma=0.95$}]
+{%
+\begin{tikzpicture}
+\begin{axis}[xlabel=$k$,ylabel={$\alpha=\alpha_0\gamma^k$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
+\addplot[samples=200,domain=0:200,blue,smooth] {1*0.95^(x)};
+\end{axis}
+\end{tikzpicture}
+}
+\caption{Step-size schedules for the \texttt{SGD-Decreasing} algorithm}
+\label{fig:decre-step}
+\end{figure}
+
 \subsubsection{Stochastic line search}
 
 %Other than $\mathcal{L}_0=\set{w\in\R^{(p+1)}\mid\func(w)\leq\func(w^0)}$ being a \emph{compact set}, since the function is coercive (see\dots)

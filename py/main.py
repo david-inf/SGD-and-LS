@@ -25,19 +25,31 @@ benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
+fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
+fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.01)
+print(fixed1)
+# sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
 # %%% SGD-Decreasing
 
-sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
+decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
+decre1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(decre1)
+# sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% SGDM
 
-sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
+sgdm1 = LogisticRegression("SGDM", C=CDiab)
+sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.1, momentum=0.9)
+print(sgdm1)
+# sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
 
-sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
+armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
+armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(armijo1)
+# sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% MSL-SGDM-C
 

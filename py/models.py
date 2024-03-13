@@ -31,7 +31,7 @@ class LogisticRegression():
         X_test = dataset[2]
         y_test = dataset[3]
 
-        w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
+        w0 = (2 + 2) * np.random.default_rng(42).random(X_train.shape[1]) - 2
 
         if self.solver in ("L-BFGS-B", "CG"):
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
@@ -99,7 +99,8 @@ class LogisticRegression():
 
 
     def __str__(self):
-        return (f"Train score: {self.accuracy_train}" +
+        return (f"Solver: {self.solver}" +
+                f"\nTrain score: {self.accuracy_train}" +
                 f"\nTest score: {self.accuracy_test}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
