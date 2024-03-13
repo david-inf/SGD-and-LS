@@ -235,6 +235,33 @@ def load_w2a():
     return X_arr, y
 
 
+def load_w4a():  # ok
+    path_train = "datasets/LIBSVM/w4a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    path_test= "datasets/LIBSVM/w4a.t"
+    X_test, y_test= load_svmlight_file(path_test)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
+
+    return X_train.toarray(), y_train, X_test.toarray(), y_test
+
+
 def load_w5a():  # ok
     path_train = "datasets/LIBSVM/w5a.txt"
     X_train, y_train = load_svmlight_file(path_train)
@@ -245,6 +272,19 @@ def load_w5a():  # ok
     X_test, y_test= load_svmlight_file(path_test)
     # transform to array from CSR sparse matrix
     # X_arr = X.toarray()
+
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    print(f"Class distribution: {dataset_distrib(y_train)}")
+
+    model = LogisticRegression().fit(X_train, y_train)
+    train_score = accuracy_score(y_train, model.predict(X_train))
+    test_score = accuracy_score(y_test, model.predict(X_test))
+
+    print(f"sklearn train score: {train_score:.6f}")
+    print(f"sklearn test score: {test_score:.6f}")
+    weights = np.insert(model.coef_, 0, model.intercept_)
+    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
     return X_train.toarray(), y_train, X_test.toarray(), y_test
 
