@@ -109,7 +109,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                  fun, jac, f_and_df):
     """
     Mini-batch Gradient Descent variants
-    Handle X as CSR matrix
+    Handles X as CSR matrix
 
     Parameters
     ----------
@@ -181,8 +181,8 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
 
             # get minibatch samples
             # .copy() can be avoided
-            samples_x = X[minibatch, :].copy()  # CSR matrix
-            samples_y = y[minibatch].copy()     # vector
+            samples_x = X[minibatch, :].copy()  # scipy.sparse.csr_matrix
+            samples_y = y[minibatch].copy()     # numpy.ndarray
 
             # samples w.r.t. iteration solution
             grad_t = jac(z_t, samples_x, samples_y, lam)

@@ -37,8 +37,29 @@ class LogisticRegression():
         self.accuracy_train = None  # float
         self.accuracy_test = None   # float
 
+
     def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0, stop=0):
-        # dataset = (X_train, y_train, X_test, y_test)
+        """
+        Parameters
+        ----------
+        dataset : tuple, optional
+            (X_train, y_train, X_test, y_test) The default is ().
+        max_epochs : int, optional
+            maximum number of epochs. The default is 200.
+        batch_size : int, optional
+            mini-batch size. The default is 16.
+        step_size : float, optional
+            initial learning rate. The default is 1.
+        momentum : float, optional
+            momentum term. The default is 0.
+        stop : int, optional
+            stopping criterion. The default is 0.
+
+        Returns
+        -------
+        LogisticRegression
+            fitted model.
+        """
 
         sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
                    "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R")
@@ -48,7 +69,7 @@ class LogisticRegression():
         X_test = dataset[2]   # scipy.sparse.csr_matrix
         y_test = dataset[3]   # numpy.ndarray
 
-        w0 = (2 + 2) * np.random.default_rng(42).random(X_train.shape[1]) - 2
+        w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
 
         if self.solver in ("L-BFGS-B", "CG"):
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
@@ -70,10 +91,6 @@ class LogisticRegression():
             self.grad = np.linalg.norm(model.jac)
 
         elif self.solver in sgd_variants:
-            # model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-            #     batch_size, step_size, momentum, max_epochs, self.solver, stop)
-            # sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
-
             # model = sgd(w0, X_train, y_train, self.C, batch_size, step_size,
             #             momentum, max_epochs, self.solver, stop,
             #             logistic, logistic_der, f_and_df_log)
@@ -87,21 +104,6 @@ class LogisticRegression():
             self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
             self.fun_seq = model.fun_per_epoch
-
-        # elif self.solver in ():
-            # model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-            #     batch_size, step_size, momentum, max_epochs, self.solver, stop)
-            # sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
-
-            # model = sgd(w0, X_train, y_train, self.C, batch_size, step_size,
-            #             momentum, max_epochs, self.solver, stop,
-            #             logistic, logistic_der, f_and_df_log)
-
-            # self.opt_result = model
-            # self.coef_ = model.x
-            # self.fun = model.fun
-            # self.grad = np.linalg.norm(model.jac)
-            # self.fun_seq = model.fun_per_epoch
 
         self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
         self.accuracy_test = accuracy_score(y_test, self.predict(X_test))
@@ -137,6 +139,7 @@ class LogisticRegression():
 
 
     def __str__(self):
+
         return (f"Solver: {self.solver}" +
                 f"\nTrain score: {self.accuracy_train}" +
                 f"\nTest score: {self.accuracy_test}" +

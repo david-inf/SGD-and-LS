@@ -75,6 +75,7 @@ def logistic_der(w, X, y, lam):
     -------
     numpy.ndarray of shape w.size
     """
+
     samples = y.size  # number of samples
 
     # loss function derivative

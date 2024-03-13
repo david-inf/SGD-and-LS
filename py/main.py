@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from load_datasets import load_diabetes, load_mg, load_mushrooms
+from load_datasets import load_diabetes, load_mg, load_mushrooms, load_w3a
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
@@ -14,7 +14,7 @@ from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
 
 # %% Diabetes
 
-data_diab = load_mushrooms()
+data_diab = load_diabetes()
 
 CDiab = 1
 MDiab = 8
