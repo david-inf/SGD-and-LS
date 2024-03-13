@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from load_datasets import load_diabetes
+from load_datasets import load_diabetes, load_mg
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
@@ -25,19 +25,31 @@ benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001))
+fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
+fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.01)
+print(fixed1)
+# sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
 # %%% SGD-Decreasing
 
-sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
+decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
+decre1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(decre1)
+# sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% SGDM
 
-sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (0.1, 0.01, 0.001), momentum=(0.9, 0.9, 0.9))
+sgdm1 = LogisticRegression("SGDM", C=CDiab)
+sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.1, momentum=0.9)
+print(sgdm1)
+# sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
 
-sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
+armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
+armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(armijo1)
+# sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% MSL-SGDM-C
 
@@ -111,4 +123,12 @@ diagnostic(
 
 # %% Linear Regression
 
-linearbench1 = LinearRegression().fit(data_diab)
+data_mg = load_mg()
+
+# %% SGD-Fixed
+
+linearbench1 = LinearRegression().fit(data_mg)
+linearbench2 = LinearRegression("CG").fit(data_mg)
+linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
+
+linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)

@@ -2,213 +2,119 @@
 
 # %% Packages
 import time
+import sys
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import OptimizeResult, fsolve
 
-from solvers_utils import logistic, loss_and_regul, logistic_der, f_and_df_log, logistic_hess
-
-# %% [0] L-BFGS-B / Newton-CG / CG
+# %% One function for all solvers
 
 
-def l_bfgs_b(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="L-BFGS-B",
-                   jac=True, bounds=None)
+def sgd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
+        fun, jac, f_and_df):
+    """
+    alpha0:
+        given learning rate
+    beta0:
+        given momentum term
+    solver:
+        SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R
+    fun, jac, f_and_df: callables
+    """
 
-    return res
+    # p = w0.size  # intercept and features size
 
-
-def newton_cg(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="Newton-CG",
-                   jac=True, hess=logistic_hess, bounds=None)
-
-    return res
-
-
-def cg(w0, X, y, lam):
-    res = minimize(f_and_df_log, w0, args=(X, y, lam), method="CG",
-                   jac=True, bounds=None)
-
-    return res
-
-
-# %% [1,2,4] SGD-Fixed/Decreasing, SGDM
-
-
-"""
-Example:
-_minimize_bfgs(fun, x0, args=(), jac=None, callback=None,
-            gtol=1e-5, norm=np.inf, eps=_epsilon, maxiter=None,
-            disp=False, return_all=False, finite_diff_rel_step=None,
-            xrtol=0, c1=1e-4, c2=0.9, 
-            hess_inv0=None, **unknown_options):
-"""
-
-# SGD-Fixed, SGD-Decreasing, SGDM
-def sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
-    # p = X.shape[1]  # features number
-
-    # allocate sequences
     # w_seq = np.empty((epochs + 1, p))  # weights sequence
-    # fun_seq = np.empty(epochs + 1)  # full objective function sequence
-    loss_seq = np.empty(epochs + 1)  # loss function sequence
-    # grad_seq = np.empty_like(w_seq) # full gradient sequence
-    time_seq = np.empty_like(loss_seq)  # time to epoch sequence
+    fun_seq = np.empty(epochs + 1)       # full objective function sequence
+    # grad_seq = np.empty_like(w_seq)    # full gradient sequence
 
-    w_k = w0.copy()
-    # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-    loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-    jac_k = logistic_der(w_k, X, y, lam)
+    time_seq = np.empty_like(fun_seq)    # time per epoch sequence
 
-    # w_seq[0, :] = w_k.copy()
-    loss_seq[0] = loss_k.copy()
-    # grad_seq[0, :] = jac_k.copy()
-    time_seq[0] = 0
+    w_k = w0.copy()                           # starting solution
+    # fun_k = fun(w_k, X, y, lam)             # full w.r.t. starting solution
+    # grad_k = jac(w_k, X, y, lam             # full w.r.t. starting solution
+    fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
 
-    start = time.time()
+    # w_seq[0, :] = w_k.copy()        # add starting solution
+    fun_seq[0] = fun_k.copy()         # add full evaluation
+    # grad_seq[0, :] = grad_k.copy()  # add full evaluation
+
+    time_seq[0] = 0.0                 # count from 0
+    start = time.time()  # start time counter
 
     k = 0  # epochs counter
-    while stopping(fun_k, jac_k, k, epochs, criterion=stop):
+    while stopping(fun_k, grad_k, k, epochs, criterion=stop):
+
         # split dataset indices randomly
-        minibatches = shuffle_dataset(X.shape[0], k, M)
+        minibatches = shuffle_dataset(y.size, k, M)
 
-        z_t = w_k.copy()  # starting model
-        d_t = np.zeros_like(z_t)  # initialize direction
+        z_t = w_k.copy()          # ietrations starting model
+        d_t = np.zeros_like(z_t)  # allocate iterations direction
 
-        # fixed or decreasing step-size
-        alpha = select_step1(solver, alpha0, k)
-
-        for t, minibatch in enumerate(minibatches):  # 0 to N/M-1
-            # compute gradient on the considered minibatch
-            jac_t = batch_jac(z_t, X, y, lam, minibatch)
-
-            # direction: anti-gradient or momentum
-            d_t = -((1 - beta0) * jac_t + beta0 * d_t)
-
-            # update model
-            z_t += alpha * d_t
-
-        k += 1
-
-        w_k = z_t.copy()
-        # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-        loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-        jac_k = logistic_der(w_k, X, y, lam)
-
-        # w_seq[k, :] = w_k.copy()
-        loss_seq[k] = loss_k.copy()
-        # grad_seq[k, :] = jac_k.copy()
-        time_seq[k] = time.time() - start  # time to epoch
-
-    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
-                            success=(k > 1), solver=solver, minibatch_size=M,
-                            nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
-                            step_size=alpha0, momentum=beta0,
-                            loss_per_epoch=loss_seq)
-    return result
-
-
-# %% [3,5a,5b] SGD-Armijo, MSL-SGDM-C/R
-
-
-def sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop):
-    # p = X.shape[1]  # features number
-
-    # allocate sequences
-    # w_seq = np.empty((epochs + 1, p))  # weights sequence
-    # fun_seq = np.empty(epochs + 1)  # full objective function sequence
-    loss_seq = np.empty(epochs + 1)  # loss function sequence
-    # grad_seq = np.empty_like(w_seq) # full gradient sequence
-    time_seq = np.empty_like(loss_seq)  # time to epoch sequence
-
-    w_k = w0.copy()
-    # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-    loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-    jac_k = logistic_der(w_k, X, y, lam)
-
-    # w_seq[0, :] = w_k.copy()
-    loss_seq[0] = loss_k.copy()
-    # grad_seq[0, :] = jac_k.copy()
-    time_seq[0] = 0
-
-    start = time.time()
-
-    k = 0
-    while stopping(fun_k, jac_k, k, epochs, criterion=stop):
-        # split dataset indices randomly
-        minibatches = shuffle_dataset(X.shape[0], k, M)  # get random minibatches
-
-        z_t = w_k.copy()  # starting model
-        d_t = np.zeros_like(z_t)  # initialize direction
-
-        # initialize iterations step-size
+        # start every epoch with the given step-size
         alpha_t = alpha0
 
+        if solver == "SGD-Decreasing":
+            # decrease stepsize at every epoch
+            alpha_t = alpha0 / (k + 1)
+
         for t, minibatch in enumerate(minibatches):
-            # compute gradient on the considered minibatch
-            jac_t = batch_jac(z_t, X, y, lam, minibatch)
+            # t: iteration number
+            # minibatch: numpy.ndarray of np.int32, contains minibatch indices
 
-            # direction: anti-gradient, momentum correction or restart
-            d_t = select_direction2(solver, beta0, jac_t, d_t)
+            # get minibatch samples
+            samples_x = X[minibatch, :].copy()  # matrix
+            samples_y = y[minibatch].copy()     # vector
 
-            # Armijo (stochastic) line search and model update
-            alpha_t, z_t = armijo_method(
-                z_t, d_t, X, y, lam, alpha_t, alpha0, M, t)
+            # samples w.r.t. iteration solution
+            grad_t = jac(z_t, samples_x, samples_y, lam)
+
+            # direction: anti-gradient or damped
+            d_t = select_direction(solver, beta0, grad_t, d_t)
+
+            if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
+                # reset step-size
+                alpha = reset_step(y.size, alpha_t, alpha0, M, t)
+
+                # weights update with line search
+                alpha_t = armijo_method(
+                    z_t, d_t, samples_x, samples_y, lam, alpha,
+                    t, y.size, fun, f_and_df)
+
+            # update weights
+            z_t += alpha_t * d_t
 
         k += 1
 
-        w_k = z_t.copy()
-        # fun_k, jac_k = f_and_df_log(w_k, X, y, lam)
-        loss_k, fun_k = loss_and_regul(w_k, X, y, lam)
-        jac_k = logistic_der(w_k, X, y, lam)
+        w_k = z_t.copy()                          # solution found
+        # fun_k = fun(w_k, X, y, lam)             # full w.r.t. last solution found
+        # grad_k = jac(w_k, X, y, lam)            # full w.r.t. last solution found
+        fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
 
-        # w_seq[k, :] = w_k.copy()
-        loss_seq[k] = loss_k.copy()
-        # grad_seq[k, :] = jac_k.copy()
-        time_seq[k] = time.time() - start  # time to epoch
+        # w_seq[k, :] = w_k.copy()         # add last solution found
+        fun_seq[k] = fun_k.copy()          # add full evaluation
+        # grad_seq[k, :] = grad_k.copy()   # add full evaluation
 
-    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=jac_k.copy(),
+        time_seq[k] = time.time() - start  # time per epoch
+
+    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=grad_k.copy(),
                             success=(k > 1), solver=solver, minibatch_size=M,
                             nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
                             step_size=alpha0, momentum=beta0,
-                            loss_per_epoch=loss_seq)
+                            fun_per_epoch=fun_seq)
+
     return result
 
 
 # %% utils
 
 
-def stopping(fun_k, grad_k, nit, max_iter, criterion):
-    # fun and grad already evaluated
-    tol = 1e-3
-    stop = False
-
-    if criterion == 0:
-        stop = nit < max_iter
-
-    if criterion == 1:
-        stop = (np.linalg.norm(grad_k) > tol) and (nit < max_iter)
-
-    if criterion == 2:
-        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
-        stop = (np.linalg.norm(grad_k) > tol * (1 + fun_k)) and (nit < max_iter)
-
-    return stop
-
-
-def batch_jac(z, X, y, lam, minibatch):
-    # z: gradient w.r.t.
-    # minibatch: array
-
-    samples_x = X[minibatch, :].copy()  # matrix
-    samples_y = y[minibatch].copy()     # vector
-
-    # compute minibatch gradient
-    grad_sum = logistic_der(z, samples_x, samples_y, lam)
-
-    return grad_sum
-
-
 def shuffle_dataset(N, k, M):
+    """
+    N: dataset size
+    k: epochs counter
+    M: minibatch size
+    """
+
     batch = np.arange(N)  # dataset indices, reset every epoch
 
     rng = np.random.default_rng(k)  # set different seed every epoch
@@ -220,125 +126,312 @@ def shuffle_dataset(N, k, M):
     return minibatches  # list of numpy.ndarray
 
 
-# %% utils basic
+def stopping(fun_k, jac_k, nit, max_iter, criterion):
+    """
+    fun_k, jac_k:
+        already evaluated w.r.t. w_k
+    nit:
+        epochs counter
+    max_iter:
+        maximum number of epochs
+
+    returns: True or False
+    """
+
+    tol = 1e-3
+    stop = False
+
+    if criterion == 0:
+        stop = nit < max_iter
+
+    elif criterion == 1:
+        stop = (np.linalg.norm(jac_k) > tol) and (nit < max_iter)
+
+    elif criterion == 2:
+        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
+        stop = (np.linalg.norm(jac_k) > tol * (1 + fun_k)) and (nit < max_iter)
+
+    return stop
 
 
-def select_step1(solver, alpha, k):
-    if solver in ("SGD-Fixed", "SGDM"):
-        pass
+# def batch_grad(jac, z_t, X, y, lam, batch_idx):
+#     """
+#     jac: callable
+#     z_t:
+#         current iterations weights
+#     batch_idx: array of np.int32
+#         minibatch indices
 
-    elif solver == "SGD-Decreasing":
-        alpha = alpha / (k + 1)
+#     returns gradient w.r.t. z_t and minibatch samples
+#     """
 
-    return alpha
+#     # get minibatch samples
+#     samples_x = X[batch_idx, :].copy()  # matrix
+#     samples_y = y[batch_idx].copy()     # vector
+
+#     # compute minibatch gradient
+#     mini_grad = jac(z_t, samples_x, samples_y, lam)
+
+#     return mini_grad
 
 
-# def select_direction1(beta0, jac, d, t):
-#     # d: previous direction
+# def select_step(solver, alpha, k):
+#     """
+#     solver:
+#         SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R
+#     alpha:
+#         initial stepsize
+#     k:
+#         epochs counter
 
-#     if t == 0:
-#         return -(1 - beta0) * jac
+#     returns: stepsize for the chosen solver
+#     """
 
-#     return -((1 - beta0) * jac + beta0 * d)
+#     if solver == "SGD-Decreasing":
+#         # decrease stepsize on every epoch
+#         alpha = alpha / (k + 1)
+
+#     return alpha
+
+
+def select_direction(solver, beta0, grad_t, d_t):
+    """
+    Select direction based on the selected solver
+    Dataset not required for this operation
+
+    beta0:
+        initial momentum term
+    grad_t:
+        w.r.t. z_t
+    d_t:
+        previous iteration direction
+
+    returns: current iteration direction
+    """
+
+    # allocate next direction
+    d_next = np.empty_like(d_t)
+
+    # beta = beta0
+
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
+        # set negative gradient
+        d_next = -grad_t
+
+    elif solver == "SGDM":
+        # damped negative gradient
+        d_next = -((1 - beta0) * grad_t + beta0 * d_t)
+
+    elif solver == "MSL-SGDM-C":
+        # update momentum until the direction is descent
+        d_next = momentum_correction(beta0, grad_t, d_t)
+
+    elif solver == "MSL-SGDM-R":
+        # if not descent set direction to damped negative gradient
+        d_next = momentum_restart(beta0, grad_t, d_t)
+
+    return d_next
 
 
 # %% utils sls
 
 
-def select_direction2(solver, beta0, jac, d):
-    # d: previous direction
+def momentum_correction(beta0, grad_t, d_t):
+    """
+    Momentum correction procedure, dataset not required
+    damp the momentum term until the next direction is descent
 
-    d_next = np.empty_like(d)
+    beta0: initial momentum term
+    grad_t: w.r.t. z_t
+    d_t: previous iteration direction
 
-    if solver == "SGD-Armijo":
-        # set negative gradient as the direction
-        d_next = - jac
+    returns: current iteration direction
+    """
 
-    elif solver == "MSL-SGDM-C":
-        # update momentum until the direction is descent
-        d_next = momentum_correction(beta0, jac, d)
+    beta = beta0  # starting momentum tern
+    delta = 0.75  # momentumterm  damping factor
 
-    elif solver == "MSL-SGDM-R":
-        # if not descent set direction to damped negative gradient
-        d_next = momentum_restart(beta0, jac, d)
-
-    return d_next
-
-
-def momentum_correction(beta0, jac, d):
-    beta = beta0  # initial momentum
-    delta = 0.75  # momentum damping factor
-
-    d_next = - ((1 - beta) * jac + beta * d)  # starting direction
+    d_next = -((1 - beta) * grad_t + beta * d_t)  # starting direction
+    # bestbeta = beta0
 
     q = 0  # momentum term rejections counter
-    while (not np.dot(jac, d_next) < 0) and (q < 20):
-        beta = delta * beta  # reduce momentum term
+    while (not np.dot(grad_t, d_next) < 0) and (q < 30):
+
+        # give more importance to the negative gradient
+        beta *= delta  # reduce momentum term
 
         # update direction with reduced momentum term
-        d_next = - ((1 - beta) * jac + beta * d)
+        d_next = -((1 - beta) * grad_t + beta * d_t)
 
         q += 1
 
     return d_next
 
 
-def momentum_restart(beta0, jac, d):
-    d_next1 = - (1 - beta0) * jac
-    d_next2 = - beta0 * d
+def momentum_restart(beta0, grad_t, d_t):
+    """
+    Momentum restart procedure, dataset not required
+    Check if the next direction is descent
 
-    if np.dot(jac, d_next1 + d_next2) < 0:  # if descent direction
-        d = d_next1 + d_next2
+    beta0: initial momentum term
+    grad_t: w.r.t. z_t
+    d_t: previous iteration direction
 
-    else:  # restart with d=d0=0
-        d = d_next1
+    returns: current iteration direction
+    """
 
-    return d
+    d_next1 = -(1 - beta0) * grad_t
+    d_next2 = -beta0 * d_t
+
+    if np.dot(grad_t, d_next1 + d_next2) < 0:  # if descent direction
+        d_next = d_next1 + d_next2
+
+    else:
+        d_next = d_next1  # restart with d=d0=0
+
+    return d_next
 
 
 def reset_step(N, alpha, alpha0, M, t):
-    # alpha: previous iteration step-size
-    # alpha0: initial step-size
+    """
+    N:
+        dataset size
+    alpha:
+        previous iteration step-size
+    alpha0:
+        initial step-size
+    alpha0:
+        initial stepsize
+    M:
+        minibatch size
+    t:
+        iterations counter
+
+    returns: starting stepsize for Armijo line search
+    """
+
     opt = 2  # step-size restart rule
-    a = 2
+    a = 2    # hyperparameter
 
     if t == 0 or opt == 1:
+        # set given learning rate
         alpha = alpha0
 
     elif opt == 0:
+        # set previous iteration step-size
         pass
 
     elif opt == 2:
+        # a little higher than the previous
         alpha = alpha * a**(M / N)
 
     return alpha
 
 
-def armijo_method(z, d, X, y, lam, alpha_old, alpha_init, M, t):
-    # returns: selected step-size and model update
-    delta = 0.75  # step-size damping factor
-    gamma = 0.1  # Armijo condition coefficient
+def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_old,
+                  t, N, fun, f_and_df):
+    """
+    z_t:
+        previous iteration weights
+    d_t:
+        current iteration (descent) direction
+    samples_x, samples_y:
+        general Armijo line search (SLS) uses minibatch samples
+    alpha_old:
+        previous iteration stepsize
+    alpha_init:
+        initial stepsize
+    batch_idx: array of np.int32
+        minibatch indices
+    t:
+        iterations counter
+    N:
+        dataset size
+    fun, f_and_df:
+        callables
 
-    # reset step-size
-    alpha = reset_step(X.shape[0], alpha_old, alpha_init, M, t) / delta
+    returns: selected step-size
+    """
 
-    fun, jac = f_and_df_log(z, X, y, lam)  # w.r.t. z
-    z_next = z + alpha * d  # update model with starting step-size
-    fun_next = logistic(z_next, X, y, lam)  # w.r.t. potential next z
+    delta = 0.5                # step-size damping factor
+    gamma = 0.01               # Armijo condition coefficient
+    alpha = alpha_old / delta  # starting step-size
 
-    # general Armijo condition
-    condition = fun_next - (fun + gamma * alpha * np.dot(jac, d))
+    # samples w.r.t. z_t
+    fun_t, grad_t = f_and_df(z_t, samples_x, samples_y, lam)
+
+    z_next = z_t + alpha * d_t  # model update
+
+    # samples w.r.t. potential next weights
+    fun_next = fun(z_next, samples_x, samples_y, lam)
+    # fun_next, grad_next = f_and_df(z_next, samples_x, samples_y, lam)
+
+    # stochastic Armijo condition
+    # armijo_thresh should be greater than fun_next
+    armijo_thresh = fun_t + gamma * alpha * np.dot(grad_t, d_t)
+    armijo_condition = fun_next - armijo_thresh
 
     q = 0  # step-size rejections counter
-    while (not condition <= 0) and (q < 20):
-        alpha = delta * alpha  # reduce step-size
+    while not armijo_condition <= 0 and q < 30:
 
-        z_next = z + alpha * d  # update model with reduced step-size
-        fun_next = logistic(z_next, X, y, lam)  # w.r.t. potential next z
+        # step_in_range = check_step(alpha, gamma, d_t, z_t, z_next, grad_t, grad_next)
+        if not check_step(alpha, gamma, d_t, z_t):
+            return alpha / delta
 
-        # general Armijo condition once more
-        condition = fun_next - (fun + 0.1 * alpha * np.dot(jac, d))
+        alpha *= delta         # reduce step-size
+        z_next += alpha * d_t  # model update
+
+        # samples w.r.t. potential next weights
+        fun_next = fun(z_next, samples_x, samples_y, lam)
+
+        # general Armijo condition
+        armijo_thresh = fun_t + gamma * alpha * np.dot(grad_t, d_t)
+        armijo_condition = fun_next - armijo_thresh
 
         q += 1
 
-    return alpha, z_next
+    return alpha
+
+
+# def check_step(alpha, gamma, d, x, y, jac_x, jac_y):
+#     """
+#     check if the step-size is in the specified range
+#     """
+#     # relative length of the direction
+#     # check if there is a significant improvement
+#     s_max = np.max(np.divide(d, x + 1))
+
+#     alpha_min = sys.float_info.epsilon**(2/3) / s_max
+#     # alpha_min = 2 * (1 - gamma) / fsolve(lipschitz, 1, args=(x, y, jac_x, jac_y)[0])
+
+#     alpha_max = 1e3 / s_max
+
+#     return alpha_min <= alpha <= alpha_max
+
+
+def check_step(alpha, gamma, d, x):
+    """
+    check if the step-size is in the specified range
+    """
+
+    # relative length of the direction
+    # check if there is a significant improvement
+    s_max = np.max(np.divide(d, x + 1))
+
+    alpha_min = sys.float_info.epsilon**(2/3) / s_max
+
+    alpha_max = 1e3 / s_max
+
+    return alpha_min <= alpha <= alpha_max
+
+
+def lipschitz(L, x, y, jac_x, jac_y):
+    """ Lipschitz L constant """
+    return np.linalg.norm(jac_x - jac_y) - L * np.linalg.norm(x - y)
+
+
+# %%
+
+
+# def grid_search():
+    # rates = [1, 0.5, 0.25, 0.1, 0.05, 0.25, 0.1]

@@ -3,6 +3,8 @@
 import numpy as np
 
 
+## Logistic Regression
+
 def sigmoid(z):
     """ sigmoid function """
 
@@ -23,21 +25,6 @@ def logistic(w, X, y, lam):
     return loss + lam * regul
 
 
-def loss_and_regul(w, X, y, lam):
-    """ Log-loss and log-loss with l2 regularization term """
-    samples = y.size  # number of samples
-
-    # loss function
-    z = - y * np.dot(X, w)
-    loss = np.sum(np.logaddexp(0, z)) / samples
-
-    # regularizer term
-    regul = 0.5 * np.linalg.norm(w) ** 2
-
-    return (loss,                # log-loss
-            loss + lam * regul)  # log-loss with l2 regularization
-
-
 def logistic_der(w, X, y, lam):
     """ Log-loss with l2 regularization derivative """
     samples = y.size  # number of samples
@@ -54,8 +41,9 @@ def logistic_der(w, X, y, lam):
 
 def f_and_df_log(w, X, y, lam):
     """ Log-loss with l2 regularization and its derivative """
-    z = - y * np.dot(X, w)  # once for twice
     samples = y.size  # number of samples
+
+    z = - y * np.dot(X, w)  # once for twice
 
     # loss function and regularizer term
     loss = np.sum(np.logaddexp(0, z)) / samples
@@ -86,7 +74,7 @@ def logistic_hess(w, X, y, lam):
     return loss_hess + lam * regul_hess
 
 
-
+## Multiple linear regression
 
 def linear(w, X, y, lam):
     """ Quadratic-loss with l2 regularization """
@@ -94,8 +82,8 @@ def linear(w, X, y, lam):
 
     # loss function
     # loss = 0.5 * np.linalg.norm(np.dot(X, w) - y)**2 / samples
-    XXw = np.dot(np.matmul(X.T, X), w)
-    yX = np.dot(y, X)
+    XXw = np.dot(np.matmul(X.T, X), w)  # vector
+    yX = np.dot(y, X)                   # vector
     loss = 0.5 * (np.dot(w, XXw) - 2 * np.dot(yX, w) + np.linalg.norm(y)**2) / samples
 
     # regularizer term
@@ -109,7 +97,9 @@ def linear_der(w, X, y, lam):
     samples = y.size  # number of samples
 
     # loss function derivative
-    loss_der = np.dot(np.matmul(X.T, X), w) - np.dot(y, X) / samples
+    XXw = np.dot(np.matmul(X.T, X), w)  # vector
+    yX = np.dot(y, X)                   # vector
+    loss_der = (XXw - yX) / samples
 
     # regularizer term derivative
     regul_der = w
@@ -117,7 +107,23 @@ def linear_der(w, X, y, lam):
     return loss_der + lam * regul_der
 
 
-# def f_and_df_linear(w, X, y, lam):
+def f_and_df_linear(w, X, y, lam):
+    """ Quadratic-loss with l2 regularization and its derivative """
+    samples = y.size  # number of samples
+
+    XXw = np.dot(np.matmul(X.T, X), w)  # once for twice
+    yX = np.dot(y, X)                   # once for twice
+
+    # loss function and regularizer term
+    loss = 0.5 * (np.dot(w, XXw) - 2 * np.dot(yX, w) + np.linalg.norm(y)**2) / samples
+    regul = 0.5 * np.linalg.norm(w) ** 2
+
+    # loss function and regularizer term derivatives
+    loss_der = (XXw - yX) / samples
+    regul_der = w
+
+    return (loss + lam * regul,          # objective function
+            loss_der + lam * regul_der)  # jacobian
 
 
 def linear_hess(w, X, y, lam):

@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 
 
 
@@ -235,6 +235,20 @@ def load_w2a():
     return X_arr, y
 
 
+def load_w5a():  # ok
+    path_train = "datasets/LIBSVM/w5a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    path_test= "datasets/LIBSVM/w5a.t"
+    X_test, y_test= load_svmlight_file(path_test)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    return X_train.toarray(), y_train, X_test.toarray(), y_test
+
+
 def load_a3a():  # ok
     path_train = "datasets/LIBSVM/a3a.txt"
     X_train, y_train = load_svmlight_file(path_train)
@@ -301,6 +315,7 @@ def load_a4a():
     return X_train, y_train, X_test, y_test
 
 
+# Regression
 def load_mg():
     path = "datasets/LIBSVM/mg_scale.txt"
     X, y = load_svmlight_file(path)
@@ -310,13 +325,17 @@ def load_mg():
     # add constant column
     X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
 
-    print(f"X = {X_prep.shape}, y = {y.shape}")
+    # split dataset
+    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
 
-    model = LinearRegression().fit(X_prep, y)
-    R2 = model.score(X_prep, y)
+    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
+    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
 
-    print(f"sklearn R2 score: {R2:.6f}")
+    model = LinearRegression().fit(X_train, y_train)
+    mse = mean_squared_error(y_test, model.predict(X_test))
+
+    print(f"sklearn MSE: {mse:.6f}")
     weights = np.insert(model.coef_, 0, model.intercept_)
     print(f"sklearn sol norm: {np.linalg.norm(weights)}")
     
-    return X_prep, y
+    return X_train, y_train, X_test, y_test
