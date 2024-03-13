@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from models import LogisticRegression
 
-
+# something like of a grid search
 def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
     solver1 = LogisticRegression(solver, C=C)
     solver1.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,

@@ -64,8 +64,11 @@ def logistic_der(w, X, y, lam):
     Parameters
     ----------
     w : numpy.ndarray
+        size p
     X : scipy.sparse.csr_matrix
+        size Nxp
     y : numpy.ndarray
+        size N
     lam : int
 
     Returns
@@ -95,8 +98,11 @@ def f_and_df_log(w, X, y, lam):
     Parameters
     ----------
     w : numpy.ndarray
+        size p
     X : scipy.sparse.csr_matrix
+        size Nxp
     y : numpy.ndarray
+        size N
     lam : int
 
     Returns
@@ -122,7 +128,23 @@ def f_and_df_log(w, X, y, lam):
 
 
 def logistic_hess(w, X, y, lam):
-    """ Log-loss with l2 regularization hessian """
+    """
+    Log-loss with l2 regularization hessian
+
+    Parameters
+    ----------
+    w : numpy.ndarray
+        size p
+    X : scipy.sparse.csr_matrix
+        size Nxp
+    y : numpy.ndarray
+        size N
+    lam : int
+
+    Returns
+    -------
+    numpy.ndarray of shape (w.size, w.size)
+    """
 
     samples = y.size  # number of samples
 
@@ -142,9 +164,11 @@ def logistic_hess(w, X, y, lam):
 
 
 # %% Multiple linear regression
+# TODO: handle CSR
 
 def linear(w, X, y, lam):
     """ Quadratic-loss with l2 regularization """
+
     samples = y.size  # number of samples
 
     # loss function

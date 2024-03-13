@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from load_datasets import load_diabetes, load_mg
+from load_datasets import load_diabetes, load_mg, load_mushrooms
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
@@ -14,7 +14,7 @@ from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
 
 # %% Diabetes
 
-data_diab = load_diabetes()
+data_diab = load_mushrooms()
 
 CDiab = 1
 MDiab = 8
@@ -26,7 +26,7 @@ benchDiab_data = optim_bench(benchDiab)
 # %%% SGD-Fixed
 
 fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
-fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.01)
+fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01)
 print(fixed1)
 # sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
@@ -47,17 +47,23 @@ print(sgdm1)
 # %%% SGD-Armijo
 
 armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
-armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
 print(armijo1)
 # sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% MSL-SGDM-C
 
-mslc_diab = run_solvers("MSL-SGDM-C", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
+mslc1 = LogisticRegression("MSL-SGDM-C", C=CDiab)
+mslc1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(mslc1)
+# mslc_diab = run_solvers("MSL-SGDM-C", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% MSL-SGDM-R
 
-mslr_diab = run_solvers("MSL-SGDM-R", CDiab, data_diab, kDiab, MDiab, step_size=(1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
+mslr1 = LogisticRegression("MSL-SGDM-R", C=CDiab)
+mslr1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+print(mslr1)
+# mslr_diab = run_solvers("MSL-SGDM-R", CDiab, data_diab, kDiab, MDiab, step_size=(1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% Diagnostic
 
