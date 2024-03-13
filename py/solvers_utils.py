@@ -1,37 +1,86 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import numpy.linalg as la
+from scipy.sparse import csr_matrix, isspmatrix_csr
 
-
-## Logistic Regression
+# %% Logistic Regression
 
 def sigmoid(z):
-    """ sigmoid function """
+    """
+    Sigmoid function
+
+    Parameters
+    ----------
+    z : numpy.ndarray
+
+    Returns
+    -------
+    numpy.float64
+    """
 
     return 1 / (1 + np.exp(-z))
 
 
 def logistic(w, X, y, lam):
-    """ Log-loss with l2 regularization """
+    """
+    Log-loss with l2 regularization
+
+    Parameters
+    ----------
+    w : numpy.ndarray
+        size p
+    X : scipy.sparse.csr_matrix
+        size Nxp
+    y : numpy.ndarray
+        size N
+    lam : int
+
+    Returns
+    -------
+    numpy.float64
+    """
+
     samples = y.size  # number of samples
 
     # loss function
-    z = - y * np.dot(X, w)
+    # z = -y * np.dot(X, w)
+    # loss = np.sum(np.logaddexp(0, z)) / samples
+
+    # handle CSR loss function
+    z = -y * X.dot(w)
     loss = np.sum(np.logaddexp(0, z)) / samples
 
     # regularizer term
-    regul = 0.5 * np.linalg.norm(w) ** 2
+    regul = 0.5 * la.norm(w) ** 2
 
     return loss + lam * regul
 
 
 def logistic_der(w, X, y, lam):
-    """ Log-loss with l2 regularization derivative """
+    """
+    Log-loss with l2 regularization derivative
+
+    Parameters
+    ----------
+    w : numpy.ndarray
+    X : scipy.sparse.csr_matrix
+    y : numpy.ndarray
+    lam : int
+
+    Returns
+    -------
+    numpy.ndarray of shape w.size
+    """
     samples = y.size  # number of samples
 
     # loss function derivative
-    z = - y * np.dot(X, w)
-    loss_der = np.dot(- y * sigmoid(z), X) / samples
+    # z = - y * np.dot(X, w)
+    # loss_der = np.dot(-y * sigmoid(z), X) / samples
+
+    # handle CSR loss function derivative
+    z = -y * X.dot(w)
+    loss_der = X.T.dot(-y * sigmoid(z)) / samples
 
     # regularizer term derivative
     regul_der = w
@@ -40,17 +89,32 @@ def logistic_der(w, X, y, lam):
 
 
 def f_and_df_log(w, X, y, lam):
-    """ Log-loss with l2 regularization and its derivative """
+    """
+    Log-loss with l2 regularization and its derivative
+
+    Parameters
+    ----------
+    w : numpy.ndarray
+    X : scipy.sparse.csr_matrix
+    y : numpy.ndarray
+    lam : int
+
+    Returns
+    -------
+    numpy.float64,
+    numpy.ndarray of shape w.size
+    """
+
     samples = y.size  # number of samples
 
-    z = - y * np.dot(X, w)  # once for twice
+    z = -y * X.dot(w)  # once for twice
 
-    # loss function and regularizer term
+    # handle CSR loss function and regularizer term
     loss = np.sum(np.logaddexp(0, z)) / samples
     regul = 0.5 * np.linalg.norm(w) ** 2
 
-    # loss function and regularizer term derivatives
-    loss_der = np.dot(- y * sigmoid(z), X) / samples
+    # handle CSR loss function and regularizer term derivatives
+    loss_der = X.T.dot(-y * sigmoid(z)) / samples
     regul_der = w
 
     return (loss + lam * regul,          # objective function
@@ -59,22 +123,25 @@ def f_and_df_log(w, X, y, lam):
 
 def logistic_hess(w, X, y, lam):
     """ Log-loss with l2 regularization hessian """
-    z = y * np.dot(X, w)
+
     samples = y.size  # number of samples
 
-    # diagnonal matrix NxN
-    D = np.diag(sigmoid(z) * sigmoid(- z))
+    z = y * X.dot(w)  # once for twice
 
-    # loss function hessian
-    loss_hess = np.dot(np.dot(D, X).T, X) / samples
+    # diagnonal matrix NxN
+    D = csr_matrix(np.diag(sigmoid(z) * sigmoid(-z)))
+
+    # handle CSR loss function hessian
+    # loss_hess = np.dot(np.dot(D, X).T, X) / samples
+    loss_hess = X.T.dot(D).dot(X) / samples
 
     # regularizer term hessian
     regul_hess = np.eye(w.size)
 
-    return loss_hess + lam * regul_hess
+    return loss_hess.toarray() + lam * regul_hess
 
 
-## Multiple linear regression
+# %% Multiple linear regression
 
 def linear(w, X, y, lam):
     """ Quadratic-loss with l2 regularization """

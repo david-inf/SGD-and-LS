@@ -10,6 +10,8 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import accuracy_score, mean_squared_error
 
+from scipy.sparse import csr_matrix, hstack
+
 
 
 # Utils
@@ -30,10 +32,12 @@ def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
     X, y = load_svmlight_file(path)
     # transform to array from CSR sparse matrix
-    X_arr = X.toarray()
+    # X_arr = X.toarray()
 
     # add constant column
-    X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
+    # X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
+    ones = csr_matrix(np.ones((y.size, 1)))
+    X_prep = hstack([ones, X])
 
     # split dataset
     X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
