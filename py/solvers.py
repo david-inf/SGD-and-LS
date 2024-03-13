@@ -255,7 +255,7 @@ def momentum_correction(beta0, grad_t, d_t):
     # bestbeta = beta0
 
     q = 0  # momentum term rejections counter
-    while (not np.dot(grad_t, d_next) < 0) and (q < 15):
+    while (not np.dot(grad_t, d_next) < 0) and (q < 30):
 
         # give more importance to the negative gradient
         beta *= delta  # reduce momentum term
@@ -372,7 +372,7 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_old,
     armijo_condition = fun_next - armijo_thresh
 
     q = 0  # step-size rejections counter
-    while not armijo_condition <= 0 and q < 15:
+    while not armijo_condition <= 0 and q < 30:
 
         # step_in_range = check_step(alpha, gamma, d_t, z_t, z_next, grad_t, grad_next)
         if not check_step(alpha, gamma, d_t, z_t):

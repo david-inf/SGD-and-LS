@@ -3,6 +3,8 @@
 import numpy as np
 
 
+## Logistic Regression
+
 def sigmoid(z):
     """ sigmoid function """
 
@@ -21,21 +23,6 @@ def logistic(w, X, y, lam):
     regul = 0.5 * np.linalg.norm(w) ** 2
 
     return loss + lam * regul
-
-
-def loss_and_regul(w, X, y, lam):
-    """ Log-loss and log-loss with l2 regularization term """
-    samples = y.size  # number of samples
-
-    # loss function
-    z = - y * np.dot(X, w)
-    loss = np.sum(np.logaddexp(0, z)) / samples
-
-    # regularizer term
-    regul = 0.5 * np.linalg.norm(w) ** 2
-
-    return (loss,                # log-loss
-            loss + lam * regul)  # log-loss with l2 regularization
 
 
 def logistic_der(w, X, y, lam):

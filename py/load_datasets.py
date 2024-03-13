@@ -235,6 +235,20 @@ def load_w2a():
     return X_arr, y
 
 
+def load_w5a():  # ok
+    path_train = "datasets/LIBSVM/w5a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    path_test= "datasets/LIBSVM/w5a.t"
+    X_test, y_test= load_svmlight_file(path_test)
+    # transform to array from CSR sparse matrix
+    # X_arr = X.toarray()
+
+    return X_train.toarray(), y_train, X_test.toarray(), y_test
+
+
 def load_a3a():  # ok
     path_train = "datasets/LIBSVM/a3a.txt"
     X_train, y_train = load_svmlight_file(path_train)
