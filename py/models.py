@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, mean_squared_error
 from scipy.optimize import minimize
 
-from solvers import sgd, minibatch_gd
+from solvers import sgd, minibatch_gd, minibatch_gd_parallel
 from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
 
@@ -38,7 +38,8 @@ class LogisticRegression():
         self.accuracy_test = None   # float
 
 
-    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0, stop=0):
+    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1,
+            momentum=0, stop=0, parallel=False):
         """
         Parameters
         ----------
@@ -95,9 +96,15 @@ class LogisticRegression():
             #             momentum, max_epochs, self.solver, stop,
             #             logistic, logistic_der, f_and_df_log)
 
-            model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
-                                 step_size, momentum, max_epochs, self.solver,
-                                 stop, logistic, logistic_der, f_and_df_log)
+            if parallel:
+                model = minibatch_gd_parallel(w0, X_train, y_train, self.C, batch_size,
+                                     step_size, momentum, max_epochs, self.solver,
+                                     stop, logistic, logistic_der, f_and_df_log)
+
+            else:
+                model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
+                                     step_size, momentum, max_epochs, self.solver,
+                                     stop, logistic, logistic_der, f_and_df_log)
 
             self.opt_result = model
             self.coef_ = model.x
@@ -131,9 +138,7 @@ class LogisticRegression():
 
         y_proba = sigmoid(X.dot(self.coef_))
 
-        y_pred = y_proba.copy()
-        y_pred[y_pred > thresh] = 1
-        y_pred[y_pred <= thresh] = -1
+        y_pred = np.where(y_proba > thresh, 1, -1)
 
         return y_pred
 
@@ -163,7 +168,8 @@ class LinearRegression():
 
         self.mse = None
 
-    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1, momentum=0, stop=0):
+    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1,
+            momentum=0, stop=0, parallel=False):
         # dataset = (X_train, y_train, X_test, y_test)
         X_train = dataset[0]
         y_train = dataset[1]

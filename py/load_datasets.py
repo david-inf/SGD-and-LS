@@ -12,6 +12,9 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 
 from scipy.sparse import csr_matrix, lil_matrix, hstack
 
+from joblib import Memory
+mem = Memory("./mycache")
+
 
 
 # Utils
@@ -52,6 +55,7 @@ def add_intercept(X):
 
 # %% Diabetes
 
+@mem.cache
 def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
     X, y = load_svmlight_file(path)
@@ -62,7 +66,8 @@ def load_diabetes():  # ok
     X_prep = add_intercept(X)
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y, test_size=0.2, random_state=42)
 
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
@@ -83,7 +88,8 @@ def load_breast_cancer():  # ok
     y_prep = 2 * encoder.fit_transform(y) - 1
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y_prep, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y_prep, test_size=0.2, random_state=42)
 
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
@@ -133,7 +139,8 @@ def load_australian():  # ok
     X_prep = add_intercept(X)
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y, test_size=0.2, random_state=42)
 
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
@@ -142,6 +149,7 @@ def load_australian():  # ok
 
 # %% Mushrooms
 
+@mem.cache
 def load_mushrooms():  # ok
     path = "datasets/LIBSVM/mushrooms.txt"
     X, y = load_svmlight_file(path)
@@ -154,7 +162,8 @@ def load_mushrooms():  # ok
     y_prep = 2 * encoder.fit_transform(y) - 1
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y_prep, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y_prep, test_size=0.2, random_state=42)
 
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
@@ -171,7 +180,8 @@ def load_german():  # ok
     X_prep = add_intercept(X)
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y, test_size=0.2, random_state=42)
 
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
@@ -179,6 +189,26 @@ def load_german():  # ok
 
 
 # %% More datasets
+
+
+def load_phishing():
+    path = "datasets/LIBSVM/phishing.txt"
+    X, y = load_svmlight_file(path)
+
+    # add constant column
+    X_prep = add_intercept(X)
+
+    # encode respponse variable in {-1,1}
+    encoder = LabelEncoder()
+    y_prep = 2 * encoder.fit_transform(y) - 1
+
+    # split dataset
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y_prep, test_size=0.2, random_state=42)
+
+    train_sklearn_log(X_train, y_train, X_test, y_test)
+
+    return X_train, y_train, X_test, y_test
 
 
 def load_w3a():  # ok

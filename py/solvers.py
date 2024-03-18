@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import numpy.linalg as la
 from scipy.optimize import OptimizeResult#, fsolve
+from joblib import Parallel, delayed
 
 # %% One function for all solvers
 
@@ -35,9 +36,9 @@ def sgd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
     # grad_k = jac(w_k, X, y, lam             # full w.r.t. starting solution
     fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
 
-    # w_seq[0, :] = w_k.copy()        # add starting solution
-    fun_seq[0] = fun_k.copy()         # add full evaluation
-    # grad_seq[0, :] = grad_k.copy()  # add full evaluation
+    # w_seq[0, :] = w_k        # add starting solution
+    fun_seq[0] = fun_k         # add full evaluation
+    # grad_seq[0, :] = grad_k  # add full evaluation
 
     time_seq[0] = 0.0    # count from 0
     start = time.time()  # start time counter
@@ -90,9 +91,9 @@ def sgd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
         # grad_k = jac(w_k, X, y, lam)            # full w.r.t. last solution found
         fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
 
-        # w_seq[k, :] = w_k.copy()         # add last solution found
-        fun_seq[k] = fun_k.copy()          # add full evaluation
-        # grad_seq[k, :] = grad_k.copy()   # add full evaluation
+        # w_seq[k, :] = w_k         # add last solution found
+        fun_seq[k] = fun_k          # add full evaluation
+        # grad_seq[k, :] = grad_k   # add full evaluation
 
         time_seq[k] = time.time() - start  # time per epoch
 
@@ -147,14 +148,14 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
 
     time_seq = np.empty_like(fun_seq)    # time per epoch sequence
 
-    w_k = w0.copy()                           # starting solution
+    w_k = np.asarray(w0).flatten()            # starting solution
     # fun_k = fun(w_k, X, y, lam)             # full w.r.t. starting solution
     # grad_k = jac(w_k, X, y, lam)            # full w.r.t. starting solution
     fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
 
-    # w_seq[0, :] = w_k.copy()        # add starting solution
-    fun_seq[0] = fun_k.copy()         # add full evaluation
-    # grad_seq[0, :] = grad_k.copy()  # add full evaluation
+    # w_seq[0, :] = w_k        # add starting solution
+    fun_seq[0] = fun_k         # add full evaluation
+    # grad_seq[0, :] = grad_k  # add full evaluation
 
     time_seq[0] = 0.0    # count from 0
     start = time.time()  # start time counter
@@ -176,13 +177,12 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             alpha_t = alpha0 / (k + 1)
 
         for t, minibatch in enumerate(minibatches):
-            # t: iteration number
-            # minibatch: numpy.ndarray, minibatch indices
+            # t : iteration number
+            # minibatch : numpy.ndarray, minibatch indices
 
             # get minibatch samples
-            # .copy() can be avoided
-            samples_x = X[minibatch, :].copy()  # scipy.sparse.csr_matrix
-            samples_y = y[minibatch].copy()     # numpy.ndarray
+            samples_x = X[minibatch]  # scipy.sparse.csr_matrix
+            samples_y = y[minibatch]  # numpy.ndarray
 
             # samples w.r.t. iteration solution
             grad_t = jac(z_t, samples_x, samples_y, lam)
@@ -208,13 +208,99 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
         # grad_k = jac(w_k, X, y, lam)            # full w.r.t. last solution found
         fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
 
-        # w_seq[k, :] = w_k.copy()         # add last solution found
-        fun_seq[k] = fun_k.copy()          # add full evaluation
-        # grad_seq[k, :] = grad_k.copy()   # add full evaluation
+        # w_seq[k, :] = w_k         # add last solution found
+        fun_seq[k] = fun_k          # add full evaluation
+        # grad_seq[k, :] = grad_k   # add full evaluation
 
         time_seq[k] = time.time() - start  # time per epoch
 
-    result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=grad_k.copy(),
+    result = OptimizeResult(fun=fun_k, x=w_k, jac=grad_k,
+                            success=(k > 1), solver=solver, minibatch_size=M,
+                            nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
+                            step_size=alpha0, momentum=beta0,
+                            fun_per_epoch=fun_seq)
+
+    return result
+
+
+# %% Prova
+
+
+def minibatch_gd_parallel(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
+                          fun, jac, f_and_df):
+    """
+    Mini-batch Gradient Descent variants
+    Handles X as CSR matrix
+
+    Parameters
+    ----------
+    w0 : numpy.ndarray
+        initial guess, size p
+    X : scipy.sparse.csr_matrix
+        dataset, size Nxp
+    y : numpy.ndarray
+        response variable, size N
+    lam : int
+        regularization term
+    M : int
+        minibatches size
+    alpha0 : float
+        given learning rate
+    beta0 : float
+        given momentum term
+    epochs : int
+        maximum number of epochs
+    solver : string
+        SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R
+    stop : int
+        stopping criterion to be used
+    fun, jac, f_and_df : callables
+        objective function, gradient, both as a tuple
+
+    Returns
+    -------
+    OptimizeResult
+    """
+
+    fun_seq = np.empty(epochs + 1)       # full objective function sequence
+    time_seq = np.empty_like(fun_seq)    # time per epoch sequence
+
+    w_k = np.asarray(w0).flatten()            # starting solution
+    fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
+
+    fun_seq[0] = fun_k         # add full evaluation
+    time_seq[0] = 0.0          # count from 0
+    start = time.time()        # start time counter
+
+    k = 0  # epochs counter
+    while stopping(fun_k, grad_k, k, epochs, criterion=stop):
+
+        minibatches = shuffle_dataset(y.size, k, M)
+
+        z_t = w_k.copy()          # iterations starting model
+        d_t = np.zeros_like(z_t)  # allocate iterations direction
+        alpha_t = alpha0
+
+        if solver == "SGD-Decreasing":
+            alpha_t = alpha0 / (k + 1)
+
+        grad_t_list = Parallel(n_jobs=-1)(
+            delayed(jac)(z_t, X[minibatch], y[minibatch], lam) for minibatch in minibatches
+        )
+
+        for grad_t in grad_t_list:
+            d_t = select_direction(solver, beta0, grad_t, d_t)
+            z_t += alpha_t * d_t
+
+        k += 1
+
+        w_k = z_t.copy()                          # solution found
+        fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
+
+        fun_seq[k] = fun_k          # add full evaluation
+        time_seq[k] = time.time() - start  # time per epoch
+
+    result = OptimizeResult(fun=fun_k, x=w_k, jac=grad_k,
                             success=(k > 1), solver=solver, minibatch_size=M,
                             nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
                             step_size=alpha0, momentum=beta0,
@@ -491,7 +577,7 @@ def reset_step(N, alpha, alpha0, M, t):
 
     elif opt == 2:
         # a little higher than the previous
-        alpha = alpha * a**(M / N)
+        alpha *= a**(M / N)
 
     return alpha
 

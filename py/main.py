@@ -2,10 +2,11 @@
 #%% Packages
 # import time
 # import numpy as np
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from load_datasets import load_diabetes, load_mg, load_mushrooms, load_w3a
+from load_datasets import load_diabetes, load_mg, load_mushrooms, load_phishing
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
@@ -14,9 +15,9 @@ from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
 
 # %% Diabetes
 
-data_diab = load_diabetes()
+data_diab = load_phishing()
 
-CDiab = 1
+CDiab = 0.05
 MDiab = 8
 kDiab = 200
 
@@ -25,23 +26,34 @@ benchDiab_data = optim_bench(benchDiab)
 
 # %%% SGD-Fixed
 
-fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
-fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01)
-print(fixed1)
+# fixed1 = LogisticRegression("SGD-Fixed", C=CDiab)
+# fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01)
+# print(fixed1)
+
+fixed2 = LogisticRegression("SGD-Fixed", C=CDiab)
+fixed2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01, parallel=True)
+print(fixed2)
+
 # sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
 # %%% SGD-Decreasing
 
 decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
-decre1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+decre1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
 print(decre1)
+
+# decre2 = LogisticRegression("SGD-Decreasing", C=CDiab)
+# decre2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1, parallel=True)
+# print(decre2)
+
 # sgddecre_diab = run_solvers("SGD-Decreasing", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% SGDM
 
 sgdm1 = LogisticRegression("SGDM", C=CDiab)
-sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=0.1, momentum=0.9)
+sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.1, momentum=0.9)
 print(sgdm1)
+
 # sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
@@ -49,20 +61,23 @@ print(sgdm1)
 armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
 armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
 print(armijo1)
+
 # sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% MSL-SGDM-C
 
 mslc1 = LogisticRegression("MSL-SGDM-C", C=CDiab)
-mslc1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+mslc1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
 print(mslc1)
+
 # mslc_diab = run_solvers("MSL-SGDM-C", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% MSL-SGDM-R
 
 mslr1 = LogisticRegression("MSL-SGDM-R", C=CDiab)
-mslr1.fit(dataset=data_diab, max_epochs=200, batch_size=16, step_size=1)
+mslr1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
 print(mslr1)
+
 # mslr_diab = run_solvers("MSL-SGDM-R", CDiab, data_diab, kDiab, MDiab, step_size=(1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% Diagnostic
@@ -81,15 +96,15 @@ print(mslr1)
 #     optim_data(sgdm_diab + mslr_diab),
 #     benchDiab[0])
 
-models_diab = optim_data(sgdfixed_diab + sgddecre_diab + sgdm_diab + sgdarmijo_diab +
-                         mslc_diab + mslr_diab)
+# models_diab = optim_data(sgdfixed_diab + sgddecre_diab + sgdm_diab + sgdarmijo_diab +
+#                          mslc_diab + mslr_diab)
 
-diagnostic(
-    optim_data(sgdfixed_diab + sgdarmijo_diab),
-    optim_data(sgddecre_diab + sgdarmijo_diab),
-    optim_data(sgdm_diab + mslc_diab),
-    optim_data(sgdm_diab + mslr_diab),
-    benchDiab[0])
+# diagnostic(
+#     optim_data(sgdfixed_diab + sgdarmijo_diab),
+#     optim_data(sgddecre_diab + sgdarmijo_diab),
+#     optim_data(sgdm_diab + mslc_diab),
+#     optim_data(sgdm_diab + mslr_diab),
+#     benchDiab[0])
 
 
 # fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
@@ -129,12 +144,12 @@ diagnostic(
 
 # %% Linear Regression
 
-data_mg = load_mg()
+# data_mg = load_mg()
 
 # %% SGD-Fixed
 
-linearbench1 = LinearRegression().fit(data_mg)
-linearbench2 = LinearRegression("CG").fit(data_mg)
-linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
+# linearbench1 = LinearRegression().fit(data_mg)
+# linearbench2 = LinearRegression("CG").fit(data_mg)
+# linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
 
-linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)
+# linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)
