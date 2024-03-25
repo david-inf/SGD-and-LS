@@ -20,34 +20,33 @@
 
 % df.to_latex
 
-To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM}, see table~\vref{tab:datasets}.
+To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details.
 
-First the six algorithms are tested on a fixed number of epochs, \textcite{fan_msl_2023} set the value to \num{200}, so we do the same. We keep track of the loss function value for every epoch and the running time that every epoch took; our aim is to show how the value decreases on every epoch and the running time that takes.
+First the six algorithms are tested on a fixed number of epochs, \textcite{fan_msl_2023} set the value to \num{200}, so we do the same. We keep track of the loss function value for every epoch and the running time that every epoch took; our aim is to show how the value decreases on every epoch and the running time that takes, see figures on pages~\pageref{fig:diab-breast}, \pageref{fig:phish-austr} and \pageref{fig:mush-german}.\par\smallskip
 
-Once we have the algorithms performance at different step-size values, a fine-tuning of the hyper-parameter is done in order to obtain the best solver for every dataset based on the accuracy score and loss function value. For a better comparison, the L-BFGS, Conjugate Gradient and Newton-CG algorithms are also tested.
+Once we have the algorithms performance at different step-size values, a fine-tuning of the hyper-parameter is done in order to obtain the best solver for every dataset based on the accuracy score and loss function values. For a better comparison, the L-BFGS, Conjugate Gradient and Newton-CG, and the full-batch gradient descent algorithms are also tested.
 
-As set the only hyper-parameter that varies is the step-size $\alpha$, the momentum term is set to \num{0.9}, the mini-batch size is a power of 2 and is set according to perform at least \num{100} \emph{iterations} and the $\epsilon$ tolerance from~\eqref{eq:stopping} is set to \num{e-3}.
+The only hyper-parameter that varies is the step-size $\alpha$, the momentum term is set to \num{0.9}, the mini-batch size is a power of 2 and is set according to perform at least \num{100} \emph{iterations} depending on the considered dataset and the $\epsilon$ tolerance from~\eqref{eq:stopping} is set to \num{e-3}.
 
 \begin{table}
 \centering
 \caption{Benchmark datasets}
 \label{tab:datasets}
-\begin{tabular}{lSS}
+\begin{tabular}{lSSSc}
 \toprule
-Name & {Train} & {Test} \\
+Name & {Train} & {Test} & {Features} & {Distribution} \\
 \midrule
-Diabetes & 614 & 154 \\
-Breast cancer & 546 & 137 \\
-svmguide1 & 3089 & 4000 \\
-Australian & 552 & 138 \\
-Mushrooms & 6499 & 1625 \\
-German & 800 & 200 \\
+Diabetes & 614 & 154 & 8 & -1:$0.35$\,\,\,1:$0.65$ \\
+Breast cancer & 546 & 137 & 10 & -1:$0.67$\,\,\,1:$0.33$ \\
+Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ \\
+Australian & 552 & 138 & 14 & -1:$0.54$\,\,\,1:$0.46$ \\
+Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ \\
+German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-
-\cleardoublepage
+%\cleardoublepage
 \begin{table}
 \sisetup{round-mode=places}
 \centering
@@ -96,8 +95,8 @@ MSL-SGDM-R & 0.850000 & 249 & 1.828050 & 0.492561 & 0.000953 & 0.817518 \\
 
 \begin{table}
 \sisetup{round-mode=places}
-\caption{svmguide1 dataset}
-\label{tab:svm-tab}
+\caption{Phishing dataset}
+\label{tab:phish-tab}
 \centering
 \begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
@@ -116,7 +115,6 @@ MSL-SGDM-R & 0.500000 & 84 & 3.622162 & 0.673303 & 0.000616 & 0.516000 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 \begin{table}
 \sisetup{round-mode=places}
@@ -141,7 +139,6 @@ MSL-SGDM-C & 0.500000 & 400 & 9.091646 & 0.615629 & 0.009875 & 0.876812 \\
 \end{tabular}
 \end{table}
 
-
 \begin{table}
 \sisetup{round-mode=places}
 \caption{Mushrooms dataset}
@@ -164,7 +161,6 @@ MSL-SGDM-C & 0.200000 & 400 & 28.363697 & 0.581541 & 0.035599 & 0.886769 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 \begin{table}
 \sisetup{round-mode=places}
@@ -189,7 +185,6 @@ MSL-SGDM-C & 1.000000 & 400 & 3.088394 & 0.619170 & 0.010250 & 0.700000 \\
 \end{tabular}
 \end{table}
 
-
 \begin{figure}
 \centering
 % diabetes
@@ -205,13 +200,13 @@ MSL-SGDM-C & 1.000000 & 400 & 3.088394 & 0.619170 & 0.010250 & 0.700000 \\
 \begin{figure}
 \centering
 % svmguide1
-\subfloat[][\emph{svmguide1 dataset}\label{subfig:svm-diagnostic}]%
+\subfloat[][\emph{Phishing dataset}\label{subfig:phish-diagnostic}]%
 {\includegraphics[width=\textwidth]{svm-diagnostic}} \\
 % australian
 \subfloat[][\emph{Australian dataset}\label{subfig:austr-diagnostic}]%
 {\includegraphics[width=\textwidth]{austr-diagnostic}}
-\caption[]{svmguide1 and Australian datasets}
-\label{fig:svm-austr}
+\caption[]{Phishing and Australian datasets}
+\label{fig:phish-austr}
 \end{figure}
 
 \begin{figure}

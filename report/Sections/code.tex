@@ -55,38 +55,6 @@
 %}
 %\end{algorithm}
 
-\begin{algorithm}
-\caption{\texttt{SGD-Fixed}, \texttt{SGD-Decreasing}, \texttt{SGDM}}\label{alg:SGD-variants}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
-$k \gets 0$\;
-\While{\stopping}{
-	\shuffleDB\;
-	$z^0 \gets w^k$\;
-	$d_{-1}\gets0$\;
-	$\alpha_{-1}\gets%
-	\begin{cases}
-		\frac{\alpha_0}{k+1} & \text{if \texttt{SGD-Decreasing}} \\
-		\alpha_0 & \text{otherwise}
-	\end{cases}$\;
-	\For{\forcond}{
-		get indices $i_t$ from $B_t$ then get the samples\;
-		\algGrad\;
-		$d_t\gets
-		\begin{cases}
-		-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr) & \text{if \texttt{SGD-Fix/Decr/Armijo}, \texttt{SGDM}} \\
-		\mathtt{correction}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-C}} \\
-		\mathtt{restart}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-R}}
-		\end{cases}$\;
-		\If{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R}}{%
-			$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,M,N,t,a,\mathtt{opt)}$\; 
-			$\alpha_t\gets\mathtt{armijo(}z^t,d_t,\alpha\mathtt{)}$\;}
-		$z^{t+1} \gets z^t+\alpha_td_t$\;
-	}
-	$w^{k+1} \gets z^{N/M}$\;
-	$k \gets k+1$\;
-}
-\end{algorithm}
-
 \noindent%
 \begin{minipage}[t]{0.35\textwidth}
 \vspace{0pt}
@@ -151,3 +119,35 @@ $d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr)$\;
 \KwOut{$d_t$}
 \end{algorithm}
 \end{minipage}
+
+\begin{algorithm}
+\caption{\texttt{SGD-Fixed}, \texttt{SGD-Decreasing}, \texttt{SGDM}}\label{alg:SGD-variants}
+\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
+$k \gets 0$\;
+\While{\stopping}{
+	\shuffleDB\;
+	$z^0 \gets w^k$\;
+	$d_{-1}\gets0$\;
+	$\alpha_{-1}\gets%
+	\begin{cases}
+		\frac{\alpha_0}{k+1} & \text{if \texttt{SGD-Decreasing}} \\
+		\alpha_0 & \text{otherwise}
+	\end{cases}$\;
+	\For{\forcond}{
+		get indices $i_t$ from $B_t$ then get the samples\;
+		\algGrad\;
+		$d_t\gets
+		\begin{cases}
+			-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr) & \text{if \texttt{SGD-Fix/Decr/Armijo}, \texttt{SGDM}} \\
+			\mathtt{correction}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-C}} \\
+			\mathtt{restart}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-R}}
+		\end{cases}$\;
+		\If{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R}}{%
+			$\alpha\gets\mathtt{reset(}\alpha_{t-1},\alpha_0,M,N,t,a,\mathtt{opt)}$\; 
+			$\alpha_t\gets\mathtt{armijo(}z^t,d_t,\alpha\mathtt{)}$\;}
+		$z^{t+1} \gets z^t+\alpha_td_t$\;
+	}
+	$w^{k+1} \gets z^{N/M}$\;
+	$k \gets k+1$\;
+}
+\end{algorithm}

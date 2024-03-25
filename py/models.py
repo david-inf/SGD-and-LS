@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
 from scipy.optimize import minimize
 
-from solvers import sgd, minibatch_gd, minibatch_gd_parallel
+from solvers import minibatch_gd, minibatch_gd_parallel
 from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
 
@@ -34,8 +34,8 @@ class LogisticRegression():
         self.fun_seq = None
         self.grad = None
 
-        self.accuracy_train = None  # float
-        self.accuracy_test = None   # float
+        self.metrics_train = None  # list of floats
+        self.metrics_test = None   # list of floats
 
 
     def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1,
@@ -112,8 +112,10 @@ class LogisticRegression():
             self.grad = np.linalg.norm(model.jac)
             self.fun_seq = model.fun_per_epoch
 
-        self.accuracy_train = accuracy_score(y_train, self.predict(X_train))
-        self.accuracy_test = accuracy_score(y_test, self.predict(X_test))
+        self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
+                               balanced_accuracy_score(y_train, self.predict(X_train))]
+        self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
+                              balanced_accuracy_score(y_test, self.predict(X_test))]
 
         return self
 
@@ -176,6 +178,9 @@ class LinearRegression():
         X_test = dataset[2]
         y_test = dataset[3]
 
+        sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
+                   "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R")
+
         w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
 
         if self.solver in ("L-BFGS-B", "CG"):
@@ -197,29 +202,10 @@ class LinearRegression():
             self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
 
-        elif self.solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
-            # model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-            #     batch_size, step_size, momentum, max_epochs, self.solver, stop)
-            # sgd_m(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
-
-            model = sgd(w0, X_train, y_train, self.C, batch_size, step_size,
-                        momentum, max_epochs, self.solver, stop,
-                        linear, linear_der, f_and_df_linear)
-
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
-            self.fun_seq = model.fun_per_epoch
-
-        elif self.solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
-            # model = solver_dict[self.solver](w0, X_train, y_train, self.C,
-            #     batch_size, step_size, momentum, max_epochs, self.solver, stop)
-            # sgd_sls(w0, X, y, lam, M, alpha0, beta0, epochs, solver)
-
-            model = sgd(w0, X_train, y_train, self.C, batch_size, step_size,
-                        momentum, max_epochs, self.solver, stop,
-                        linear, linear_der, f_and_df_linear)
+        elif self.solver in sgd_variants:
+            model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
+                                 step_size, momentum, max_epochs, self.solver,
+                                 stop, linear, linear_der, f_and_df_linear)
 
             self.opt_result = model
             self.coef_ = model.x

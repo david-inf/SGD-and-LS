@@ -38,8 +38,10 @@ def optim_data(models):
             "Run-time": [model.opt_result.runtime for model in models],
             "Epochs": [model.opt_result.nit for model in models],
             # "Termination": [model.message for model in models],
-            "Train score": [model.accuracy_train for model in models],
-            "Test score": [model.accuracy_test for model in models],
+            "Train score": [model.metrics_train[0] for model in models],
+            "Test score": [model.metrics_test[0] for model in models],
+            "Bal train score": [model.metrics_train[1] for model in models],
+            "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": [model.fun_seq for model in models],
             "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
         }
@@ -69,8 +71,10 @@ def optim_bench(models):
             "Run-time": np.nan,
             "Epochs": [model.opt_result.nit for model in models],
             # "Termination": model.message,
-            "Train score": [model.accuracy_train for model in models],
-            "Test score": [model.accuracy_test for model in models],
+            "Train score": [model.metrics_train[0] for model in models],
+            "Test score": [model.metrics_test[0] for model in models],
+            "Bal train score": [model.metrics_train[1] for model in models],
+            "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": np.nan,
             "Time/Epochs": np.nan
         }

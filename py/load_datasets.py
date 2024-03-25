@@ -8,12 +8,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler, MaxAbsScaler
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
 
 from scipy.sparse import csr_matrix, lil_matrix, hstack
 
-from joblib import Memory
-mem = Memory("./mycache")
+# from joblib import Memory
+# mem = Memory("./mycache")
 
 
 
@@ -34,9 +34,13 @@ def train_sklearn_log(X_train, y_train, X_test, y_test):
     model = LogisticRegression().fit(X_train, y_train)
     train_score = accuracy_score(y_train, model.predict(X_train))
     test_score = accuracy_score(y_test, model.predict(X_test))
+    bal_train_score = balanced_accuracy_score(y_train, model.predict(X_train))
+    bal_test_score = balanced_accuracy_score(y_test, model.predict(X_test))
 
     print(f"sklearn train score: {train_score:.6f}")
     print(f"sklearn test score: {test_score:.6f}")
+    print(f"sklearn balanced train score: {bal_train_score:.6f}")
+    print(f"sklearn balanced test score: {bal_test_score:.6f}")
     weights = np.insert(model.coef_, 0, model.intercept_)
     print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
@@ -55,7 +59,7 @@ def add_intercept(X):
 
 # %% Diabetes
 
-@mem.cache
+# @mem.cache
 def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
     X, y = load_svmlight_file(path)
@@ -149,7 +153,6 @@ def load_australian():  # ok
 
 # %% Mushrooms
 
-@mem.cache
 def load_mushrooms():  # ok
     path = "datasets/LIBSVM/mushrooms.txt"
     X, y = load_svmlight_file(path)
@@ -211,6 +214,22 @@ def load_phishing():
     return X_train, y_train, X_test, y_test
 
 
+def load_w1a():  # ok
+    path_train = "datasets/LIBSVM/w1a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/w1a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
+    train_sklearn_log(X_train, y_train, X_test, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
+
 def load_w3a():  # ok
     path_train = "datasets/LIBSVM/w3a.txt"
     X_train, y_train = load_svmlight_file(path_train)
@@ -218,9 +237,13 @@ def load_w3a():  # ok
     path_test = "datasets/LIBSVM/w3a.t"
     X_test, y_test = load_svmlight_file(path_test)
 
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
-    return X_train.toarray(), y_train, X_test.toarray(), y_test
+    return X_train_prep, y_train, X_test_prep, y_test
 
 
 def load_w4a():  # ok
@@ -245,6 +268,22 @@ def load_w5a():  # ok
     train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
+
+
+def load_a2a():
+    path_train = "datasets/LIBSVM/a2a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/a2a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)[:, :120]
+
+    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
 
 
 def load_a3a():  # 

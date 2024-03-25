@@ -2,7 +2,7 @@
 
 import numpy as np
 import numpy.linalg as la
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix#, isspmatrix_csr
 
 # %% Logistic Regression
 
@@ -49,7 +49,7 @@ def logistic(w, X, y, lam):
 
     # handle CSR loss function
     z = -y * X.dot(w)
-    loss = np.sum(np.logaddexp(0, z)) / samples
+    loss = np.sum(np.log(1 + np.exp(z))) / samples
 
     # regularizer term
     regul = 0.5 * la.norm(w) ** 2
