@@ -6,19 +6,47 @@ import matplotlib.pyplot as plt
 
 from models import LogisticRegression
 
-# something like of a grid search
-def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
+
+def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
+                momentum=(0.9,0.9,0.9), delta_a=0.9, gamma_a=0.01, delta_m=0.9,
+                **kwargs):
+    """
+    Something like of a grid search
+
+    Parameters
+    ----------
+    solver : TYPE
+        DESCRIPTION.
+    C : TYPE
+        DESCRIPTION.
+    dataset : TYPE
+        DESCRIPTION.
+    batch_size : TYPE
+        DESCRIPTION.
+    step_size : tuple, optional
+        DESCRIPTION. The default is [1,0.1,0.01].
+    momentum : tuple, optional
+        DESCRIPTION. The default is (0,0,0).
+    max_epochs : TYPE, optional
+        DESCRIPTION. The default is 200.
+
+    Returns
+    -------
+    list of LogisticRegression
+
+    """
+
     solver1 = LogisticRegression(solver, C=C)
-    solver1.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[0], momentum=momentum[0])
+    solver1.fit(dataset, batch_size, step_size[0], momentum[0], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     solver2 = LogisticRegression(solver, C=C)
-    solver2.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[1], momentum=momentum[1])
+    solver2.fit(dataset, batch_size, step_size[1], momentum[1], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     solver3 = LogisticRegression(solver, C=C)
-    solver3.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[2], momentum=momentum[2])
+    solver3.fit(dataset, batch_size, step_size[2], momentum[2], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     return [solver1, solver2, solver3]
 

@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
 from scipy.optimize import minimize
 
-from solvers import minibatch_gd, minibatch_gd_parallel
+from solvers import minibatch_gd
 from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
 
@@ -38,8 +38,9 @@ class LogisticRegression():
         self.metrics_test = None   # list of floats
 
 
-    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1,
-            momentum=0, stop=0, parallel=False):
+    def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0.9, stop=1,
+            max_epochs=400, damp_armijo=0.9, gamma_armijo=0.01, damp_momentum=0.9,
+            **kwargs):
         """
         Parameters
         ----------
@@ -92,19 +93,16 @@ class LogisticRegression():
             self.grad = np.linalg.norm(model.jac)
 
         elif self.solver in sgd_variants:
-            # model = sgd(w0, X_train, y_train, self.C, batch_size, step_size,
-            #             momentum, max_epochs, self.solver, stop,
-            #             logistic, logistic_der, f_and_df_log)
+            model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
+                                  step_size, momentum, max_epochs, self.solver,
+                                  stop, damp_armijo, gamma_armijo, damp_momentum,
+                                  logistic, logistic_der, f_and_df_log)
 
-            if parallel:
-                model = minibatch_gd_parallel(w0, X_train, y_train, self.C, batch_size,
-                                     step_size, momentum, max_epochs, self.solver,
-                                     stop, logistic, logistic_der, f_and_df_log)
-
-            else:
-                model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
-                                     step_size, momentum, max_epochs, self.solver,
-                                     stop, logistic, logistic_der, f_and_df_log)
+            # model = minibatch_gd(w0, X_train, y_train, self.C, batch_size, self.solver,
+            #                       logistic, logistic_der, f_and_df_log,
+            #                       options=dict(alpha=step_size, beta0=momentum,
+            #                                   epochs=max_epochs, stop=stop,
+            #                                   delta_a=damp_armijo, delta_m=damp_momentum))
 
             self.opt_result = model
             self.coef_ = model.x
