@@ -36,6 +36,9 @@ def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
 
     """
 
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
+        momentum = (0, 0, 0)
+
     solver1 = LogisticRegression(solver, C=C)
     solver1.fit(dataset, batch_size, step_size[0], momentum[0], 0, 200,
                 delta_a, gamma_a, delta_m)

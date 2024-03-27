@@ -5,27 +5,27 @@ Created on Fri Mar 15 09:45:20 2024
 @author: Utente
 """
 
+from multiprocessing import Pool
 import time
-from joblib import Parallel, delayed
+import math
 
-# Define a simple function to square a number
-def square(x):
-    return x * x
+N = 5000000
 
-# Define a list of numbers
-numbers = [1, 2, 3, 4, 5]
+def cube(x):
+    return math.sqrt(x)
 
-# Sequential computation
-start_time = time.time()
-squared_sequential = [square(x) for x in numbers]
-sequential_time = time.time() - start_time
-print("Squared (Sequential):", squared_sequential)
-print("Time taken (Sequential):", sequential_time, "seconds")
-
-# Parallel computation using joblib
-num_cores = 3  # Number of CPU cores to use in parallel
-start_time = time.time()
-squared_parallel = Parallel(n_jobs=num_cores)(delayed(square)(x) for x in numbers)
-parallel_time = time.time() - start_time
-print("Squared (Parallel):", squared_parallel)
-print("Time taken (Parallel):", parallel_time, "seconds")
+if __name__ == "__main__":
+    # first way, using multiprocessing
+    start_time = time.perf_counter()
+    with Pool() as pool:
+      result = pool.map(cube, range(10,N))
+    finish_time = time.perf_counter()
+    print("Program finished in {} seconds - using multiprocessing".format(finish_time-start_time))
+    print("---")
+    # second way, serial computation
+    start_time = time.perf_counter()
+    result = []
+    for x in range(10,N):
+      result.append(cube(x))
+    finish_time = time.perf_counter()
+    print("Program finished in {} seconds".format(finish_time-start_time))

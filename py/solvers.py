@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import numpy.linalg as la
 from scipy.optimize import OptimizeResult#, fsolve
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 
 # %% One function for all solvers
 
@@ -107,7 +107,7 @@ from joblib import Parallel, delayed
 
 
 def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
-                 delta_a, gamma, delta_m, fun, jac, f_and_df, **options):
+                  delta_a, gamma, delta_m, fun, jac, f_and_df, **options):
     """
     Mini-batch Gradient Descent variants
     Handles X as CSR matrix
@@ -152,11 +152,9 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
     fun_seq = np.empty(epochs + 1)       # full objective function sequence
     # grad_seq = np.empty_like(w_seq)    # full gradient sequence
 
-    time_seq = np.empty_like(fun_seq)    # time per epoch sequence
+    time_seq = np.empty_like(fun_seq)  # time per epoch sequence
 
     w_k = np.asarray(w0).flatten()            # starting solution
-    # fun_k = fun(w_k, X, y, lam)             # full w.r.t. starting solution
-    # grad_k = jac(w_k, X, y, lam)            # full w.r.t. starting solution
     fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
 
     # w_seq[0, :] = w_k        # add starting solution
@@ -223,8 +221,6 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
         k += 1
 
         w_k = z_t.copy()                          # solution found
-        # fun_k = fun(w_k, X, y, lam)             # full w.r.t. last solution found
-        # grad_k = jac(w_k, X, y, lam)            # full w.r.t. last solution found
         fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
 
         # w_seq[k, :] = w_k         # add last solution found
@@ -604,10 +600,3 @@ def check_step(alpha, d, x):
 def lipschitz(L, x, y, jac_x, jac_y):
     """ Lipschitz L constant """
     return np.linalg.norm(jac_x - jac_y) - L * np.linalg.norm(x - y)
-
-
-# %%
-
-
-# def grid_search():
-    # rates = [1, 0.5, 0.25, 0.1, 0.05, 0.25, 0.1]

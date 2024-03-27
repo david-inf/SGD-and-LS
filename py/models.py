@@ -38,7 +38,7 @@ class LogisticRegression():
         self.metrics_test = None   # list of floats
 
 
-    def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0.9, stop=1,
+    def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0, stop=1,
             max_epochs=400, damp_armijo=0.9, gamma_armijo=0.01, damp_momentum=0.9,
             **kwargs):
         """
@@ -97,12 +97,6 @@ class LogisticRegression():
                                   step_size, momentum, max_epochs, self.solver,
                                   stop, damp_armijo, gamma_armijo, damp_momentum,
                                   logistic, logistic_der, f_and_df_log)
-
-            # model = minibatch_gd(w0, X_train, y_train, self.C, batch_size, self.solver,
-            #                       logistic, logistic_der, f_and_df_log,
-            #                       options=dict(alpha=step_size, beta0=momentum,
-            #                                   epochs=max_epochs, stop=stop,
-            #                                   delta_a=damp_armijo, delta_m=damp_momentum))
 
             self.opt_result = model
             self.coef_ = model.x
@@ -223,6 +217,7 @@ class LinearRegression():
 
 
     def __str__(self):
+
         return (f"MSE: {self.mse:.6f}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
