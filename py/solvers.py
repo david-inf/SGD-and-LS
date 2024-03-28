@@ -191,7 +191,6 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             # samples w.r.t. iteration solution
             grad_t = jac(z_t, samples_x, samples_y, lam)
 
-            # d_t = select_direction(solver, beta0, grad_t, d_t)
             # --------- # direction: anti-gradient or damped
             if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "SGD-Armijo"):
                 # negative gradient damped or not
@@ -213,7 +212,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                 # weights update with line search
                 alpha_t = armijo_method(
                     z_t, d_t, samples_x, samples_y, lam, alpha, delta_a, gamma,
-                    fun, f_and_df)
+                    grad_t, fun)
 
             # update weights
             z_t += alpha_t * d_t
@@ -473,7 +472,7 @@ def reset_step(N, alpha, alpha0, M, t):
 
 
 def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma,
-                  fun, f_and_df):
+                  grad_t, fun):
     """
     Armijo (stochastic) line search
     Required dataset (current minibatch samples)
@@ -517,7 +516,7 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
         alpha = alpha_reset
 
     # samples w.r.t. z_t
-    fun_t, grad_t = f_and_df(z_t, samples_x, samples_y, lam)
+    fun_t = fun(z_t, samples_x, samples_y, lam)
 
     z_next = z_t + alpha * d_t  # model update
 

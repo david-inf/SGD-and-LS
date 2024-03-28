@@ -8,7 +8,7 @@ from models import LogisticRegression
 
 
 def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
-                momentum=(0.9,0.9,0.9), delta_a=0.9, gamma_a=0.01, delta_m=0.9,
+                momentum=(0.9,0.9,0.9), delta_a=0.5, gamma_a=0.001, delta_m=0.5,
                 **kwargs):
     """
     Something like of a grid search
@@ -33,7 +33,6 @@ def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
     Returns
     -------
     list of LogisticRegression
-
     """
 
     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
@@ -234,13 +233,15 @@ def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear
     # E = data1["Loss/Epochs"][0].shape[0]  # number of measurement
     # T = data1["Time/Epochs"][3][-1]  # total time
 
+    scalexy_epochs, scalexy_runtime = scalexy[:2], scalexy[2:]
+
     fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
                             figsize=(6.4*2, 4.8*1.5))
 
     for i, ax in enumerate(axs.flat):
         if i in (0,1,4,5):
             # 1) Train loss against epochs
-            plot_loss_epochs(ax, models[i], scalexy[:2])
+            plot_loss_epochs(ax, models[i], scalexy_epochs)
 
             # benchmark solver line
             # ax.axhline(y=bench.fun, color="k", linestyle="dashed")
@@ -248,7 +249,7 @@ def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear
 
         elif i in (2,3,6,7):
             # 2) Train loss against runtime
-            plot_loss_time(ax, models[i], scalexy[2:])
+            plot_loss_time(ax, models[i], scalexy_runtime)
 
             # benchmark solver line
             # ax.axhline(y=bench.fun, color="k", linestyle="dashed")

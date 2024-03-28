@@ -57,6 +57,11 @@ Scoperte
 - miniGD con passo costante è non monotono, o almeno per certi valori dipendenti dal dataset
     - deve essere fatto un fine-tuning sul dataset
     - è non monotono proprio perché senza il fine-tuning il passo costante non è ottimo
+- Aumentando il delta, i metodi con line search oscillano di meno. La line search
+è comunque non monotona globalmente, così facendo si può controllare l'andamento nelle epoche
+in altri casi invece funziona diminuendo il delta, quindi in generale farlo variare
+riduce le oscillazioni della funzione obiettivo
+- Nel caso di oscillazione, quelli con momentum richiedono un incremento minore rispetto a quando non c'è
 
 Altro
 - speed up execution

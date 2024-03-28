@@ -17,8 +17,8 @@ from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
 
 data_diab = load_phishing()
 
-CDiab = 0.05
-MDiab = 8
+CDiab = 0.2
+MDiab = 64
 kDiab = 200
 
 benchDiab = run_bench(data_diab, CDiab)

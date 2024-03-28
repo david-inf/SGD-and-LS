@@ -117,7 +117,7 @@ def f_and_df_log(w, X, y, lam):
     z = -y * X.dot(w)  # once for twice
 
     # handle CSR loss function and regularizer term
-    loss = np.sum(np.logaddexp(0, z)) / samples
+    loss = np.sum(np.log(1 + np.exp(z))) / samples
     regul = 0.5 * np.linalg.norm(w) ** 2
 
     # handle CSR loss function and regularizer term derivatives

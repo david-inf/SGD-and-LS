@@ -31,18 +31,18 @@ def train_sklearn_log(X_train, y_train, X_test, y_test):
     print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
     print(f"Class distribution: {dataset_distrib(y_train)}")
 
-    model = LogisticRegression().fit(X_train, y_train)
-    train_score = accuracy_score(y_train, model.predict(X_train))
-    test_score = accuracy_score(y_test, model.predict(X_test))
-    bal_train_score = balanced_accuracy_score(y_train, model.predict(X_train))
-    bal_test_score = balanced_accuracy_score(y_test, model.predict(X_test))
+    # model = LogisticRegression().fit(X_train, y_train)
+    # train_score = accuracy_score(y_train, model.predict(X_train))
+    # test_score = accuracy_score(y_test, model.predict(X_test))
+    # bal_train_score = balanced_accuracy_score(y_train, model.predict(X_train))
+    # bal_test_score = balanced_accuracy_score(y_test, model.predict(X_test))
 
-    print(f"sklearn train score: {train_score:.6f}")
-    print(f"sklearn test score: {test_score:.6f}")
-    print(f"sklearn balanced train score: {bal_train_score:.6f}")
-    print(f"sklearn balanced test score: {bal_test_score:.6f}")
-    weights = np.insert(model.coef_, 0, model.intercept_)
-    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
+    # print(f"sklearn train score: {train_score:.6f}")
+    # print(f"sklearn test score: {test_score:.6f}")
+    # print(f"sklearn balanced train score: {bal_train_score:.6f}")
+    # print(f"sklearn balanced test score: {bal_test_score:.6f}")
+    # weights = np.insert(model.coef_, 0, model.intercept_)
+    # print(f"sklearn sol norm: {np.linalg.norm(weights)}")
 
 
 def add_intercept(X):
@@ -225,7 +225,7 @@ def load_w1a():  # ok
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 
@@ -241,36 +241,28 @@ def load_w3a():  # ok
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 
 
-def load_w4a():  # ok
-    path_train = "datasets/LIBSVM/w4a.txt"
+def load_w6a():  # ok
+    path_train = "datasets/LIBSVM/w6a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 
-    path_test = "datasets/LIBSVM/w4a.t"
+    path_test= "datasets/LIBSVM/w6a.t"
     X_test, y_test= load_svmlight_file(path_test)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
 
-    return X_train, y_train, X_test, y_test
+    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
-
-def load_w5a():  # ok
-    path_train = "datasets/LIBSVM/w5a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test= "datasets/LIBSVM/w5a.t"
-    X_test, y_test= load_svmlight_file(path_test)
-
-    train_sklearn_log(X_train, y_train, X_test, y_test)
-
-    return X_train, y_train, X_test, y_test
+    return X_train_prep, y_train, X_test_prep, y_test
 
 
-def load_a2a():
+def load_a2a():  # ok
     path_train = "datasets/LIBSVM/a2a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 
@@ -286,7 +278,7 @@ def load_a2a():
     return X_train_prep, y_train, X_test_prep, y_test
 
 
-def load_a3a():  # 
+def load_a3a():
     path_train = "datasets/LIBSVM/a3a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 

@@ -39,7 +39,7 @@ class LogisticRegression():
 
 
     def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0, stop=1,
-            max_epochs=400, damp_armijo=0.9, gamma_armijo=0.01, damp_momentum=0.9,
+            max_epochs=600, damp_armijo=0.5, gamma_armijo=0.001, damp_momentum=0.5,
             **kwargs):
         """
         Parameters
@@ -71,7 +71,8 @@ class LogisticRegression():
         X_test = dataset[2]   # scipy.sparse.csr_matrix
         y_test = dataset[3]   # numpy.ndarray
 
-        w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
+        w0 = (0.5 + 0.5) * np.random.default_rng(42).random(X_train.shape[1] - 1) - 0.5
+        w0 = np.insert(w0, 0, 0)  # null bias
 
         if self.solver in ("L-BFGS-B", "CG"):
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
@@ -94,9 +95,9 @@ class LogisticRegression():
 
         elif self.solver in sgd_variants:
             model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
-                                  step_size, momentum, max_epochs, self.solver,
-                                  stop, damp_armijo, gamma_armijo, damp_momentum,
-                                  logistic, logistic_der, f_and_df_log)
+                                 step_size, momentum, max_epochs, self.solver,
+                                 stop, damp_armijo, gamma_armijo, damp_momentum,
+                                 logistic, logistic_der, f_and_df_log)
 
             self.opt_result = model
             self.coef_ = model.x
@@ -105,9 +106,9 @@ class LogisticRegression():
             self.fun_seq = model.fun_per_epoch
 
         self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
-                               balanced_accuracy_score(y_train, self.predict(X_train))]
+                              balanced_accuracy_score(y_train, self.predict(X_train))]
         self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
-                              balanced_accuracy_score(y_test, self.predict(X_test))]
+                             balanced_accuracy_score(y_test, self.predict(X_test))]
 
         return self
 
