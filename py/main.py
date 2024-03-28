@@ -2,27 +2,37 @@
 #%% Packages
 # import time
 # import numpy as np
-import sys
-import matplotlib.pyplot as plt
-import pandas as pd
+# import sys
+# import matplotlib.pyplot as plt
+# import pandas as pd
 
 from load_datasets import load_diabetes, load_mg, load_mushrooms, load_phishing
 from models import LogisticRegression, LinearRegression
 from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
-                      plot_loss_time, plot_loss_epochs, diagnostic)
+                      plot_loss_time, plot_loss_epochs, diagnostic,
+                      grid_search_seq)
 # from solvers_utils import f_and_df, logistic, logistic_der
 
 # %% Diabetes
 
 data_diab = load_phishing()
 
-CDiab = 0.2
-MDiab = 64
-kDiab = 200
+# CDiab = 0.5
+# MDiab = 64
+# kDiab = 200
 
-benchDiab = run_bench(data_diab, CDiab)
+benchDiab = run_bench(data_diab, 0.5)
 benchDiab_data = optim_bench(benchDiab)
+
+# %% Grid search
+
+sgdfixed_opt = grid_search_seq("SGD-Fixed", 0.5, data_diab, (64, 128))
+# sgdfixed_opt2 = grid_search_parallel("SGD-Fixed", 0.5, data_diab, [64, 128])
+
+sgdm_opt = grid_search_seq("SGDM", 0.5, data_diab, (64, 128))
+
+armijo_opt = grid_search_seq("SGD-Armijo", 0.5, data_diab, (64, 128), (1, 0.1, 0.01))
 
 # %%% SGD-Fixed
 
@@ -30,7 +40,7 @@ benchDiab_data = optim_bench(benchDiab)
 # fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01)
 # print(fixed1)
 
-fixed2 = LogisticRegression("SGD-Fixed", C=CDiab)
+fixed2 = LogisticRegression("SGD-Fixed", 0.5)
 fixed2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01, parallel=True)
 print(fixed2)
 

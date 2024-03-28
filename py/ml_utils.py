@@ -3,6 +3,10 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from itertools import product
+
+# from multiprocessing import Pool
+# from functools import partial
 
 from models import LogisticRegression
 
@@ -51,6 +55,41 @@ def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
                 delta_a, gamma_a, delta_m)
 
     return [solver1, solver2, solver3]
+
+
+def grid_search(params, solver, C, dataset):
+    batch_size, alpha, beta, delta_a, delta_m = params
+
+    model = LogisticRegression(solver, C)
+    model.fit(dataset, batch_size, alpha, beta, damp_armijo=delta_a, damp_momentum=delta_m)
+
+    performance = model.fun
+
+    return performance, model
+
+
+def grid_search_seq(solver, C, dataset, batches, alphas=(1, 0.1, 0.01, 0.001),
+                betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,)):
+
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
+        betas = (0,)
+
+    param_grid = {"batch":batches, "alpha":alphas, "beta":betas,
+                  "delta_a":delta_a, "delta_m":delta_m}
+
+    best_performance = float("inf")
+    # best_params = None
+    best_model = None
+
+    for params in product(*param_grid.values()):
+        performance, model = grid_search(params, solver, C, dataset)
+
+        if performance < best_performance:
+            best_performance = performance
+            # best_params = params
+            best_model = model
+
+    return best_model
 
 
 def optim_data(models):
