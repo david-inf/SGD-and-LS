@@ -8,11 +8,17 @@
 
 Different SGD-type algorithms proposed by the literature were implemented and tested on different datasets for solving the $\ell_2\text{-regularized}$ Logistic Regression training problem.
 
-Those algorithms can be divided in basic SGD and SGD with line search due to common computations, follows a list of the implemented algorithms
+For the purpose of this work, those algorithms were grouped into one, see algorithm~\vref{alg:SGD-variants}, follows a list of the variants
 \begin{itemize}
-\item Mini-batch Gradient Descent with fixed step-size and momentum term, and decreasing step-size, algorithm~\vref{alg:SGD-F-D-M};
-\item Mini-batch Gradient Descent with Armijo line search and momentum term restart and correction, algorithm~\vref{alg:SGD-SLS-M};
+\item SGD with fixed or decreasing step-size, and line search, see section~\vref{subsc:sgd};
+\item SGD with momentum term and momentum correction or restart, see section~\vref{subsc:sgdm}.
 \end{itemize}
+
+%Those algorithms can be divided in basic SGD and SGD with line search due to common computations, follows a list of the implemented algorithms
+%\begin{itemize}
+%\item Mini-batch Gradient Descent with fixed step-size and momentum term, and decreasing step-size, algorithm~\vref{alg:SGD-F-D-M};
+%\item Mini-batch Gradient Descent with Armijo line search and momentum term restart and correction, algorithm~\vref{alg:SGD-SLS-M};
+%\end{itemize}
 
 This section describes the Machine Learning (ML) problem and the related optimization problem, then section~\vref{sc:sgds} summarizes the approaches proposed from the retrieved papers. Section~\vref{sc:exp} describes the experiments performed for showing the behaviour of the algorithms on different datasets.
 

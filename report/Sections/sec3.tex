@@ -20,127 +20,124 @@
 
 % df.to_latex
 
-To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM}, see table~\vref{tab:datasets}.
+To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details.
 
-First the six algorithms are tested on a fixed number of epochs, \textcite{fan_msl_2023} set the value to \num{200}, so we do the same. We keep track of the loss function value for every epoch and the running time that every epoch took; our aim is to show how the value decreases on every epoch and the running time that takes.
+First the six algorithms are tested on a fixed number of epochs, \textcite{fan_msl_2023} set the value to \num{200}, so we do the same. We keep track of the loss function value for every epoch and the running time that every epoch took; our aim is to show how the value decreases on every epoch and the running time that takes, see figures on pages~\pageref{fig:diab-breast}, \pageref{fig:phish-austr} and \pageref{fig:mush-german}.\par\smallskip
 
-Once we have the algorithms performance at different step-size values, a fine-tuning of the hyper-parameter is done in order to obtain the best solver for every dataset based on the accuracy score and loss function value. For a better comparison, the L-BFGS, Conjugate Gradient and Newton-CG algorithms are also tested.
+Once we have the algorithms performance at different step-size values, a fine-tuning of the hyper-parameter is done in order to obtain the best solver for every dataset based on the accuracy score and loss function values. For a better comparison, the L-BFGS, Conjugate Gradient and Newton-CG, and the full-batch gradient descent algorithms are also tested.
 
-As set the only hyper-parameter that varies is the step-size $\alpha$, the momentum term is set to \num{0.9}, the mini-batch size is a power of 2 and is set according to perform at least \num{100} \emph{iterations} and the $\epsilon$ tolerance from~\eqref{eq:stopping} is set to \num{e-3}.
+The only hyper-parameter that varies is the step-size $\alpha$, the momentum term is set to \num{0.9}, the mini-batch size is a power of 2 and is set according to perform at least \num{100} \emph{iterations} depending on the considered dataset and the $\epsilon$ tolerance from~\eqref{eq:stopping} is set to \num{e-3}.
 
 \begin{table}
 \centering
 \caption{Benchmark datasets}
 \label{tab:datasets}
-\begin{tabular}{lSS}
+\begin{tabular}{lSSSc}
 \toprule
-Name & {Train} & {Test} \\
+Name & {Train} & {Test} & {Features} & {Distribution} \\
 \midrule
-Diabetes & 614 & 154 \\
-Breast cancer & 546 & 137 \\
-svmguide1 & 3089 & 4000 \\
-Australian & 552 & 138 \\
-Mushrooms & 6499 & 1625 \\
-German & 800 & 200 \\
+w1a & 2477 & 47272 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
+w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
+Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ \\
+a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ \\
+Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ \\
+German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-
-\cleardoublepage
+%\cleardoublepage
 \begin{table}
 \sisetup{round-mode=places}
 \centering
-\caption{Diabetes dataset}
-\label{tab:diab-table}
+\caption{w1a dataset}
+\label{tab:w1a-table}
 \begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
 Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
 \midrule
-L-BFGS & NaN & 6 & NaN & 0.662128 & 0.000014 & 0.642857 \\
-Newton-CG & NaN & 5 & NaN & 0.662128 & 0.000001 & 0.642857 \\
-CG & NaN & 6 & NaN & 0.662128 & 0.000003 & 0.642857 \\
-BatchGD-Fixed & 0.750000 & 6 & 0.003520 & 0.662128 & 0.000489 & 0.642857 \\
-SGD-Fixed & 0.005000 & 25 & 0.038253 & 0.662128 & 0.000873 & 0.642857 \\
-SGD-Decreasing & 1.000000 & 155 & 0.166517 & 0.662128 & 0.000953 & 0.642857 \\
-SGDM & 0.050000 & 82 & 0.088677 & 0.662129 & 0.000927 & 0.642857 \\
-SGD-Armijo & 0.100000 & 174 & 1.473647 & 0.662128 & 0.000867 & 0.642857 \\
-MSL-SGDM-C & 1.000000 & 166 & 1.384042 & 0.662128 & 0.000843 & 0.642857 \\
-MSL-SGDM-R & 0.500000 & 129 & 1.033303 & 0.662129 & 0.000987 & 0.642857 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-\sisetup{round-mode=places}
-\centering
-\caption{Breast cancer dataset}
-\label{tab:breast-tab}
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
-\toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
-\midrule
-L-BFGS & NaN & 7 & NaN & 0.492561 & 0.000003 & 0.817518 \\
-Newton-CG & NaN & 7 & NaN & 0.492561 & 0.000001 & 0.817518 \\
-CG & NaN & 8 & NaN & 0.492561 & 0.000002 & 0.817518 \\
-BatchGD-Fixed & 0.750000 & 12 & 0.004144 & 0.492561 & 0.000799 & 0.817518 \\
-SGD-Fixed & 0.005000 & 35 & 0.040866 & 0.492561 & 0.000952 & 0.817518 \\
-SGD-Decreasing & 1.000000 & 156 & 0.154938 & 0.492561 & 0.000666 & 0.817518 \\
-SGDM & 0.040000 & 76 & 0.066496 & 0.492561 & 0.000788 & 0.817518 \\
-SGD-Armijo & 0.050000 & 134 & 0.955061 & 0.492561 & 0.000997 & 0.817518 \\
-MSL-SGDM-C & 0.750000 & 249 & 1.837125 & 0.492561 & 0.000908 & 0.817518 \\
-MSL-SGDM-R & 0.850000 & 249 & 1.828050 & 0.492561 & 0.000953 & 0.817518 \\
+Newton-CG & NaN & 6 & NaN & 0.464614 & 0.000046 & 0.970236 \\
+CG & NaN & 7 & NaN & 0.464614 & 0.000009 & 0.970236 \\
+L-BFGS-B & NaN & 7 & NaN & 0.464614 & 0.000023 & 0.970236 \\
+BatchGD-Fixed & 0.750000 & 17 & 0.014591 & 0.464614 & 0.000791 & 0.970236 \\
+SGD-Decreasing & 1.000000 & 85 & 1.155595 & 0.464615 & 0.000973 & 0.970236 \\
+SGDM & 0.050000 & 94 & 1.274373 & 0.464615 & 0.000989 & 0.970236 \\
+SGD-Fixed & 0.005000 & 41 & 0.546509 & 0.464615 & 0.000970 & 0.970236 \\
+MSL-SGDM-C & 0.500000 & 600 & 12.908739 & 0.466033 & 0.042922 & 0.970236 \\
+MSL-SGDM-R & 0.500000 & 600 & 12.890633 & 0.466033 & 0.042922 & 0.970236 \\
+SGD-Armijo & 0.050000 & 600 & 12.424554 & 0.483484 & 0.145005 & 0.970236 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}
 \sisetup{round-mode=places}
-\caption{svmguide1 dataset}
-\label{tab:svm-tab}
 \centering
+\caption{w3a dataset}
+\label{tab:w3a-tab}
 \begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
 Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
 \midrule
-L-BFGS & NaN & 5 & NaN & 0.673302 & 0.000013 & 0.516250 \\
-Newton-CG & NaN & 5 & NaN & 0.673302 & 0.000000 & 0.516750 \\
-CG & NaN & 8 & NaN & 0.673302 & 0.000008 & 0.516750 \\
-BatchGD-Fixed & 0.750000 & 6 & 0.006275 & 0.673302 & 0.000240 & 0.516250 \\
-SGD-Fixed & 0.010000 & 9 & 0.008882 & 0.673303 & 0.000823 & 0.517000 \\
-SGD-Decreasing & 1.000000 & 108 & 0.214093 & 0.673303 & 0.000935 & 0.516000 \\
-SGDM & 0.050000 & 30 & 0.055492 & 0.673303 & 0.000881 & 0.516250 \\
-SGD-Armijo & 0.250000 & 32 & 1.375538 & 0.673303 & 0.000992 & 0.517000 \\
-MSL-SGDM-C & 0.100000 & 70 & 3.133235 & 0.673303 & 0.000738 & 0.517000 \\
-MSL-SGDM-R & 0.500000 & 84 & 3.622162 & 0.673303 & 0.000616 & 0.516000 \\
+Newton-CG & NaN & 6 & NaN & 0.462742 & 0.000011 & 0.970203 \\
+CG & NaN & 7 & NaN & 0.462742 & 0.000022 & 0.970203 \\
+L-BFGS-B & NaN & 7 & NaN & 0.462742 & 0.000033 & 0.970203 \\
+BatchGD-Fixed & 0.750000 & 17 & 0.018317 & 0.462743 & 0.000791 & 0.970203 \\
+SGD-Fixed & 0.005000 & 42 & 0.574441 & 0.462743 & 0.000850 & 0.970203 \\
+SGD-Decreasing & 1.000000 & 72 & 1.006146 & 0.462743 & 0.000989 & 0.970203 \\
+SGDM & 0.040000 & 99 & 1.361420 & 0.462743 & 0.000970 & 0.970203 \\
+MSL-SGDM-C & 0.500000 & 600 & 12.062421 & 0.463348 & 0.028706 & 0.970203 \\
+MSL-SGDM-R & 0.750000 & 600 & 12.468809 & 0.465611 & 0.066743 & 0.970203 \\
+SGD-Armijo & 0.100000 & 600 & 12.561584 & 0.472486 & 0.111806 & 0.970203 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 \begin{table}
 \sisetup{round-mode=places}
-\caption{Australian dataset}
-\label{tab:austr-tab}
+\caption{Phishing dataset}
+\label{tab:phish-tab}
 \centering
 \begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
 Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 7 & NaN & 0.615582 & 0.000001 & 0.876812 \\
-L-BFGS & NaN & 7 & NaN & 0.615582 & 0.000004 & 0.876812 \\
-CG & NaN & 8 & NaN & 0.615582 & 0.000005 & 0.876812 \\
-BatchGD-Fixed & 0.200000 & 34 & 0.014985 & 0.615582 & 0.000802 & 0.876812 \\
-SGD-Decreasing & 0.050000 & 18 & 0.050862 & 0.615582 & 0.000905 & 0.876812 \\
-SGDM & 0.020000 & 190 & 0.513674 & 0.615582 & 0.000939 & 0.876812 \\
-SGD-Fixed & 0.001000 & 108 & 0.294544 & 0.615582 & 0.000951 & 0.876812 \\
-SGD-Armijo & 0.020000 & 400 & 8.884642 & 0.615592 & 0.004568 & 0.876812 \\
-MSL-SGDM-R & 0.500000 & 400 & 8.943974 & 0.615603 & 0.006565 & 0.876812 \\
-MSL-SGDM-C & 0.500000 & 400 & 9.091646 & 0.615629 & 0.009875 & 0.876812 \\
+Newton-CG & NaN & 5 & NaN & 0.685065 & 0.000000 & 0.567616 \\
+L-BFGS-B & NaN & 5 & NaN & 0.685065 & 0.000008 & 0.567616 \\
+CG & NaN & 6 & NaN & 0.685065 & 0.000023 & 0.567616 \\
+SGD-Decreasing & 1.000000 & 31 & 0.421835 & 0.685065 & 0.000660 & 0.567616 \\
+SGD-Fixed & 0.010000 & 21 & 0.273023 & 0.685065 & 0.000847 & 0.567616 \\
+BatchGD-Fixed & 0.500000 & 25 & 0.063251 & 0.685065 & 0.000829 & 0.567616 \\
+SGDM & 0.050000 & 79 & 1.064213 & 0.685065 & 0.000880 & 0.567616 \\
+MSL-SGDM-C & 0.500000 & 600 & 13.559572 & 0.685705 & 0.032668 & 0.568973 \\
+MSL-SGDM-R & 0.500000 & 600 & 12.843879 & 0.686124 & 0.043719 & 0.567616 \\
+SGD-Armijo & 0.010000 & 600 & 11.481668 & 0.703591 & 0.182149 & 0.567616 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{table}
+\sisetup{round-mode=places}
+\caption{a2a dataset}
+\label{tab:a2a-tab}
+\centering
+\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\toprule
+Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+\midrule
+Newton-CG & NaN & 5 & NaN & 0.564027 & 0.000004 & 0.760265 \\
+CG & NaN & 12 & NaN & 0.564027 & 0.000015 & 0.760265 \\
+L-BFGS-B & NaN & 8 & NaN & 0.564027 & 0.000012 & 0.760265 \\
+BatchGD-Fixed & 0.500000 & 26 & 0.020425 & 0.564028 & 0.000756 & 0.760265 \\
+SGDM & 0.020000 & 210 & 2.468821 & 0.564028 & 0.000917 & 0.760265 \\
+SGD-Fixed & 0.001000 & 208 & 2.479476 & 0.564028 & 0.000986 & 0.760265 \\
+SGD-Decreasing & 0.050000 & 34 & 0.406210 & 0.564028 & 0.000994 & 0.760265 \\
+MSL-SGDM-R & 0.100000 & 600 & 11.812484 & 0.566102 & 0.075915 & 0.761157 \\
+MSL-SGDM-C & 0.100000 & 600 & 12.078144 & 0.566957 & 0.085563 & 0.768022 \\
+SGD-Armijo & 0.010000 & 600 & 12.179206 & 0.572869 & 0.123547 & 0.764820 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}
 \sisetup{round-mode=places}
@@ -151,20 +148,19 @@ MSL-SGDM-C & 0.500000 & 400 & 9.091646 & 0.615629 & 0.009875 & 0.876812 \\
 \toprule
 Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 8 & NaN & 0.580925 & 0.000138 & 0.886154 \\
-L-BFGS & NaN & 9 & NaN & 0.580925 & 0.000006 & 0.886154 \\
-CG & NaN & 10 & NaN & 0.580925 & 0.000022 & 0.886154 \\
-SGD-Fixed & 0.001000 & 90 & 0.245181 & 0.580925 & 0.000755 & 0.886154 \\
-SGDM & 0.030000 & 72 & 0.195346 & 0.580925 & 0.000988 & 0.886154 \\
-SGD-Decreasing & 0.100000 & 26 & 0.089545 & 0.580925 & 0.000996 & 0.886154 \\
-BacthGD-Fixed & 0.050000 & 168 & 0.602018 & 0.580925 & 0.000977 & 0.886154 \\
-SGD-Armijo & 0.250000 & 400 & 28.435469 & 0.580927 & 0.002231 & 0.886154 \\
-MSL-SGDM-R & 0.500000 & 400 & 28.544436 & 0.580966 & 0.009285 & 0.886769 \\
-MSL-SGDM-C & 0.200000 & 400 & 28.363697 & 0.581541 & 0.035599 & 0.886769 \\
+Newton-CG & NaN & 7 & NaN & 0.517726 & 0.000003 & 0.892923 \\
+CG & NaN & 11 & NaN & 0.517726 & 0.000024 & 0.892923 \\
+L-BFGS-B & NaN & 10 & NaN & 0.517726 & 0.000017 & 0.892923 \\
+SGD-Decreasing & 0.100000 & 13 & 0.124991 & 0.517727 & 0.000622 & 0.892923 \\
+SGDM & 0.030000 & 192 & 1.855943 & 0.517727 & 0.000903 & 0.892923 \\
+SGD-Fixed & 0.001000 & 289 & 2.814241 & 0.517727 & 0.000988 & 0.892923 \\
+BatchGD-Fixed & 0.050000 & 285 & 0.448186 & 0.517727 & 0.000997 & 0.892923 \\
+MSL-SGDM-R & 0.025000 & 600 & 9.859336 & 0.518412 & 0.043708 & 0.892923 \\
+MSL-SGDM-C & 0.025000 & 600 & 10.088218 & 0.519080 & 0.073248 & 0.887385 \\
+SGD-Armijo & 0.010000 & 600 & 10.140186 & 0.521178 & 0.066312 & 0.889231 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 \begin{table}
 \sisetup{round-mode=places}
@@ -175,43 +171,42 @@ MSL-SGDM-C & 0.200000 & 400 & 28.363697 & 0.581541 & 0.035599 & 0.886769 \\
 \toprule
 Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 7 & NaN & 0.619120 & 0.000001 & 0.700000 \\
-L-BFGS & NaN & 10 & NaN & 0.619120 & 0.000009 & 0.700000 \\
-CG & NaN & 9 & NaN & 0.619120 & 0.000017 & 0.700000 \\
-BatchGD-Fixed & 0.500000 & 12 & 0.007973 & 0.619120 & 0.000613 & 0.700000 \\
-SGD-Decreasing & 1.000000 & 161 & 0.126945 & 0.619120 & 0.000808 & 0.700000 \\
-SGD-Fixed & 0.005000 & 63 & 0.090785 & 0.619121 & 0.000963 & 0.700000 \\
-SGD-Armijo & 0.250000 & 400 & 3.228432 & 0.619122 & 0.001770 & 0.700000 \\
-SGDM & 0.050000 & 400 & 0.284040 & 0.619130 & 0.004807 & 0.700000 \\
-MSL-SGDM-R & 1.000000 & 400 & 3.153552 & 0.619143 & 0.006862 & 0.700000 \\
-MSL-SGDM-C & 1.000000 & 400 & 3.088394 & 0.619170 & 0.010250 & 0.700000 \\
+Newton-CG & NaN & 5 & NaN & 0.597303 & 0.000010 & 0.710000 \\
+CG & NaN & 12 & NaN & 0.597303 & 0.000004 & 0.710000 \\
+L-BFGS-B & NaN & 7 & NaN & 0.597303 & 0.000014 & 0.710000 \\
+SGD-Decreasing & 0.250000 & 42 & 0.361343 & 0.597303 & 0.000700 & 0.710000 \\
+BatchGD-Fixed & 0.500000 & 20 & 0.010634 & 0.597303 & 0.000882 & 0.710000 \\
+SGDM & 0.010000 & 482 & 4.061424 & 0.597303 & 0.000974 & 0.710000 \\
+SGD-Fixed & 0.001000 & 231 & 1.970545 & 0.597303 & 0.000985 & 0.710000 \\
+MSL-SGDM-R & 0.500000 & 600 & 8.571129 & 0.601524 & 0.090918 & 0.705000 \\
+MSL-SGDM-C & 0.500000 & 600 & 8.865525 & 0.619598 & 0.269061 & 0.700000 \\
+SGD-Armijo & 0.050000 & 600 & 9.004771 & 0.892683 & 0.978264 & 0.705000 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-
 \begin{figure}
 \centering
-% diabetes
-\subfloat[][\emph{Diabetes dataset}\label{subfig:diab-diagnostic}]%
+% w1a
+\subfloat[][\emph{w1a dataset}\label{subfig:w1a-diagnostic}]%
 {\includegraphics[width=\textwidth]{diab-diagnostic}} \\
-% breast cancer
-\subfloat[][\emph{Breast cancer dataset}\label{subfig:breast-diagnostic}]%
+% w3a
+\subfloat[][\emph{w3a dataset}\label{subfig:w3a-diagnostic}]%
 {\includegraphics[width=\textwidth]{breast-diagnostic}} \\
-\caption[]{Diabetes and Breast cancer}
+\caption[]{w1a and w3ar}
 \label{fig:diab-breast}
 \end{figure}
 
 \begin{figure}
 \centering
-% svmguide1
-\subfloat[][\emph{svmguide1 dataset}\label{subfig:svm-diagnostic}]%
+% Phishing
+\subfloat[][\emph{Phishing dataset}\label{subfig:phish-diagnostic}]%
 {\includegraphics[width=\textwidth]{svm-diagnostic}} \\
-% australian
-\subfloat[][\emph{Australian dataset}\label{subfig:austr-diagnostic}]%
+% a2a
+\subfloat[][\emph{a2a dataset}\label{subfig:a2a-diagnostic}]%
 {\includegraphics[width=\textwidth]{austr-diagnostic}}
-\caption[]{svmguide1 and Australian datasets}
-\label{fig:svm-austr}
+\caption[]{Phishing and a2a datasets}
+\label{fig:phish-austr}
 \end{figure}
 
 \begin{figure}

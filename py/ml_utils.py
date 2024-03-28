@@ -7,18 +7,48 @@ import matplotlib.pyplot as plt
 from models import LogisticRegression
 
 
-def run_solvers(solver, C, dataset, max_epochs, batch_size, step_size, momentum=(0, 0, 0)):
+def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
+                momentum=(0.9,0.9,0.9), delta_a=0.5, gamma_a=0.001, delta_m=0.5,
+                **kwargs):
+    """
+    Something like of a grid search
+
+    Parameters
+    ----------
+    solver : TYPE
+        DESCRIPTION.
+    C : TYPE
+        DESCRIPTION.
+    dataset : TYPE
+        DESCRIPTION.
+    batch_size : TYPE
+        DESCRIPTION.
+    step_size : tuple, optional
+        DESCRIPTION. The default is [1,0.1,0.01].
+    momentum : tuple, optional
+        DESCRIPTION. The default is (0,0,0).
+    max_epochs : TYPE, optional
+        DESCRIPTION. The default is 200.
+
+    Returns
+    -------
+    list of LogisticRegression
+    """
+
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
+        momentum = (0, 0, 0)
+
     solver1 = LogisticRegression(solver, C=C)
-    solver1.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[0], momentum=momentum[0])
+    solver1.fit(dataset, batch_size, step_size[0], momentum[0], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     solver2 = LogisticRegression(solver, C=C)
-    solver2.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[1], momentum=momentum[1])
+    solver2.fit(dataset, batch_size, step_size[1], momentum[1], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     solver3 = LogisticRegression(solver, C=C)
-    solver3.fit(dataset=dataset, max_epochs=max_epochs, batch_size=batch_size,
-                step_size=step_size[2], momentum=momentum[2])
+    solver3.fit(dataset, batch_size, step_size[2], momentum[2], 0, 200,
+                delta_a, gamma_a, delta_m)
 
     return [solver1, solver2, solver3]
 
@@ -38,8 +68,10 @@ def optim_data(models):
             "Run-time": [model.opt_result.runtime for model in models],
             "Epochs": [model.opt_result.nit for model in models],
             # "Termination": [model.message for model in models],
-            "Train score": [model.accuracy_train for model in models],
-            "Test score": [model.accuracy_test for model in models],
+            "Train score": [model.metrics_train[0] for model in models],
+            "Test score": [model.metrics_test[0] for model in models],
+            "Bal train score": [model.metrics_train[1] for model in models],
+            "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": [model.fun_seq for model in models],
             "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
         }
@@ -69,8 +101,10 @@ def optim_bench(models):
             "Run-time": np.nan,
             "Epochs": [model.opt_result.nit for model in models],
             # "Termination": model.message,
-            "Train score": [model.accuracy_train for model in models],
-            "Test score": [model.accuracy_test for model in models],
+            "Train score": [model.metrics_train[0] for model in models],
+            "Test score": [model.metrics_test[0] for model in models],
+            "Bal train score": [model.metrics_train[1] for model in models],
+            "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": np.nan,
             "Time/Epochs": np.nan
         }
@@ -199,13 +233,15 @@ def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear
     # E = data1["Loss/Epochs"][0].shape[0]  # number of measurement
     # T = data1["Time/Epochs"][3][-1]  # total time
 
+    scalexy_epochs, scalexy_runtime = scalexy[:2], scalexy[2:]
+
     fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
                             figsize=(6.4*2, 4.8*1.5))
 
     for i, ax in enumerate(axs.flat):
         if i in (0,1,4,5):
             # 1) Train loss against epochs
-            plot_loss_epochs(ax, models[i], scalexy[:2])
+            plot_loss_epochs(ax, models[i], scalexy_epochs)
 
             # benchmark solver line
             # ax.axhline(y=bench.fun, color="k", linestyle="dashed")
@@ -213,7 +249,7 @@ def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear
 
         elif i in (2,3,6,7):
             # 2) Train loss against runtime
-            plot_loss_time(ax, models[i], scalexy[2:])
+            plot_loss_time(ax, models[i], scalexy_runtime)
 
             # benchmark solver line
             # ax.axhline(y=bench.fun, color="k", linestyle="dashed")
