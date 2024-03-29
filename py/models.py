@@ -146,7 +146,8 @@ class LogisticRegression():
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
                 f"\nSol norm: {np.linalg.norm(self.coef_):.6f}" +
-                f"\nRun-time: {self.opt_result.runtime:.6f}")
+                f"\nRun-time (seconds): {self.opt_result.runtime:.6f}" +
+                f"\nEpochs: {self.opt_result.nit}")
 
 
 class LinearRegression():
