@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
 
-from scipy.sparse import csr_matrix, lil_matrix, hstack
+from scipy.sparse import lil_matrix, hstack
 
 # from joblib import Memory
 # mem = Memory("./mycache")

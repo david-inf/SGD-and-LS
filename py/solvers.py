@@ -212,51 +212,6 @@ def stopping(fun_k, jac_k, nit, max_iter, criterion):
     return stop
 
 
-# def select_direction(solver, beta0, grad_t, d_t):
-#     """
-#     Select direction based on the selected solver
-#     Dataset not required for this operation
-
-#     Parameters
-#     ----------
-#     solver : string
-#     beta0 : int
-#         initial momentum term
-#     grad_t : numpy.ndarray of size d_t.size
-#         w.r.t. z_t
-#     d_t : numpy.ndarray
-#         previous iteration direction
-
-#     Returns
-#     -------
-#     d_next : numpy.ndarray
-#         current iteration direction
-#     """
-
-#     # allocate next direction
-#     d_next = np.empty_like(d_t)
-
-#     # beta = beta0
-
-#     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
-#         # set negative gradient
-#         d_next = -grad_t
-
-#     elif solver == "SGDM":
-#         # damped negative gradient
-#         d_next = -((1 - beta0) * grad_t + beta0 * d_t)
-
-#     elif solver == "MSL-SGDM-C":
-#         # update momentum until the direction is descent
-#         d_next = momentum_correction(beta0, grad_t, d_t)
-
-#     elif solver == "MSL-SGDM-R":
-#         # if not descent set direction to damped negative gradient
-#         d_next = momentum_restart(beta0, grad_t, d_t)
-
-#     return d_next
-
-
 # %% utils sls
 
 
