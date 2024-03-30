@@ -10,14 +10,21 @@ from models import LogisticRegression
 
 # %% Grid search
 
-def fit_model(params, solver, C, dataset):
+def fit_model(params, solver, C, dataset, plot=False):
     """ fit the model with the specified parameters """
 
+    # get all the model parameters
     batch_size, alpha, beta, delta_a, delta_m = params
 
     model = LogisticRegression(solver, C)
-    model.fit(dataset, batch_size, alpha, beta, damp_armijo=delta_a,
-              damp_momentum=delta_m)
+
+    if plot:
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
+                  damp_armijo=delta_a, damp_momentum=delta_m)
+
+    else:
+        model.fit(dataset, batch_size, alpha, beta, damp_armijo=delta_a,
+                  damp_momentum=delta_m)
 
     # test accuracy and loss
     # performance = model.metrics_test[0]
@@ -51,7 +58,7 @@ def prepare_grid(solver, batches, alphas, betas, delta_a, delta_m):
 
 def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
                 betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,),
-                output=True, do_parallel=True, n_jobs=4):
+                output=True, do_parallel=True, n_jobs=7):
     # for betas, delta_a and delta_m is set just one value because of the
     # solvers that don't use those parameters, there would be more
     # combinations that it needed
@@ -60,41 +67,33 @@ def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
     param_grid = prepare_grid(solver, batches, alphas, betas, delta_a, delta_m)
 
     # best_performance = np.array([0, float("inf")])  # accuracy and loss
-    best_params = None
-    best_model = None
+    best_model = None   # store best model
+    best_params = None  # store best model parameters
 
     start_time = time.time()
 
+    # all possible combinations
     params_combos = product(*param_grid.values())
 
     results = []  # list of tuples
 
     if do_parallel:
-        # results = Parallel(n_jobs=n_jobs)(
-            # delayed(fit_model)(params, solver, C, dataset)
-            # for params in params_combos)
-
         # I'm reusing the same pool through Parallel context manager
         with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
             results = parallel(
                 delayed(fit_model)(params, solver, C, dataset)
                 for params in params_combos)
+            # results = performance, model, params
 
     else:
         for params in params_combos:
             res = fit_model(params, solver, C, dataset)
             results.append(res)
 
-    # this can be improved, in the first place with a sorting algorithm
-    # for performance, model, params in results:
-    #     if compare_performance(performance, best_performance):
-    #         best_performance = performance
-    #         best_params = params
-    #         best_model = model
-
-    results.sort(key=lambda x: (x[0][0], -x[0][1]))  # sort elements by accuracy
-    best_params = results[-1][2]
+    # sort elements by test accuracy and loss
+    results.sort(key=lambda x: (x[0][0], -x[0][1]))
     best_model = results[-1][1]
+    best_params = results[-1][2]
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -149,21 +148,17 @@ def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
     if not do_parallel:
         for i in range(3):
             params = (batch_size, step_size[i], momentum[i], delta_a, delta_m)
-            res = fit_model(params, solver, C, dataset)
-            solvers_output.append(res)
+            _, model, _ = fit_model(params, solver, C, dataset, plot=True)
+            solvers_output.append(model)
 
     else:
         param_grid = []
         for i in range(3):
             param_grid.append((batch_size, step_size[i], momentum[i], delta_a, delta_m))
 
-        # results = Parallel(n_jobs=n_jobs, backend="loky")(
-        #     delayed(fit_model)(params, solver, C, dataset)
-        #     for params in param_grid)
-
         with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
             results = parallel(
-                delayed(fit_model)(params, solver, C, dataset)
+                delayed(fit_model)(params, solver, C, dataset, plot=True)
                 for params in param_grid)
 
         for _, model, _ in results:
@@ -175,30 +170,3 @@ def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
     print(f"Run-time (seconds): {elapsed_time:.6f}")
 
     return solvers_output
-
-
-# def run_solvers_par(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
-#                 momentum=(0.9,0.9,0.9), delta_a=0.5, gamma_a=0.001, delta_m=0.5,
-#                 **kwargs):
-
-#     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
-#         momentum = (0, 0, 0)
-
-#     param_grid = []
-#     for i in range(3):
-#         param_grid.append((batch_size, step_size[i], momentum[i], delta_a, delta_m))
-
-#     start_time = time.time()
-
-#     results = Parallel(n_jobs=2)(delayed(fit_model)(params, solver, C, dataset)
-#                                  for params in param_grid)
-
-#     end_time = time.time()
-#     elapsed_time = end_time - start_time
-#     print(f"Run-time (seconds): {elapsed_time:.6f}")
-
-#     solvers_output = []
-#     for _, model, _ in results:
-#         solvers_output.append(model)
-
-#     return solvers_output

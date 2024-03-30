@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from models import LogisticRegression
-
 
 def optim_data(models):
     # models: LogisticRegression
@@ -70,60 +68,6 @@ def models_summary(custom, bench):
     return models_data.drop(columns={"Solution", "Fun/Epochs", "Time/Epochs"})
 
 
-def plot_loss_epochs(ax, data, scalexy):
-    df = data.copy()
-    df.loc[:, "labels"] = df["Solver"] + \
-        "(" + df["Alpha0"].astype(str) + ")"
-
-    start = 1  # only in np.range
-    end = data["Fun/Epochs"][0].shape[0] + 1
-
-    R = data.shape[0]  # number of rows
-    for i in range(R//2):
-        ax.plot(np.arange(start, end), df["Fun/Epochs"][i], linestyle="dashed")
-
-    for i in range(R//2, R):
-        ax.plot(np.arange(start, end), df["Fun/Epochs"][i], linestyle="solid")
-
-    # ax.set_xlabel("Epochs")
-    ax.set_xscale(scalexy[0])
-
-    # ax.set_ylabel("Train loss")
-    ax.set_yscale(scalexy[1])
-    # ax.set_ylim(top=np.mean(df["Loss/Epochs"][0]))
-
-    ax.grid(True, which="both", axis="both")
-    ax.legend(df["labels"], fontsize="x-small")
-
-
-def diagnostic_epochs(data1, data2, data3, data4, bench, scalexy=("log", "log")):
-    models = [data1, data2, data3, data4]
-    E = data1["Fun/Epochs"][0].shape[0]  # number of measurement
-
-    fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
-                            figsize=(6.4, 4.8))
-
-    i = 0
-    for ax in axs.flat:
-        plot_loss_epochs(ax, models[i], scalexy)
-
-        # benchmark solver line
-        ax.axhline(y=bench.loss, color="k", linestyle="dashed")
-        ax.text(E*0.25, bench.loss*1.02, bench.solver, fontsize=8, ha="center")
-
-        i += 1
-
-    xlabel = "Epochs"
-    axs[1,0].set_xlabel(xlabel)
-    axs[1,1].set_xlabel(xlabel)
-    axs[1,0].set_xticks([1, 10, 100])
-    axs[1,0].set_xticklabels(["1", "10", "100"])
-
-    ylabel = "Train loss"
-    axs[0,0].set_ylabel(ylabel)
-    axs[1,0].set_ylabel(ylabel)
-
-
 def plot_loss_time(ax, data, scalexy):
     df = data.copy()
     df.loc[:, "labels"] = df["Solver"] + \
@@ -139,83 +83,67 @@ def plot_loss_time(ax, data, scalexy):
     for i in range(R//2, R):
         ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="solid")
 
-    # ax.set_xlabel("Time")
     ax.set_xscale(scalexy[0])
-
-    # ax.set_ylabel("Train loss")
     ax.set_yscale(scalexy[1])
 
     ax.grid(True, which="both", axis="both")
     ax.legend(df["labels"], fontsize="x-small")
 
 
-def diagnostic_time(data1, data2, data3, data4, bench, scalexy=("linear", "log")):
-    models = [data1, data2, data3, data4]
-    T = data1["Time/Epochs"][3][-1]
+def plot_loss_epochs(ax, data, scalexy):
+    df = data.copy()
+    df.loc[:, "labels"] = df["Solver"] + \
+        "(" + df["Alpha0"].astype(str) + ")"
 
-    fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
-                            figsize=(6.4, 4.8))
+    start = 1  # only in np.range
+    end = data["Fun/Epochs"][0].shape[0]
 
-    i = 0
-    for ax in axs.flat:
-        plot_loss_time(ax, models[i], scalexy)
+    R = data.shape[0]  # number of rows
+    for i in range(R//2):
+        ax.plot(np.arange(start, end), df["Fun/Epochs"][i][:-1], linestyle="dashed")
 
-        ax.axhline(y=bench.loss, color="k", linestyle="dashed")
-        ax.text(T, bench.loss*1.02, bench.solver, fontsize=8, ha="right")
+    for i in range(R//2, R):
+        ax.plot(np.arange(start, end), df["Fun/Epochs"][i][:-1], linestyle="solid")
 
-        i += 1
+    ax.set_xscale(scalexy[0])
+    ax.set_yscale(scalexy[1])
 
-    xlabel = "Time (seconds)"
-    axs[1,0].set_xlabel(xlabel)
-    axs[1,1].set_xlabel(xlabel)
-
-    ylabel = "Train loss"
-    axs[0,0].set_ylabel(ylabel)
-    axs[1,0].set_ylabel(ylabel)
+    ax.grid(True, which="both", axis="both")
+    ax.legend(df["labels"], fontsize="x-small")
 
 
-def diagnostic(data1, data2, data3, data4, bench, scalexy=("log", "log", "linear", "log")):
-    models = [data1, data2] * 2 + [data3, data4] * 2
-    # E = data1["Loss/Epochs"][0].shape[0]  # number of measurement
-    # T = data1["Time/Epochs"][3][-1]  # total time
+def diagnostic(models, scalexy=("log", "log", "linear", "log")):
+
+    # models is a list of list of LogisticRegression
+    # list of length 6
+    # [sgdf, sgdd, sgdm, armijo, mslc, mslr]
+
+    models_choose = [models[0] + models[3], models[1] + models[3],
+                     models[2] + models[4], models[2] + models[5]]
 
     scalexy_epochs, scalexy_runtime = scalexy[:2], scalexy[2:]
 
-    fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
+    fig, axs = plt.subplots(2, 4, layout="constrained", sharey="row", sharex="row",
                             figsize=(6.4*2, 4.8*1.5))
 
     for i, ax in enumerate(axs.flat):
-        if i in (0,1,4,5):
+        if i in (0,1,2,3):  # first row
             # 1) Train loss against epochs
-            plot_loss_epochs(ax, models[i], scalexy_epochs)
+            plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
 
-            # benchmark solver line
-            # ax.axhline(y=bench.fun, color="k", linestyle="dashed")
-            # ax.text(E*0.25, bench.fun*1.02, bench.solver, fontsize=8, ha="center")
-
-        elif i in (2,3,6,7):
+        elif i in (4,5,6,7):  # second row
             # 2) Train loss against runtime
-            plot_loss_time(ax, models[i], scalexy_runtime)
-
-            # benchmark solver line
-            # ax.axhline(y=bench.fun, color="k", linestyle="dashed")
-            # ax.text(T, bench.fun*1.02, bench.solver, fontsize=8, ha="right")
+            plot_loss_time(ax, optim_data(models_choose[i % 4]), scalexy_runtime)
 
     xlabel1 = "Epochs"
-    axs[1,0].set_xlabel(xlabel1)
-    axs[1,1].set_xlabel(xlabel1)
-    axs[1,0].set_xticks([1, 10, 100])
-    axs[1,0].set_xticklabels(["1", "10", "100"])
-    axs[1,1].set_xticks([1, 10, 100])
-    axs[1,1].set_xticklabels(["1", "10", "100"])
+    xlabel2 = "Time (seconds)"
+    for i in range(4):
+        axs[0, i].set_xlabel(xlabel1)
+        axs[1, i].set_xlabel(xlabel2)
 
     ylabel1 = r"$f(w)$"
-    axs[0,0].set_ylabel(ylabel1)
-    axs[1,0].set_ylabel(ylabel1)
-
-    xlabel2 = "Time (seconds)"
-    axs[1,2].set_xlabel(xlabel2)
-    axs[1,3].set_xlabel(xlabel2)
+    axs[0, 0].set_ylabel(ylabel1)
+    axs[1, 0].set_ylabel(ylabel1)
 
 
 # def plot_accuracy(models, ticks):

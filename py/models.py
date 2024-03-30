@@ -55,7 +55,7 @@ class LogisticRegression():
         momentum : float, optional
             momentum term. The default is 0.
         stop : int, optional
-            stopping criterion. The default is 0.
+            stopping criterion. The default is 1, when reaches optimal solution.
 
         Returns
         -------

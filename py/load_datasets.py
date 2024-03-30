@@ -16,17 +16,20 @@ from joblib import Memory
 
 cachedir = "./tmp/mycache"
 memory = Memory(cachedir, verbose=0)
-# memory.clear(warn=False)
+# memory.clear(warn=False)  # keep them cached
 
 
-
-# Utils
+# %% Utils
 
 def dataset_distrib(y_train):
     values, counts = np.unique(y_train, return_counts=True)
     samples = np.sum(counts)
 
     return dict(zip(values, counts / samples))
+
+
+def data_info(dataset):
+    train_sklearn_log(dataset[0], dataset[1], dataset[2], dataset[3])
 
 
 def train_sklearn_log(X_train, y_train, X_test, y_test):
@@ -66,7 +69,25 @@ def add_intercept(X):
 # perché proprio quello che faccio visto a fit passo dataset_X = load_X()
 
 
-# %% Diabetes
+# %% w1a
+
+@memory.cache
+def load_w1a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/w1a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/w1a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
 
 # @memory.cache
 def load_diabetes():  # ok
@@ -87,7 +108,25 @@ def load_diabetes():  # ok
     return X_train, y_train, X_test, y_test
 
 
-# %% Breast cancer
+# %% w3a
+
+@memory.cache
+def load_w3a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/w3a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/w3a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
 
 def load_breast_cancer():  # ok
     path = "datasets/LIBSVM/breast-cancer_scale.txt"
@@ -109,7 +148,29 @@ def load_breast_cancer():  # ok
     return X_train, y_train, X_test, y_test
 
 
-# %% svmguide1
+# %% phishing
+
+@memory.cache
+def load_phishing(disp=False):
+    path = "datasets/LIBSVM/phishing.txt"
+    X, y = load_svmlight_file(path)
+
+    # add constant column
+    X_prep = add_intercept(X)
+
+    # encode respponse variable in {-1,1}
+    encoder = LabelEncoder()
+    y_prep = 2 * encoder.fit_transform(y) - 1
+
+    # split dataset
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y_prep, test_size=0.2, random_state=42)
+
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
+
+    return X_train, y_train, X_test, y_test
+
 
 def load_svmguide1():  # ok
     path_train = "datasets/LIBSVM/svmguide1.txt"
@@ -142,7 +203,25 @@ def load_svmguide1():  # ok
     return X_train_prep, y_train_prep, X_test_prep, y_test_prep
 
 
-# %% Australian
+# %% a2a
+
+@memory.cache
+def load_a2a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/a2a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/a2a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)[:, :120]
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
 
 def load_australian():  # ok
     path = "datasets/LIBSVM/australian_scale.txt"
@@ -206,62 +285,6 @@ def load_german(disp=False):  # ok
 
 # %% More datasets
 
-@memory.cache
-def load_phishing(disp=False):
-    path = "datasets/LIBSVM/phishing.txt"
-    X, y = load_svmlight_file(path)
-
-    # add constant column
-    X_prep = add_intercept(X)
-
-    # encode respponse variable in {-1,1}
-    encoder = LabelEncoder()
-    y_prep = 2 * encoder.fit_transform(y) - 1
-
-    # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_prep, y_prep, test_size=0.2, random_state=42)
-
-    if disp:
-        train_sklearn_log(X_train, y_train, X_test, y_test)
-
-    return X_train, y_train, X_test, y_test
-
-@memory.cache
-def load_w1a(disp=False):  # ok
-    path_train = "datasets/LIBSVM/w1a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/w1a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)
-
-    if disp:
-        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
-@memory.cache
-def load_w3a(disp=False):  # ok
-    path_train = "datasets/LIBSVM/w3a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/w3a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)
-
-    if disp:
-        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
-
 def load_w6a():  # ok
     path_train = "datasets/LIBSVM/w6a.txt"
     X_train, y_train = load_svmlight_file(path_train)
@@ -274,23 +297,6 @@ def load_w6a():  # ok
     X_test_prep = add_intercept(X_test)
 
     train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
-@memory.cache
-def load_a2a(disp=False):  # ok
-    path_train = "datasets/LIBSVM/a2a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/a2a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)[:, :120]
-
-    if disp:
-        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 
