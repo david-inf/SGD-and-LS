@@ -11,25 +11,25 @@ from models import LogisticRegression, LinearRegression
 from ml_utils import (optim_data, optim_bench,
                       models_summary, diagnostic_epochs, diagnostic_time,
                       plot_loss_time, plot_loss_epochs, diagnostic)
-from grid_search import run_solvers, run_bench, run_solvers_par, grid_search
+from grid_search import run_solvers, run_bench, grid_search
 # from solvers_utils import f_and_df, logistic, logistic_der
 
 # %% Diabetes
 
-data_diab = load_phishing()
+# data_diab = load_phishing()
 
 # CDiab = 0.5
 # MDiab = 64
 # kDiab = 200
 
-benchDiab = run_bench(data_diab, 0.5)
+benchDiab = run_bench(load_phishing(), 0.5)
 benchDiab_data = optim_bench(benchDiab)
 
 # %% Grid search
 
 # sgdfixed_opt1, _ = grid_search_seq("SGD-Fixed", 0.5, data_diab, (64, 128), (0.1, 0.01, 0.001, 0.0001))
 # print("% ----- %")
-sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, data_diab, (64, 128), (0.1, 0.01, 0.001, 0.0001))
+sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, load_phishing(), (64, 128), (0.1, 0.01, 0.001, 0.0001))
 
 # sgdm_opt, _ = grid_search_seq("SGDM", 0.5, data_diab, (64, 128))
 
@@ -40,7 +40,9 @@ sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, data_diab, (64, 128), (0.1, 0.0
 # %% Run 3 solvers
 
 # sgdfixed_diab = run_solvers("SGD-Fixed", 0.5, data_diab, 128)
-sgdarmijo_diab = run_solvers("SGD-Armijo", 0.5, data_diab, 128)
+# sgdfixed_diab2 = run_solvers("SGD-Fixed", 0.5, data_diab, 128, parallel=True)
+sgdarmijo_diab = run_solvers("SGD-Armijo", 0.5, load_phishing(), 128)
+sgdarmijo_diab2 = run_solvers("SGD-Armijo", 0.5, load_phishing(), 128, do_parallel=True)
 
 # %%% SGD-Fixed
 

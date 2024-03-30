@@ -166,6 +166,9 @@ cython_debug/
 # JupyterLab
 .virtual_documents
 
+# Altro
+py/tmp/
+
 
 #######
 # TeX

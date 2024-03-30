@@ -12,8 +12,11 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_square
 
 from scipy.sparse import lil_matrix, hstack
 
-# from joblib import Memory
-# mem = Memory("./mycache")
+from joblib import Memory
+
+cachedir = "./tmp/mycache"
+memory = Memory(cachedir, verbose=0)
+# memory.clear(warn=False)
 
 
 
@@ -56,10 +59,16 @@ def add_intercept(X):
 
 """ dataset_X = load_X() """
 
+# TODO: use joblib memoization
+# la posso usare quando memorizzo il dataset in dataset_X così lo butta sul disco
+# però chiamando il load_X soltanto una volta servirebbe a poco memoizzare
+# a meno che invece di salvare i dati nelle variabili, passo direttamente la funzione
+# perché proprio quello che faccio visto a fit passo dataset_X = load_X()
+
 
 # %% Diabetes
 
-# @mem.cache
+# @memory.cache
 def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
     X, y = load_svmlight_file(path)
@@ -153,7 +162,8 @@ def load_australian():  # ok
 
 # %% Mushrooms
 
-def load_mushrooms():  # ok
+@memory.cache
+def load_mushrooms(disp=False):  # ok
     path = "datasets/LIBSVM/mushrooms.txt"
     X, y = load_svmlight_file(path)
 
@@ -168,14 +178,16 @@ def load_mushrooms():  # ok
     X_train, X_test, y_train, y_test = train_test_split(
         X_prep, y_prep, test_size=0.2, random_state=42)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
 
 
 # %% German
 
-def load_german():  # ok
+# @memory.cache
+def load_german(disp=False):  # ok
     path = "datasets/LIBSVM/german.numer_scale.txt"
     X, y = load_svmlight_file(path)
 
@@ -186,15 +198,16 @@ def load_german():  # ok
     X_train, X_test, y_train, y_test = train_test_split(
         X_prep, y, test_size=0.2, random_state=42)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
 
 
 # %% More datasets
 
-
-def load_phishing():
+@memory.cache
+def load_phishing(disp=False):
     path = "datasets/LIBSVM/phishing.txt"
     X, y = load_svmlight_file(path)
 
@@ -209,12 +222,13 @@ def load_phishing():
     X_train, X_test, y_train, y_test = train_test_split(
         X_prep, y_prep, test_size=0.2, random_state=42)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
 
-
-def load_w1a():  # ok
+@memory.cache
+def load_w1a(disp=False):  # ok
     path_train = "datasets/LIBSVM/w1a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 
@@ -225,12 +239,13 @@ def load_w1a():  # ok
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)
 
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 
-
-def load_w3a():  # ok
+@memory.cache
+def load_w3a(disp=False):  # ok
     path_train = "datasets/LIBSVM/w3a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 
@@ -241,7 +256,8 @@ def load_w3a():  # ok
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)
 
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 
@@ -261,8 +277,8 @@ def load_w6a():  # ok
 
     return X_train_prep, y_train, X_test_prep, y_test
 
-
-def load_a2a():  # ok
+@memory.cache
+def load_a2a(disp=False):  # ok
     path_train = "datasets/LIBSVM/a2a.txt"
     X_train, y_train = load_svmlight_file(path_train)
 
@@ -273,7 +289,8 @@ def load_a2a():  # ok
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)[:, :120]
 
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
     return X_train_prep, y_train, X_test_prep, y_test
 

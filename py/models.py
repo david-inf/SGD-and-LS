@@ -141,7 +141,7 @@ class LogisticRegression():
     def __str__(self):
 
         return (f"Solver: {self.solver}" +
-                f"\nTrain score: {self.metrics_train[0]}" +
+                # f"\nTrain score: {self.metrics_train[0]}" +
                 f"\nTest score: {self.metrics_test[0]}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
