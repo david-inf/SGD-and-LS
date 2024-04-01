@@ -6,12 +6,12 @@
 % problem identification
 % solutions
 
-Different SGD-type algorithms proposed by the literature were implemented and tested on different datasets for solving the $\ell_2\text{-regularized}$ Logistic Regression training problem.
+Different SGD-type algorithms proposed by the literature were implemented and tested on different benchmark datasets for training the $\ell_2\text{-regularized}$ Logistic Regression model.
 
 For the purpose of this work, those algorithms were grouped into one, see algorithm~\vref{alg:SGD-variants}, follows a list of the variants
 \begin{itemize}
 \item SGD with fixed or decreasing step-size, and line search, see section~\vref{subsc:sgd};
-\item SGD with momentum term and momentum correction or restart, see section~\vref{subsc:sgdm}.
+\item SGD with momentum term and line search, see section~\vref{subsc:sgdm}.
 \end{itemize}
 
 %Those algorithms can be divided in basic SGD and SGD with line search due to common computations, follows a list of the implemented algorithms
@@ -38,7 +38,7 @@ L(w)=\frac{1}{N}\sum_{i=1}^N\ell_i(w) \\[0.5ex]
 \Omega_{\ell_2}=\frac{1}{2}\norma{w}_2^2
 \end{cases}
 \]
-where $L(w)$ is the \emph{loss function} which is dived by the total number of samples in the dataset and $\Omega(w)$ is the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
+where $L(w)$ is the \emph{loss function} which for scaling issues is dived by the total number of samples in the dataset and $\Omega(w)$ is the \emph{regularization term} with its coefficient $\lambda$. There are three regularization possible choices, the $\ell_2$ regularization was chosen for the problem that we want to address. The vector $w$ contains the model weights associated to the dataset features.
 
 The task performed is the \emph{binary classification} (so the allowed values for the response variable are $\mathcal{Y}=\set{-1,1}$), using the Logistic Regression model. The selected loss function is the \emph{log-loss}, for one dataset sample is
 \begin{equation}\label{eq:sample_loss}
@@ -48,7 +48,7 @@ figure~\vref{subfig:log-loss} shows a plot of the loss function $\ell(uv)=\log\b
 
 \subsubsection*{Prediction}
 
-Once the model is trained, we use the sigmoid function, see figure~\vref{subfig:sigmoid}, to classify (as positive or negative class) unseen data as follows
+The sigmoid function, see figure~\vref{subfig:sigmoid}, is used for predicting the labels (positive or negative class) of unseen samples as follows
 \[
 y^{(i)}=
 \begin{cases}
@@ -56,7 +56,7 @@ y^{(i)}=
 -1 & \text{if $w^Tx^{(i)}\leq0.5$}
 \end{cases}
 \]
-
+the threshold is set according to the Bayes classifier.
 
 \begin{figure}
 \centering
@@ -98,12 +98,12 @@ y^{(i)}=
 \subsection{Optimization problem}
 % ---------------------------------------------------- %
 
-Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using Stochastic Gradient Descent (SGD) algorithm variants
+Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to address with the Stochastic Gradient Descent (SGD) algorithm variants
 \begin{equation}\label{eq:opt-prob}
 %\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \end{equation}
-where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features and the intercept. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
+where $i=1,\dots,N$ are the dataset samples, $\mathcal{X}\subseteq\R^{(p+1)}$ where $p+1$ means that there are $p$ features from the dataset and the intercept. %The $1/N$ term isn't always used, we choose to use that term for scaling issues.
 We define the matrix associated to the dataset and the model weights as follows
 \[
 X^T=
@@ -122,9 +122,9 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is meant for the intercept, also known as \emph{bias}, the $b$ weight in vector $w$. A compact definition for the dataset matrix is $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
+the constant column is meant for the intercept, known as \emph{bias}, the $b$ weight in vector $w$. The dataset matrix can be written as $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
 
-The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we compute the first and second order derivatives
+The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we can compute the first and second order derivatives
 \begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
 %\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
@@ -145,7 +145,7 @@ Problem~\eqref{eq:opt-prob} admits a unique optimal solution.
 \begin{proof}
 We need to prove the existence and the uniqueness of the global minimum.
 
-\noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is coercive, in fact $\forall\set{w^k}$ s.t. $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
+\noindent$(i)$ \emph{Existence} of a optimal solution. The problem is quadratic and the objective function is \emph{coercive}, that is $\forall\set{w^k}$ s.t. $\lim_{k\to\infty}\norma{w^k}=\infty$ holds
 \[
 \lim_{k\to\infty}\func(w^k)\geq\lim_{k\to\infty}\lambda\frac{1}{2}\norma{w^k}^2=\infty\Rightarrow\lim_{k\to\infty}\func(w^k)=\infty
 \]
@@ -155,7 +155,7 @@ hence by a corollary of the Weirstrass theorem, the problem admits global minimu
 \[
 w^T\nabla^2\func(w)w=w^TXDX^Tw+\lambda w^TIw=\underbrace{y^TDy}_{\geq0}+\lambda\norma{w}^2\geq\lambda\norma{w}^2>0\quad\forall w
 \]
-the hessian matrix positive definite implies that the objective function is strictly convex and that implies that the global minimum, if exists, is unique. Being in the convex case, the global minimum is a $w^\ast\in\R^{(p+1)}$ s.t. $\nabla\func(w^\ast)=0$ for first-order optimality conditions.\qedhere
+the $1/N$ is omitted. The hessian matrix positive definite implies that the objective function is \emph{strictly convex} and that implies that the global minimum, if exists, is unique. Being in the convex case, the global minimum is a $w^\ast\in\R^{(p+1)}$ s.t. $\nabla\func(w^\ast)=0$ for first-order optimality conditions.\qedhere
 \end{proof}
 
 \begin{rmk}

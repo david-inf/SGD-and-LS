@@ -20,13 +20,31 @@
 
 % df.to_latex
 
-To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details.
+To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details. Every dataset comes already pre-processed, with every sample scaled in range $[-1,1]$; many features are categorical with values $0,1,2\dots$, this implies that the dataset matrix is sparse, so the \texttt{SciPy} CSR matrix format was used to store the data.
 
-First the six algorithms are tested on a fixed number of epochs, \textcite{fan_msl_2023} set the value to \num{200}, so we do the same. We keep track of the loss function value for every epoch and the running time that every epoch took; our aim is to show how the value decreases on every epoch and the running time that takes, see figures on pages~\pageref{fig:diab-breast}, \pageref{fig:phish-austr} and \pageref{fig:mush-german}.\par\smallskip
+Compared to the available benchmark dataset, those chosen are not that large, the choice is due to the hardware available (Intel\textregistered\,Core\texttrademark\,i\num{7}). As can be seen few dataset are unbalanced, this will affect the accuracy.\par\smallskip
 
-Once we have the algorithms performance at different step-size values, a fine-tuning of the hyper-parameter is done in order to obtain the best solver for every dataset based on the accuracy score and loss function values. For a better comparison, the L-BFGS, Conjugate Gradient and Newton-CG, and the full-batch gradient descent algorithms are also tested.
+The regularization coefficient from~\eqref{eq:opt-prob} is set to $\lambda=0.5$ and the tolerance from the stopping criterion~\eqref{eq:stopping} $\epsilon=\num{e-3}$, then the momentum term $\beta_0=0.9$, the aggressiveness of the Armijo condition is set to a small value $\gamma=\num{e-3}$ and the maximum number of epochs is set to $k^\ast=600$. For the other hyper-parameters a \emph{grid search} is applied.
 
-The only hyper-parameter that varies is the step-size $\alpha$, the momentum term is set to \num{0.9}, the mini-batch size is a power of 2 and is set according to perform at least \num{100} \emph{iterations} depending on the considered dataset and the $\epsilon$ tolerance from~\eqref{eq:stopping} is set to \num{e-3}.
+The grid search confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, in the latter are confronted also different values for the damping both in the Armijo method and momentum correction. The grid search for the mini-batch size depends on the considered dataset since those chosen are quite different in size, however the rule is to stay around the 100 iterations and the value goes with powers of 2, for the first five datasets the size starts from 32; follows the grid used for the others
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+%Hyper-parameter & Algorithm & Values \\
+%\midrule
+$\alpha_0$ & \texttt{SGD-Fixed}, \texttt{SGDM} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005; 0.0001; 0.00005} \\
+$\alpha_0$ & \texttt{SGD-Decreasing} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.001; 0.0005} \\
+$\alpha_0$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{1; 0.1; 0.01; 0.005} \\
+$\delta_a$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.5; 0.7} \\
+\bottomrule
+\end{tabular}
+\end{center}
+where $\delta_a$ is the damping for the Armijo line search and $\delta_m$ for the momentum correction, the combinations for the \texttt{MSL-SGDM-C} are twice the ones for \texttt{SGD-Armijo} and \texttt{MSL-SGDM-R}.
+
+The grid search chooses the best solver based on the greater \emph{test accuracy} and lower \emph{objective function} value. The results can be seen in tables~\vref{tab:w1a-table} to~\ref{tab:german-tab}, the optimization problem is addressed also with the full-batch gradient descent and three solvers from \texttt{SciPy} which are \texttt{L-BFGS}, Conjugate Gradient and Newton-CG.\par\smallskip
+
+Now as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and time, we set $k^\ast=200$ and run the algorithms with the hyper-parameters from the grid search varying the learning rate for the grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
 
 % grid search
 % i valori "ottimi" della grid search per i parametri che non sono il learning rate sono stati usati per mostrare poi l'andamento al variare del learning rate
@@ -192,24 +210,24 @@ SGDM & 1.000000 & 600 & 2.522513 & 0.616375 & 0.313714 & 0.745000 \\
 \centering
 % w1a
 \subfloat[][\emph{w1a dataset}\label{subfig:w1a-diagnostic}]%
-{\includegraphics[width=\textwidth]{diab-diagnostic}} \\
+{\includegraphics[width=\textwidth]{w1a-diagnostic}} \\
 % w3a
 \subfloat[][\emph{w3a dataset}\label{subfig:w3a-diagnostic}]%
-{\includegraphics[width=\textwidth]{breast-diagnostic}} \\
-\caption[]{w1a and w3ar}
-\label{fig:diab-breast}
+{\includegraphics[width=\textwidth]{w3a-diagnostic}} \\
+\caption[]{w1a and w3a datasets}
+\label{fig:w1a-w3a}
 \end{figure}
 
 \begin{figure}
 \centering
 % Phishing
 \subfloat[][\emph{Phishing dataset}\label{subfig:phish-diagnostic}]%
-{\includegraphics[width=\textwidth]{svm-diagnostic}} \\
+{\includegraphics[width=\textwidth]{phish-diagnostic}} \\
 % a2a
 \subfloat[][\emph{a2a dataset}\label{subfig:a2a-diagnostic}]%
-{\includegraphics[width=\textwidth]{austr-diagnostic}}
+{\includegraphics[width=\textwidth]{a2a-diagnostic}}
 \caption[]{Phishing and a2a datasets}
-\label{fig:phish-austr}
+\label{fig:phish-a2a}
 \end{figure}
 
 \begin{figure}

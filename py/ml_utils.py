@@ -130,6 +130,8 @@ def diagnostic(models, scalexy=("log", "log", "linear", "log")):
         if i in (0,1,2,3):  # first row
             # 1) Train loss against epochs
             plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
+            ax.set_xticks([1, 10, 100])
+            ax.set_xticklabels([1, 10, 100])
 
         elif i in (4,5,6,7):  # second row
             # 2) Train loss against runtime

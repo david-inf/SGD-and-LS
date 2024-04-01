@@ -134,10 +134,9 @@ plot_loss_epochs(axs[0,0], optim_data([sgdfixed_w1a[2]]), ("log", "log"))
 
 # data_mg = load_mg()
 
-# %% SGD-Fixed
 
 # linearbench1 = LinearRegression().fit(data_mg)
 # linearbench2 = LinearRegression("CG").fit(data_mg)
 # linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
 
-# linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)
+# linearmodel1 = LinearRegression("SGD-Fixed").fit(load_mg())

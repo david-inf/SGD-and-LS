@@ -364,26 +364,19 @@ def load_a4a():
 
 
 # Regression
-def load_mg():
+@memory.cache
+def load_mg(disp=False):
     path = "datasets/LIBSVM/mg_scale.txt"
     X, y = load_svmlight_file(path)
-    # transform to array from CSR sparse matrix
-    X_arr = X.toarray()
-
-    # add constant column
-    X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
-    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
 
-    model = LinearRegression().fit(X_train, y_train)
-    mse = mean_squared_error(y_test, model.predict(X_test))
-
-    print(f"sklearn MSE: {mse:.6f}")
-    weights = np.insert(model.coef_, 0, model.intercept_)
-    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
     
-    return X_train, y_train, X_test, y_test
+    return X_train_prep, y_train, X_test_prep, y_test
