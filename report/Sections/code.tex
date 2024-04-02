@@ -97,7 +97,7 @@ $k \gets 0$\;
 		\algGrad\;
 		$d_t\gets
 		\begin{cases}
-			-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr) & \text{if \texttt{SGD}, \texttt{SGDM}} \\
+			-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr) & \text{if \texttt{SGD-}, \texttt{SGDM}} \\
 			\text{\texttt{momentum-correction}}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-C}} \\
 			\text{\texttt{momentum-restart}}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-R}}
 		\end{cases}$\;

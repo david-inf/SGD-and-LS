@@ -52,8 +52,8 @@ The sigmoid function, see figure~\vref{subfig:sigmoid}, is used for predicting t
 \[
 y^{(i)}=
 \begin{cases}
-1  & \text{if $w^Tx^{(i)}>0.5$} \\
--1 & \text{if $w^Tx^{(i)}\leq0.5$}
+1  & \text{if $\sigma\bigl(w^Tx^{(i)}\bigr)>0.5$} \\
+-1 & \text{if $\sigma\bigl(w^Tx^{(i)}\bigr)\leq0.5$}
 \end{cases}
 \]
 the threshold is set according to the Bayes classifier.
@@ -98,7 +98,7 @@ the threshold is set according to the Bayes classifier.
 \subsection{Optimization problem}
 % ---------------------------------------------------- %
 
-Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to address with the Stochastic Gradient Descent (SGD) algorithm variants
+Putting together the loss function and the regularization term, we can obtain the optimization problem that we want to solve using the Stochastic Gradient Descent (SGD) algorithm variants
 \begin{equation}\label{eq:opt-prob}
 %\min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
 \min_{w\in\R^{(p+1)}}\func(w)=\frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2
@@ -122,9 +122,9 @@ w=
 b \\ w_1 \\ w_2 \\ \vdots \\ w_p
 \end{pmatrix}
 \]
-the constant column is meant for the intercept, known as \emph{bias}, the $b$ weight in vector $w$. The dataset matrix can be written as $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
+the constant column is meant for the intercept, known as \emph{bias} the $b$ weight in vector $w$. The dataset matrix can be written as $X=(x^{(1)},x^{(2)},\dots,x^{(N)})$.% We can see that every $x^{(i)}$ is a column vector
 
-The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)})$, we can compute the first and second order derivatives
+The objective function $f\colon\R^{(p+1)}\to\R$ is at least of class $f\in C^2(\R^{(p+1)})$, we can compute the first and second order derivatives
 \begin{subequations}\label{eq:f-df-ddf}
 \begin{align}
 %\func(w) &= \frac{1}{N}\sum_{i=1}^N\log\bigl(1+\exp(-y^{(i)}w^Tx^{(i)})\bigr)+\lambda\frac{1}{2}\norma{w}^2 \label{subeq:obj-fun} \\
@@ -135,7 +135,7 @@ The objective function $f\colon\R^{(p+1)}\to\R$ is of class $f\in C^2(\R^{(p+1)}
 \nabla^2\func(w) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}\label{subeq:hessian}
 \end{align}
 \end{subequations}
-where $r\in\R^N$ is a vector of the same length as the total number of samples, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function, $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$, and $I_{(p+1)}$ is the identity matrix with size $p+1$. Dividing by $N$ means dividing by the total number of samples involved.
+where $r\in\R^N$ is a vector of the same length as the total number of samples, whose elements are $r_i=-y^{(i)}\sigma(-y^{(i)}w^Tx^{(i)})$, note that $\sigma(z)$ is the sigmoid function; $D\in\R^{N\times N}$ is a diagonal matrix whose elements are $d_{ii}=\sigma(y^{(i)}w^Tx^{(i)})\sigma(-y^{(i)}w^Tx^{(i)})$ which implies $d_{ii}\in(0,1)$; and $I_{(p+1)}$ is the identity matrix with size $p+1$. Dividing by $N$ means dividing by the total number of samples involved.
 
 The next proposition allows to solve the optimization problem.
 

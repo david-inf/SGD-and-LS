@@ -1,53 +1,114 @@
 % !TeX spellcheck = en_GB
+
+%\begin{table}
+%\centering
+%\caption{Benchmark datasets}
+%\label{tab:datasets}
+%\begin{tabular}{lSSSc}
+%\toprule
+%Name & {Train} & {Test} & {Features} & {Distribution} \\
+%\midrule
+%w1a & 2477 & 47272 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
+%w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
+%Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ \\
+%a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ \\
+%Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ \\
+%German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
+%\bottomrule
+%\end{tabular}
+%\end{table}
+
+\cleardoublepage
 % ***************************************************** %
 \section{Experiments and results discussion}\label{sc:exp}
 % ***************************************************** %
 
-%\begin{table}
-%\caption[]{Hyper-parameters}
-%\label{tab:hyper-params}
-%\[
-%\begin{array}{l}
-%\beta=0.9 \\
-%\end{array}
-%\]
-%\end{table}
+To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details. Every dataset comes already pre-processed, with every sample scaled in range $[-1,1]$ and the response variable in $\set{-1,1}$; many features are categorical with values $0,1,2\dots$, this implies that the dataset matrix can be stored in sparse format, so the \texttt{SciPy} CSR matrix format was used.
 
-%\begin{figure}
-%\centering
-%\includegraphics[width=0.3\textwidth]{../py/test.pdf}
-%\end{figure}
+Compared to the available benchmark dataset, those chosen are not that large, the choice is due to the hardware available (Intel\textregistered\xspace Core\texttrademark\xspace i\num{7}, memory \mbox{\num{16}GB}). As can be seen few dataset are unbalanced, this will affect the accuracy.%\par\smallskip
 
-% df.to_latex
+\subsection{Solving the optimization problem}
 
-To test the efficiency the algorithms, a benchmark of six datasets retrieved from \href{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/}{LIBSVM} is used, see table~\vref{tab:datasets} for details. Every dataset comes already pre-processed, with every sample scaled in range $[-1,1]$; many features are categorical with values $0,1,2\dots$, this implies that the dataset matrix is sparse, so the \texttt{SciPy} CSR matrix format was used to store the data.
+%The regularization coefficient from~\eqref{eq:opt-prob} is set to $\lambda=0.5$ and the tolerance from the stopping criterion~\eqref{eq:stopping} $\epsilon=\num{e-3}$; the momentum term $\beta_0=0.9$, the aggressiveness of the Armijo condition is set to a small value $\gamma=\num{e-3}$; and regarding failures for exceeding epochs and iterations $k^\ast=600$ and $q^\ast=100$ for both Armijo method and momentum correction.
+In order to solve the optimization problem, an initial guess for the model parameters is given: we set a null \emph{bias} and the other features in range $[-0.5,0.5]$. Then a \emph{hyper-parameters tuning} is performed. We set fixed values for the $\lambda$ regularization coefficient from~\eqref{eq:opt-prob}, the $\epsilon$ tolerance from the stopping criterion~\eqref{eq:stopping}, the initial momentum term $\beta_0$ and the aggressiveness of the Armijo condition $\gamma$ to a small value. Regarding failures for exceeding epochs and iterations, $k^\ast$ and $q^\ast$ for both Armijo method and momentum correction were set. Follows the values
+\[
+\begin{array}{lll}
+\toprule
+\lambda=0.5 & \epsilon=\num{e-3} & \beta_0=0.9 \\
+\gamma=\num{e-3} & k^\ast=600 & q^\ast=100 \\
+\bottomrule
+\end{array}
+\]
 
-Compared to the available benchmark dataset, those chosen are not that large, the choice is due to the hardware available (Intel\textregistered\,Core\texttrademark\,i\num{7}). As can be seen few dataset are unbalanced, this will affect the accuracy.\par\smallskip
+Moving to the other hyper-parameters, a \emph{grid search} is applied to find the best combination for each algorithm. The procedure confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, and in the latter are confronted also different values for the damping both in the Armijo method and momentum correction.
 
-The regularization coefficient from~\eqref{eq:opt-prob} is set to $\lambda=0.5$ and the tolerance from the stopping criterion~\eqref{eq:stopping} $\epsilon=\num{e-3}$, then the momentum term $\beta_0=0.9$, the aggressiveness of the Armijo condition is set to a small value $\gamma=\num{e-3}$ and the maximum number of epochs is set to $k^\ast=600$. For the other hyper-parameters a \emph{grid search} is applied.
-
-The grid search confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, in the latter are confronted also different values for the damping both in the Armijo method and momentum correction. The grid search for the mini-batch size depends on the considered dataset since those chosen are quite different in size, however the rule is to stay around the 100 iterations and the value goes with powers of 2, for the first five datasets the size starts from 32; follows the grid used for the others
+The mini-batch size grid depends on the dataset being considered. As said, the retrieved datasets vary in size, but the rule is to stay around the 100 iterations using values that are powers of 2. For the first five datasets, the size starts at 32. Follows the grids used
 \begin{center}
 \begin{tabular}{lll}
 \toprule
 %Hyper-parameter & Algorithm & Values \\
 %\midrule
-$\alpha_0$ & \texttt{SGD-Fixed}, \texttt{SGDM} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005; 0.0001; 0.00005} \\
-$\alpha_0$ & \texttt{SGD-Decreasing} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.001; 0.0005} \\
-$\alpha_0$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{1; 0.1; 0.01; 0.005} \\
+$\alpha_0$ & \texttt{SGD-Fixed}, \texttt{SGDM} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005} \\
+$\alpha_0$ & \texttt{SGD-Decreasing} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+$\alpha_0$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
 $\delta_a$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{0.3; 0.5; 0.7; 0.9} \\
-$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.5; 0.7} \\
+$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.3; 0.5; 0.7} \\
 \bottomrule
 \end{tabular}
 \end{center}
-where $\delta_a$ is the damping for the Armijo line search and $\delta_m$ for the momentum correction, the combinations for the \texttt{MSL-SGDM-C} are twice the ones for \texttt{SGD-Armijo} and \texttt{MSL-SGDM-R}.
+where $\delta_a$ is the damping for the Armijo line search and $\delta_m$ for the momentum correction, the combinations for the \texttt{MSL-SGDM-C} are twice those of \texttt{SGD-Armijo} and \texttt{MSL-SGDM-R}.
 
-The grid search chooses the best solver based on the greater \emph{test accuracy} and lower \emph{objective function} value. The results can be seen in tables~\vref{tab:w1a-table} to~\ref{tab:german-tab}, the optimization problem is addressed also with the full-batch gradient descent and three solvers from \texttt{SciPy} which are \texttt{L-BFGS}, Conjugate Gradient and Newton-CG.\par\smallskip
+The grid search chooses the best combination for a certain solver based on the greatest \emph{test accuracy} and lowest \emph{objective function} value. The results can be seen in tables~\vref{tab:w1a-table} to~\ref{tab:german-tab} ordered descending by accuracy on the test dataset and ascending by objective function on reached solution. The other displayed values are the number of epochs and the run-time, the solution norm and the gradient norm.
 
-Now as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and time, we set $k^\ast=200$ and run the algorithms with the hyper-parameters from the grid search varying the learning rate for the grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
+For a benchmarking purpose the optimization problem is solved also using the \texttt{Full-batch Gradient Descent} and three solvers from \texttt{SciPy} which are \texttt{L-BFGS}, \texttt{Conjugate Gradient} and \texttt{Newton-CG}.%\par\smallskip
+
+Regarding the grid search implementation, the \texttt{Joblib} module was used to parallelize on multiple cores the \texttt{for loop} needed to evaluate the algorithm with various combinations.\par\smallskip
+
+%Speaking of the results, the algorithms that use the line search obviously take more time to terminate
+%struggle to reach the $\epsilon$ tolerance
+
+%Per quanto riguarda gli algoritmi che fanno uso della line search, per prima cosa si nota che ovviamente il loro tempo di esecuzione è maggiore degli altri; in ogni dataset si nota la loro difficoltà nel raggiungere la $\epsilon$ tolerance nonostante il limite di 600 epoche. Bisogna comunque tener presente che nel machine learning non è richiesto di arrivare ad una precisione estremamente bassa.
+
+%Il metodo col full-batch per queste dimensioni del dataset si dimostra una scelta valida, anche perché nel caso della regressione logistica è possibile calcolare il gradiente in forma chiusa come visto, stessa cosa per i solver di \texttt{SciPy}, inoltre questi avendo condizioni d'arresto diverse arrivano ad una tolleranza ancora più inferiore, che come detto non è richiesta nel machine learning.
+
+%Come ci si aspettava, l'accuracy è molto influenzata dallo sbilanciamento del dataset, per questo fenomeno si potrebbe ricorrere all'uso di metriche diverse. In tutti i casi i valori non sono molto distanti tra un solver e l'altro.
+
+% il full-batch è sempre migliore della versione mini-batch nel fixed
+
+%Thanks to the $\ell_2\text{-regularization}$ the algorithm searches for near the null model
+
+First thing to say, the regularization term has a great influence on the final model, as you can see in the solution norm column the values are not that high, however lowering the $\lambda$ coefficient would have led to a smaller solution norm, so the null model.
+
+Speaking of the algorithms that use the Armijo line search, first of all one notices that their execution time is obviously longer than the others. More important, in each dataset you can see that the $\epsilon$ tolerance value is never reached though the limit of 600 epochs, especially the \texttt{SGD-Armijo} algorithm. However, in machine learning a very low tolerance is not necessarily required.
+
+The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, same for the \texttt{SciPy} solvers that reach the smallest gradient norm.
+
+As expected the accuracy is greatly influenced by the class distribution of each datasets, for which different metrics that deal with unbalanced datasets could be used. Between al solvers the test score is very similar, as the $f(w^\ast)$ except in some cases for the \texttt{SGD-Armijo} solver that ended on a different solution with even higher accuracy.
+
+\subsection{Performance of the objective function}
+
+Now, as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and during time. We set $k^\ast=200$ and run the algorithms with the best hyper-parameters from the grid search, but varying the learning rate in grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
+
+%Nonostante i primi due dataset siano sbilanciati, l'andamento della funzione obiettivo tende al minimo senza significative oscillazioni 
+
+%Una conclusione importante, come anche fatto presente dagli autori dei papers, è che i metodi con line search hanno una bassa sensibilità al valore iniziale del learning rate, avendo quindi un andamento simile. A differenza dei metodi basic che mostrano evidenti differenze sull'andamento. Su questo potrebbe essere fatta leva in fase di hyper-parameters tuning.
+
+%Per quanto riguarda invece il tempo necessario alla decrescita della funzione obiettivo, tutti gli algoritmi mostrano coerenza, andando di pari passo. % boh ricedere, magari non lo scrivo questo
+
+Although the first two datasets are unbalanced, the performance of the objective function tends to the minimum without significant fluctuations. In figure~\ref{subfig:german-diagnostic} the \texttt{SGD-Armijo} shows important oscillations, that may also be due to small dataset size.
+
+%Sembrerebbe che almeno con \texttt{SGD-Armijo} un leggero sbilanciamento dei dati abbia un effetto più importante, dando problemi sulla decrescita del valore della funzione obiettivo. Per quanto la Armijo line search porti subito vicino all'ottimo, fa fatica a restare nell'intorno e terminare, a differenza di quando viene impiegato il termine di momentum. Magari una diversa condizione di arresto che guarda la riduzione relativa della funzione obiettivo (come nei solvers di \texttt{SciPy}) oppure che considera la scala della funzione obiettivo o anche soltanto una tolleranza meno stringente potrebbe far arrestare l'algoritmo prima di esibire un comportamento divergente.
+
+In figure~\ref{fig:phish-a2a} we note that the \texttt{SGD-Armijo} reaches a low objective function value quickly but struggles to stay around and terminate, unlike the momentum versions that may take more epochs but oscillate less. Perhaps a different line search like a Wolfe-type may reduce this behaviour. 
+
+As pointed out by the authors, an important conclusion is that the methods with line search have a low sensitivity to the initial learning rate, thus having a similar performance. In contrast to the basic versions where significant differences in the trend can be seen, for example in figure~\ref{subfig:mush-diagnostic} the \texttt{SGD-Fixed} and \texttt{SGDM} have very different behaviours for the values in the $\alpha$ grid, while the momentum term tries to correct this abnormal behaviour.
+
+Among the basic versions, the \texttt{SGD-Decreasing} is the least affected by different initial learning rates. However if $\alpha_0$ is too small, the algorithm takes smaller steps and requires more epochs to reach a solution.
 
 % grid search
 % i valori "ottimi" della grid search per i parametri che non sono il learning rate sono stati usati per mostrare poi l'andamento al variare del learning rate
+
+%\cleardoublepage
 
 \begin{table}
 \centering
@@ -67,26 +128,27 @@ German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
 \end{tabular}
 \end{table}
 
-%\cleardoublepage
+\cleardoublepage
+
 \begin{table}
 \sisetup{round-mode=places}
 \centering
 \caption{w1a dataset}
 \label{tab:w1a-table}
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 6 & NaN & 0.464614 & 0.000046 & 0.970236 \\
-CG & NaN & 7 & NaN & 0.464614 & 0.000009 & 0.970236 \\
-L-BFGS-B & NaN & 7 & NaN & 0.464614 & 0.000023 & 0.970236 \\
-BatchGD-Fixed & 1.000000 & 12 & 0.010029 & 0.464614 & 0.000564 & 0.970236 \\
-SGD-Decreasing & 0.500000 & 27 & 0.214942 & 0.464614 & 0.000792 & 0.970236 \\
-SGD-Fixed & 0.010000 & 27 & 0.186510 & 0.464615 & 0.000852 & 0.970236 \\
-SGDM & 0.010000 & 386 & 5.914988 & 0.464615 & 0.000978 & 0.970236 \\
-MSL-SGDM-R & 0.005000 & 600 & 6.497748 & 0.464693 & 0.009144 & 0.970236 \\
-MSL-SGDM-C & 0.005000 & 600 & 6.388432 & 0.464693 & 0.009149 & 0.970236 \\
-SGD-Armijo & 0.100000 & 600 & 7.664835 & 0.536467 & 0.363829 & 0.971400 \\
+SGD-Armijo & 600 & 3.295386 & 0.455603 & 0.536138 & 0.362781 & 0.971400 \\
+Newton-CG & 6 & NaN & 0.667394 & 0.464614 & 0.000046 & 0.970236 \\
+CG & 7 & NaN & 0.667395 & 0.464614 & 0.000009 & 0.970236 \\
+L-BFGS-B & 7 & NaN & 0.667406 & 0.464614 & 0.000023 & 0.970236 \\
+BatchGD-Fixed & 12 & 0.005999 & 0.667389 & 0.464614 & 0.000564 & 0.970236 \\
+SGD-Decreasing & 27 & 0.089452 & 0.667400 & 0.464614 & 0.000792 & 0.970236 \\
+SGD-Fixed & 27 & 0.178659 & 0.667311 & 0.464615 & 0.000852 & 0.970236 \\
+SGDM & 386 & 2.920177 & 0.667383 & 0.464615 & 0.000978 & 0.970236 \\
+MSL-SGDM-R & 600 & 3.109111 & 0.665659 & 0.464693 & 0.009144 & 0.970236 \\
+MSL-SGDM-C & 600 & 3.097590 & 0.665656 & 0.464693 & 0.009149 & 0.970236 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -96,20 +158,20 @@ SGD-Armijo & 0.100000 & 600 & 7.664835 & 0.536467 & 0.363829 & 0.971400 \\
 \centering
 \caption{w3a dataset}
 \label{tab:w3a-tab}
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 6 & NaN & 0.462742 & 0.000011 & 0.970203 \\
-CG & NaN & 7 & NaN & 0.462742 & 0.000022 & 0.970203 \\
-L-BFGS-B & NaN & 7 & NaN & 0.462742 & 0.000033 & 0.970203 \\
-BatchGD-Fixed & 1.000000 & 12 & 0.016491 & 0.462742 & 0.000564 & 0.970203 \\
-SGD-Decreasing & 0.500000 & 19 & 0.081762 & 0.462743 & 0.000876 & 0.970203 \\
-SGD-Fixed & 0.010000 & 23 & 0.162157 & 0.462743 & 0.000949 & 0.970203 \\
-SGDM & 0.100000 & 45 & 0.351333 & 0.462743 & 0.000895 & 0.970203 \\
-MSL-SGDM-C & 0.005000 & 600 & 4.021617 & 0.462787 & 0.006924 & 0.970203 \\
-MSL-SGDM-R & 0.005000 & 600 & 4.124630 & 0.462787 & 0.006924 & 0.970203 \\
-SGD-Armijo & 0.010000 & 600 & 6.851229 & 0.500431 & 0.268456 & 0.971006 \\
+SGD-Armijo & 600 & 8.097415 & 0.478986 & 0.500431 & 0.268456 & 0.971006 \\
+Newton-CG & 6 & NaN & 0.666640 & 0.462742 & 0.000011 & 0.970203 \\
+CG & 7 & NaN & 0.666648 & 0.462742 & 0.000022 & 0.970203 \\
+L-BFGS-B & 7 & NaN & 0.666658 & 0.462742 & 0.000033 & 0.970203 \\
+BatchGD-Fixed & 12 & 0.024093 & 0.666635 & 0.462742 & 0.000564 & 0.970203 \\
+SGD-Decreasing & 19 & 0.165705 & 0.666731 & 0.462743 & 0.000876 & 0.970203 \\
+SGD-Fixed & 23 & 0.154913 & 0.666893 & 0.462743 & 0.000949 & 0.970203 \\
+SGDM & 45 & 0.491088 & 0.666594 & 0.462743 & 0.000895 & 0.970203 \\
+MSL-SGDM-C & 600 & 3.590718 & 0.667576 & 0.462787 & 0.006924 & 0.970203 \\
+MSL-SGDM-R & 600 & 3.515047 & 0.667576 & 0.462787 & 0.006924 & 0.970203 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -119,20 +181,20 @@ SGD-Armijo & 0.010000 & 600 & 6.851229 & 0.500431 & 0.268456 & 0.971006 \\
 \caption{Phishing dataset}
 \label{tab:phish-tab}
 \centering
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 5 & NaN & 0.685065 & 0.000000 & 0.567616 \\
-L-BFGS-B & NaN & 5 & NaN & 0.685065 & 0.000008 & 0.567616 \\
-CG & NaN & 6 & NaN & 0.685065 & 0.000023 & 0.567616 \\
-SGD-Decreasing & 0.100000 & 6 & 0.040321 & 0.685065 & 0.000508 & 0.567616 \\
-SGDM & 0.100000 & 22 & 0.271079 & 0.685065 & 0.000575 & 0.567616 \\
-BatchGD-Fixed & 1.000000 & 11 & 0.055085 & 0.685065 & 0.000534 & 0.567616 \\
-SGD-Fixed & 0.010000 & 13 & 0.173696 & 0.685065 & 0.000927 & 0.567616 \\
-MSL-SGDM-R & 0.100000 & 600 & 17.498211 & 0.685660 & 0.032621 & 0.568521 \\
-MSL-SGDM-C & 1.000000 & 600 & 9.598539 & 0.685705 & 0.032668 & 0.568973 \\
-SGD-Armijo & 0.005000 & 600 & 7.578606 & 0.687736 & 0.066541 & 0.865219 \\
+SGD-Armijo & 600 & 7.263649 & 0.144155 & 0.687736 & 0.066541 & 0.865219 \\
+MSL-SGDM-C & 600 & 9.477455 & 0.150617 & 0.686392 & 0.048846 & 0.709181 \\
+MSL-SGDM-R & 600 & 17.745766 & 0.152190 & 0.685660 & 0.032621 & 0.568521 \\
+Newton-CG & 5 & NaN & 0.164188 & 0.685065 & 0.000000 & 0.567616 \\
+L-BFGS-B & 5 & NaN & 0.164196 & 0.685065 & 0.000008 & 0.567616 \\
+CG & 6 & NaN & 0.164214 & 0.685065 & 0.000023 & 0.567616 \\
+SGD-Decreasing & 6 & 0.040658 & 0.164270 & 0.685065 & 0.000508 & 0.567616 \\
+SGDM & 22 & 0.266316 & 0.163872 & 0.685065 & 0.000575 & 0.567616 \\
+BatchGD-Fixed & 11 & 0.044791 & 0.164001 & 0.685065 & 0.000534 & 0.567616 \\
+SGD-Fixed & 13 & 0.170124 & 0.163727 & 0.685065 & 0.000927 & 0.567616 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -142,20 +204,20 @@ SGD-Armijo & 0.005000 & 600 & 7.578606 & 0.687736 & 0.066541 & 0.865219 \\
 \caption{a2a dataset}
 \label{tab:a2a-tab}
 \centering
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 5 & NaN & 0.564027 & 0.000004 & 0.760265 \\
-CG & NaN & 12 & NaN & 0.564027 & 0.000015 & 0.760265 \\
-L-BFGS-B & NaN & 8 & NaN & 0.564027 & 0.000012 & 0.760265 \\
-SGD-Decreasing & 0.800000 & 59 & 0.183221 & 0.564028 & 0.000726 & 0.760265 \\
-SGDM & 0.100000 & 600 & 1.873068 & 0.564030 & 0.002628 & 0.760298 \\
-MSL-SGDM-R & 0.010000 & 600 & 7.889470 & 0.577575 & 0.228297 & 0.790236 \\
-MSL-SGDM-C & 0.010000 & 600 & 7.482898 & 0.579879 & 0.229332 & 0.789345 \\
-BatchGD-Fixed & 1.000000 & 600 & 0.260017 & 0.594416 & 0.363976 & 0.822386 \\
-SGD-Fixed & 1.000000 & 600 & 4.331557 & 0.602741 & 0.356183 & 0.807136 \\
-SGD-Armijo & 1.000000 & 600 & 6.068792 & 0.617908 & 0.433035 & 0.798917 \\
+SGD-Armijo & 600 & 3.961250 & 0.344862 & 0.603503 & 0.397378 & 0.825191 \\
+BatchGD-Fixed & 600 & 0.206760 & 0.355752 & 0.594416 & 0.363976 & 0.822386 \\
+MSL-SGDM-C & 600 & 7.036673 & 0.406144 & 0.585491 & 0.290117 & 0.810569 \\
+SGD-Fixed & 600 & 3.559726 & 0.425177 & 0.602741 & 0.356183 & 0.807136 \\
+MSL-SGDM-R & 600 & 7.631381 & 0.413366 & 0.577575 & 0.228297 & 0.790236 \\
+SGDM & 600 & 1.810696 & 0.438444 & 0.564030 & 0.002628 & 0.760298 \\
+Newton-CG & 5 & NaN & 0.438972 & 0.564027 & 0.000004 & 0.760265 \\
+CG & 12 & NaN & 0.438961 & 0.564027 & 0.000015 & 0.760265 \\
+L-BFGS-B & 8 & NaN & 0.438969 & 0.564027 & 0.000012 & 0.760265 \\
+SGD-Decreasing & 59 & 0.168710 & 0.438522 & 0.564028 & 0.000726 & 0.760265 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -165,20 +227,20 @@ SGD-Armijo & 1.000000 & 600 & 6.068792 & 0.617908 & 0.433035 & 0.798917 \\
 \caption{Mushrooms dataset}
 \label{tab:mush-tab}
 \centering
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 7 & NaN & 0.517726 & 0.000003 & 0.892923 \\
-CG & NaN & 11 & NaN & 0.517726 & 0.000024 & 0.892923 \\
-L-BFGS-B & NaN & 10 & NaN & 0.517726 & 0.000017 & 0.892923 \\
-SGD-Decreasing & 0.100000 & 26 & 0.533000 & 0.517727 & 0.000779 & 0.893538 \\
-BatchGD-Fixed & 0.500000 & 26 & 0.059922 & 0.517727 & 0.000757 & 0.892923 \\
-SGD-Fixed & 0.500000 & 600 & 2.993838 & 0.525499 & 0.199874 & 0.926154 \\
-MSL-SGDM-R & 0.100000 & 600 & 7.885503 & 0.527069 & 0.232121 & 0.940308 \\
-MSL-SGDM-C & 0.100000 & 600 & 13.411705 & 0.527262 & 0.223900 & 0.939692 \\
-SGD-Armijo & 0.100000 & 600 & 11.367419 & 0.535765 & 0.233549 & 0.953231 \\
-SGDM & 1.000000 & 600 & 4.369383 & 0.557069 & 0.479065 & 0.924308 \\
+SGD-Armijo & 600 & 11.403854 & 0.644938 & 0.535765 & 0.233549 & 0.953231 \\
+MSL-SGDM-C & 600 & 6.713060 & 0.652698 & 0.529380 & 0.249789 & 0.942769 \\
+MSL-SGDM-R & 600 & 6.445045 & 0.642551 & 0.527069 & 0.232121 & 0.940308 \\
+SGD-Fixed & 600 & 3.318288 & 0.646431 & 0.525499 & 0.199874 & 0.926154 \\
+SGDM & 600 & 3.684742 & 0.658660 & 0.557069 & 0.479065 & 0.924308 \\
+SGD-Decreasing & 26 & 0.232628 & 0.635898 & 0.517727 & 0.000779 & 0.893538 \\
+Newton-CG & 7 & NaN & 0.635933 & 0.517726 & 0.000003 & 0.892923 \\
+CG & 11 & NaN & 0.635939 & 0.517726 & 0.000024 & 0.892923 \\
+L-BFGS-B & 10 & NaN & 0.635930 & 0.517726 & 0.000017 & 0.892923 \\
+BatchGD-Fixed & 26 & 0.043251 & 0.635906 & 0.517727 & 0.000757 & 0.892923 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -188,20 +250,20 @@ SGDM & 1.000000 & 600 & 4.369383 & 0.557069 & 0.479065 & 0.924308 \\
 \caption{German dataset}
 \label{tab:german-tab}
 \centering
-\begin{tabular}{lS[round-precision=3]S[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
+\begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
-Solver & {$\alpha_0$} & {Epochs} & {Run-time} & {$\func(w)$} & {$\nabla f(w)$} & {Test score} \\
+Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-Newton-CG & NaN & 5 & NaN & 0.597303 & 0.000010 & 0.710000 \\
-CG & NaN & 12 & NaN & 0.597303 & 0.000004 & 0.710000 \\
-L-BFGS-B & NaN & 7 & NaN & 0.597303 & 0.000014 & 0.710000 \\
-SGD-Fixed & 0.010000 & 58 & 0.129290 & 0.597303 & 0.000775 & 0.710000 \\
-BatchGD-Fixed & 0.500000 & 20 & 0.011878 & 0.597303 & 0.000882 & 0.710000 \\
-MSL-SGDM-R & 0.005000 & 600 & 2.221751 & 0.597456 & 0.023193 & 0.710000 \\
-MSL-SGDM-C & 0.005000 & 600 & 2.861868 & 0.607466 & 0.140436 & 0.735000 \\
-SGD-Decreasing & 0.010000 & 600 & 2.867500 & 0.607993 & 0.113583 & 0.720000 \\
-SGD-Armijo & 0.100000 & 600 & 2.484220 & 0.614589 & 0.229813 & 0.740000 \\
-SGDM & 1.000000 & 600 & 2.522513 & 0.616375 & 0.313714 & 0.745000 \\
+MSL-SGDM-C & 600 & 4.999331 & 0.365021 & 0.629212 & 0.364526 & 0.755000 \\
+SGD-Armijo & 600 & 5.095544 & 0.423356 & 0.632348 & 0.362572 & 0.750000 \\
+SGDM & 600 & 2.389008 & 0.313661 & 0.616375 & 0.313714 & 0.745000 \\
+MSL-SGDM-R & 600 & 5.652461 & 0.373225 & 0.599779 & 0.073177 & 0.730000 \\
+SGD-Decreasing & 600 & 2.291817 & 0.348660 & 0.607993 & 0.113583 & 0.720000 \\
+Newton-CG & 5 & NaN & 0.358504 & 0.597303 & 0.000010 & 0.710000 \\
+CG & 12 & NaN & 0.358506 & 0.597303 & 0.000004 & 0.710000 \\
+L-BFGS-B & 7 & NaN & 0.358506 & 0.597303 & 0.000014 & 0.710000 \\
+SGD-Fixed & 58 & 0.234546 & 0.358265 & 0.597303 & 0.000675 & 0.710000 \\
+BatchGD-Fixed & 20 & 0.005002 & 0.358324 & 0.597303 & 0.000882 & 0.710000 \\
 \bottomrule
 \end{tabular}
 \end{table}

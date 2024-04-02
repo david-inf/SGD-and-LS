@@ -94,7 +94,7 @@ the expression is the same as the full gradient~\eqref{subeq:jacobian} except th
 %\end{equation}
 
 % ---------------------------------------------------- %
-\subsection{Stochastic gradient descent}\label{subsc:sgd}
+\subsection{Basic stochastic gradient descent}\label{subsc:sgd}
 % ---------------------------------------------------- %
 
 The basic SGD version has the following iteration update rule
@@ -112,25 +112,36 @@ The first choice sees the same step-size between the epochs and so the iteration
 
 \begin{figure}
 \centering
-\subfloat[][\emph{Inverse decay, starting with $\alpha_0=1$}]
-{%
 \begin{tikzpicture}
 \begin{axis}[xlabel=$k$,ylabel={$\alpha=\frac{\alpha_0}{k+1}$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
 \addplot[samples=200,domain=0:200,blue,smooth] {1/(x+1)};
 \end{axis}
 \end{tikzpicture}
-} \quad
-\subfloat[][\emph{Exponential decay, starting with $\alpha_0=1$ and decay rate $\gamma=0.95$}]
-{%
-\begin{tikzpicture}
-\begin{axis}[xlabel=$k$,ylabel={$\alpha=\alpha_0\gamma^k$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
-\addplot[samples=200,domain=0:200,blue,smooth] {1*0.95^(x)};
-\end{axis}
-\end{tikzpicture}
-}
-\caption{Step-size schedules for the \texttt{SGD-Decreasing} algorithm}
+\caption{Step-size schedule for the \texttt{SGD-Decreasing} algorithm, starting with $\alpha_0=1$}
 \label{fig:decre-step}
 \end{figure}
+
+%\begin{figure}
+%\centering
+%\subfloat[][\emph{Inverse decay, starting with $\alpha_0=1$}]
+%{%
+%\begin{tikzpicture}
+%\begin{axis}[xlabel=$k$,ylabel={$\alpha=\frac{\alpha_0}{k+1}$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
+%\addplot[samples=200,domain=0:200,blue,smooth] {1/(x+1)};
+%\end{axis}
+%\end{tikzpicture}
+%} \quad
+%\subfloat[][\emph{Exponential decay, starting with $\alpha_0=1$ and decay rate $\gamma=0.95$}]
+%{%
+%\begin{tikzpicture}
+%\begin{axis}[xlabel=$k$,ylabel={$\alpha=\alpha_0\gamma^k$},axis lines=middle,enlargelimits,width=0.4\textwidth,xmin=0]
+%\addplot[samples=200,domain=0:200,blue,smooth] {1*0.95^(x)};
+%\end{axis}
+%\end{tikzpicture}
+%}
+%\caption{Step-size schedules for the \texttt{SGD-Decreasing} algorithm}
+%\label{fig:decre-step}
+%\end{figure}
 
 \subsubsection{Stochastic line search}
 
