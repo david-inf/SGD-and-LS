@@ -228,6 +228,17 @@ The problem is that $\nabla f_{i_t}(z^t)^Td_t<0$ isn't always guaranteed, i.e. t
 in algorithmic terms, until the direction is descent, damp the momentum term by a factor $\delta$, which is usually set to \num{0.5} like in the line search. When using this procedure, a descent direction $d_t$ is guaranteed and it is possible to apply the algorithm~\ref{alg:armijo}, the procedure is called \emph{momentum correction}, see algorithm~\vref{alg:m-correction}. The resulting algorithm is \texttt{MSL-SGDM-C}.\par\smallskip
 
 This procedure can be expensive, so the paper suggests another approach called \emph{momentum restart}. When the descent direction condition for $d_t$ isn't satisfied, the procedure restarts that direction by setting $d_{t-1}=d_0$, the paper suggests $d_0=0$, in general
+%\begin{center}
+%\begin{tikzpicture}
+%\node (A) at (0,0) {$\nabla\func(z^t)^Td_t$};
+%\node (B) at (-140:5.5em) {\texttt{evaluate}~\eqref{eq:armijo-sgdm}};
+%\node (C) at (-40:5.5em) {$d_{t-1}=d_0$};
+%\node (D) at ($(C) + (0,-1.5)$) {\texttt{evaluate}~\eqref{eq:armijo-sgdm}};
+%\draw[-latex] (A) -- node[left=2.5ex] {$<0$} (B);
+%\draw[-latex] (A) -- node[right=2.5ex] {$\geq0$} (C);
+%\draw[-latex] (C) -- node[right=1ex] {$d_t=-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_0\bigr)$} (D);
+%\end{tikzpicture}
+%\end{center}
 \begin{center}
 \begin{tikzpicture}
 \node (A) at (0,0) {$\nabla\func(z^t)^Td_t$};
@@ -236,7 +247,8 @@ This procedure can be expensive, so the paper suggests another approach called \
 \node (D) at ($(C) + (0,-1.5)$) {\texttt{evaluate}~\eqref{eq:armijo-sgdm}};
 \draw[-latex] (A) -- node[left=2.5ex] {$<0$} (B);
 \draw[-latex] (A) -- node[right=2.5ex] {$\geq0$} (C);
-\draw[-latex] (C) -- node[right=1ex] {$d_t=-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_0\bigr)$} (D);
+%\draw[-latex] (C) -- node[right=1ex] {$d_t=-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_0\bigr)$} (D);
+\draw[-latex] (C) -- (D);
 \end{tikzpicture}
 \end{center}
 so if $d_0=0$ the direction will be $d_t=-(1-\beta_0)\nabla f_{i_t}(z^t)$ that is a descent direction on the considered mini-batch, see algorithm~\vref{alg:m-restart}. The algorithm that uses this procedure is \texttt{MSL-SGDM-R}.

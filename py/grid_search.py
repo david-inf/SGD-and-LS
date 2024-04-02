@@ -58,7 +58,7 @@ def prepare_grid(solver, batches, alphas, betas, delta_a, delta_m):
 
 def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
                 betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,),
-                output=True, do_parallel=True, n_jobs=7):
+                output=True, do_parallel=True, plot=False, n_jobs=7):
     # for betas, delta_a and delta_m is set just one value because of the
     # solvers that don't use those parameters, there would be more
     # combinations that it needed
@@ -81,7 +81,7 @@ def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
         # I'm reusing the same pool through Parallel context manager
         with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
             results = parallel(
-                delayed(fit_model)(params, solver, C, dataset)
+                delayed(fit_model)(params, solver, C, dataset, plot)
                 for params in params_combos)
             # results = performance, model, params
 
@@ -134,35 +134,22 @@ def run_bench(dataset, C):
     return [bench1, bench2, bench3]
 
 
-def run_solvers(solver, C, dataset, batch_size, step_size=(1,0.1,0.01),
-                momentum=(0.9,0.9,0.9), delta_a=0.5, delta_m=0.5,
+def run_solvers(solver, C, dataset, batches, alphas=(1,0.1,0.01),
+                betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,),
                 do_parallel=False, n_jobs=4, **kwargs):
 
-    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
-        momentum = (0, 0, 0)
+    # for each learning rate value, chooses the other best hyper-params
 
     start_time = time.time()
 
+    ### grid search fine-tuning
     solvers_output = []
 
-    if not do_parallel:
-        for i in range(3):
-            params = (batch_size, step_size[i], momentum[i], delta_a, delta_m)
-            _, model, _ = fit_model(params, solver, C, dataset, plot=True)
-            solvers_output.append(model)
-
-    else:
-        param_grid = []
-        for i in range(3):
-            param_grid.append((batch_size, step_size[i], momentum[i], delta_a, delta_m))
-
-        with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
-            results = parallel(
-                delayed(fit_model)(params, solver, C, dataset, plot=True)
-                for params in param_grid)
-
-        for _, model, _ in results:
-            solvers_output.append(model)
+    for i in range(3):
+        model, _ = grid_search(solver, C, dataset, batches, (alphas[i],),
+                               betas, delta_a, delta_m, output=False,
+                               n_jobs=n_jobs, plot=True)
+        solvers_output.append(model)
 
     end_time = time.time()
     elapsed_time = end_time - start_time

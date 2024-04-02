@@ -39,19 +39,23 @@ sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, load_phishing(), (64, 128), (0.
 
 # %% Run 3 solvers
 
+M_grid = (32, 64)
+delta_a_grid = (0.3, 0.5, 0.7, 0.9)
+delta_m_grid = (0.3, 0.5, 0.7)
+
 # SGD-Fixed
-sgdfixed_w1a = run_solvers("SGD-Fixed", C, load_w1a(), 32, do_parallel=False)
+sgdfixed_w1a = run_solvers("SGD-Fixed", C, load_w1a(), M_grid)
 # SGD-Decreasing
-sgddecre_w1a = run_solvers("SGD-Decreasing", C, load_w1a(), 64, do_parallel=False)
+sgddecre_w1a = run_solvers("SGD-Decreasing", C, load_w1a(), M_grid)
 # SGDM
-sgdm_w1a = run_solvers("SGDM", C, load_w1a(), 32, do_parallel=False)
+sgdm_w1a = run_solvers("SGDM", C, load_w1a(), M_grid)
 
 # SGD-Armijo
-sgdarmijo_w1a = run_solvers("SGD-Armijo", C, load_w1a(), 64, delta_a=0.5, do_parallel=False)
+sgdarmijo_w1a = run_solvers("SGD-Armijo", C, load_w1a(), M_grid, delta_a=delta_a_grid)
 # MSL-SGDM-C
-mslc_w1a = run_solvers("MSL-SGDM-C", C, load_w1a(), 64, delta_a=0.9, delta_m=0.7, do_parallel=False)
+mslc_w1a = run_solvers("MSL-SGDM-C", C, load_w1a(), M_grid, delta_a=delta_a_grid, delta_m=delta_m_grid, n_jobs=6)
 # MSL-SGDM-R
-mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), 64, delta_a=0.9, do_parallel=False)
+mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), M_grid, delta_a=delta_a_grid)
 
 # %% plot solvers
 

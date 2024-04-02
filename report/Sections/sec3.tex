@@ -42,27 +42,40 @@ In order to solve the optimization problem, an initial guess for the model param
 
 Moving to the other hyper-parameters, a \emph{grid search} is applied to find the best combination for each algorithm. The procedure confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, and in the latter are confronted also different values for the damping both in the Armijo method and momentum correction.
 
-The mini-batch size grid depends on the dataset being considered. As said, the retrieved datasets vary in size, but the rule is to stay around the 100 iterations using values that are powers of 2. For the first five datasets, the size starts at 32. Follows the grids used
-\begin{center}
-\begin{tabular}{lll}
+The mini-batch size grid depends on the dataset being considered. As said, the retrieved datasets vary in size, but the rule is to stay around the 100 iterations using values that are powers of 2, the grid is composed by at least two values. For the first five datasets, the size starts at 32. Follows the grids used
+%\begin{center}
+%\begin{tabular}{lll}
+%\toprule
+%%Hyper-parameter & Algorithm & Values \\
+%%\midrule
+%$M$ & \texttt{SGD-}, \texttt{SGDM-} & depends on dataset \\
+%$\alpha_0$ & \texttt{SGD-Fixed}, \texttt{SGDM} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005} \\
+%$\alpha_0$ & \texttt{SGD-Decreasing} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+%$\alpha_0$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+%$\delta_a$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+%$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.3; 0.5; 0.7} \\
+%\bottomrule
+%\end{tabular}\par\noindent
+%\end{center}
+\[
+\begin{array}{lll}
 \toprule
-%Hyper-parameter & Algorithm & Values \\
-%\midrule
-$\alpha_0$ & \texttt{SGD-Fixed}, \texttt{SGDM} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005} \\
-$\alpha_0$ & \texttt{SGD-Decreasing} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
-$\alpha_0$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
-$\delta_a$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{0.3; 0.5; 0.7; 0.9} \\
-$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.3; 0.5; 0.7} \\
+M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
+\alpha_0 & \text{\texttt{SGD-Fixed}}, \text{\texttt{SGDM}} & \numlist{1; 0.5; 0.1; 0.01; 0.001; 0.0005} \\
+\alpha_0 & \text{\texttt{SGD-Decreasing}} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+\alpha_0 & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+\delta_m & \text{\texttt{MSL-SGDM-C}} & \numlist{0.3; 0.5; 0.7} \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{array}
+\]
 where $\delta_a$ is the damping for the Armijo line search and $\delta_m$ for the momentum correction, the combinations for the \texttt{MSL-SGDM-C} are twice those of \texttt{SGD-Armijo} and \texttt{MSL-SGDM-R}.
 
 The grid search chooses the best combination for a certain solver based on the greatest \emph{test accuracy} and lowest \emph{objective function} value. The results can be seen in tables~\vref{tab:w1a-table} to~\ref{tab:german-tab} ordered descending by accuracy on the test dataset and ascending by objective function on reached solution. The other displayed values are the number of epochs and the run-time, the solution norm and the gradient norm.
 
 For a benchmarking purpose the optimization problem is solved also using the \texttt{Full-batch Gradient Descent} and three solvers from \texttt{SciPy} which are \texttt{L-BFGS}, \texttt{Conjugate Gradient} and \texttt{Newton-CG}.%\par\smallskip
 
-Regarding the grid search implementation, the \texttt{Joblib} module was used to parallelize on multiple cores the \texttt{for loop} needed to evaluate the algorithm with various combinations.\par\smallskip
+Regarding the grid search implementation, the \texttt{Joblib} module was used to parallelize on multiple cores the \texttt{for loop} needed to evaluate the algorithm with various combinations, see algorithm~\vref{alg:grid-search}.\par\smallskip
 
 %Speaking of the results, the algorithms that use the line search obviously take more time to terminate
 %struggle to reach the $\epsilon$ tolerance
@@ -87,7 +100,42 @@ As expected the accuracy is greatly influenced by the class distribution of each
 
 \subsection{Performance of the objective function}
 
-Now, as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and during time. We set $k^\ast=200$ and run the algorithms with the best hyper-parameters from the grid search, but varying the learning rate in grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
+Now, as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and during time. For this purpose, another grid search is performed, the fixed hyper-parameters are again
+%We set $k^\ast=200$ and run the algorithms with the best hyper-parameters from the grid search, but varying the learning rate in grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
+\[
+\begin{array}{lll}
+\toprule
+\lambda=0.5 & \epsilon=\num{e-3} & \beta_0=0.9 \\
+\gamma=\num{e-3} & k^\ast=200 & q^\ast=100 \\
+\bottomrule
+\end{array}
+\]
+
+What differs now is that the grid search finds the best hyper-parameters for each learning rate in \numlist{1; 0.1; 0.01}, as the previous this time the grids are
+%\begin{center}
+%\begin{tabular}{lll}
+%\toprule
+%%Hyper-parameter & Algorithm & Values \\
+%%\midrule
+%$M$ & \texttt{SGD-}, \texttt{SGDM-} & depends on dataset \\
+%$\delta_a$ & \texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+%$\delta_m$ & \texttt{MSL-SGDM-C} & \numlist{0.3; 0.5; 0.7} \\
+%\bottomrule
+%\end{tabular}
+%\end{center}
+\[
+\begin{array}{lll}
+\toprule
+\alpha_0 & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{\num{1} or \num{0.1} or \num{0.01}} \\
+M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
+\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+\delta_m & \text{\texttt{MSL-SGDM-C}} & \numlist{0.3; 0.5; 0.7} \\
+\bottomrule
+\end{array}
+\]
+where the mini-batch size $M$ as in the previous grid search is composed by at least two values.
+
+The algorithm finds the best values for each $\alpha_0$, then objective function for every epoch and for the time took by each epoch is plotted in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
 
 %Nonostante i primi due dataset siano sbilanciati, l'andamento della funzione obiettivo tende al minimo senza significative oscillazioni 
 
@@ -109,6 +157,17 @@ Among the basic versions, the \texttt{SGD-Decreasing} is the least affected by d
 % i valori "ottimi" della grid search per i parametri che non sono il learning rate sono stati usati per mostrare poi l'andamento al variare del learning rate
 
 %\cleardoublepage
+
+\begin{algorithm}
+\caption{Grid search for hyper-parameters tuning}\label{alg:grid-search}
+\KwData{$\alpha_0$, $M$, $\delta_a$, $\delta_m$}
+prepare the hyper-parameters combinations using the given grids\;
+\For{\texttt{param} in \texttt{params}}{
+	model training with \texttt{param}\;
+	confront metrics with current \texttt{best-model} and update \texttt{best-param} if necessary\;
+}
+\KwOut{\texttt{best-model}, \texttt{best-param}}
+\end{algorithm}
 
 \begin{table}
 \centering
