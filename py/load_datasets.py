@@ -10,20 +10,26 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
 
-from scipy.sparse import csr_matrix, lil_matrix, hstack
+from scipy.sparse import lil_matrix, hstack
 
-# from joblib import Memory
-# mem = Memory("./mycache")
+from joblib import Memory
+
+cachedir = "./tmp/mycache"
+memory = Memory(cachedir, verbose=0)
+# memory.clear(warn=False)  # keep them cached
 
 
-
-# Utils
+# %% Utils
 
 def dataset_distrib(y_train):
     values, counts = np.unique(y_train, return_counts=True)
     samples = np.sum(counts)
 
     return dict(zip(values, counts / samples))
+
+
+def data_info(dataset):
+    train_sklearn_log(dataset[0], dataset[1], dataset[2], dataset[3])
 
 
 def train_sklearn_log(X_train, y_train, X_test, y_test):
@@ -56,10 +62,34 @@ def add_intercept(X):
 
 """ dataset_X = load_X() """
 
+# TODO: use joblib memoization
+# la posso usare quando memorizzo il dataset in dataset_X così lo butta sul disco
+# però chiamando il load_X soltanto una volta servirebbe a poco memoizzare
+# a meno che invece di salvare i dati nelle variabili, passo direttamente la funzione
+# perché proprio quello che faccio visto a fit passo dataset_X = load_X()
 
-# %% Diabetes
 
-# @mem.cache
+# %% w1a
+
+@memory.cache
+def load_w1a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/w1a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/w1a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
+
+# @memory.cache
 def load_diabetes():  # ok
     path = "datasets/LIBSVM/diabetes_scale.txt"
     X, y = load_svmlight_file(path)
@@ -78,7 +108,25 @@ def load_diabetes():  # ok
     return X_train, y_train, X_test, y_test
 
 
-# %% Breast cancer
+# %% w3a
+
+@memory.cache
+def load_w3a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/w3a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/w3a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
 
 def load_breast_cancer():  # ok
     path = "datasets/LIBSVM/breast-cancer_scale.txt"
@@ -100,7 +148,29 @@ def load_breast_cancer():  # ok
     return X_train, y_train, X_test, y_test
 
 
-# %% svmguide1
+# %% phishing
+
+@memory.cache
+def load_phishing(disp=False):
+    path = "datasets/LIBSVM/phishing.txt"
+    X, y = load_svmlight_file(path)
+
+    # add constant column
+    X_prep = add_intercept(X)
+
+    # encode respponse variable in {-1,1}
+    encoder = LabelEncoder()
+    y_prep = 2 * encoder.fit_transform(y) - 1
+
+    # split dataset
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_prep, y_prep, test_size=0.2, random_state=42)
+
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
+
+    return X_train, y_train, X_test, y_test
+
 
 def load_svmguide1():  # ok
     path_train = "datasets/LIBSVM/svmguide1.txt"
@@ -133,7 +203,25 @@ def load_svmguide1():  # ok
     return X_train_prep, y_train_prep, X_test_prep, y_test_prep
 
 
-# %% Australian
+# %% a2a
+
+@memory.cache
+def load_a2a(disp=False):  # ok
+    path_train = "datasets/LIBSVM/a2a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/a2a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)[:, :120]
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
 
 def load_australian():  # ok
     path = "datasets/LIBSVM/australian_scale.txt"
@@ -153,7 +241,8 @@ def load_australian():  # ok
 
 # %% Mushrooms
 
-def load_mushrooms():  # ok
+@memory.cache
+def load_mushrooms(disp=False):  # ok
     path = "datasets/LIBSVM/mushrooms.txt"
     X, y = load_svmlight_file(path)
 
@@ -168,14 +257,16 @@ def load_mushrooms():  # ok
     X_train, X_test, y_train, y_test = train_test_split(
         X_prep, y_prep, test_size=0.2, random_state=42)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
 
 
 # %% German
 
-def load_german():  # ok
+# @memory.cache
+def load_german(disp=False):  # ok
     path = "datasets/LIBSVM/german.numer_scale.txt"
     X, y = load_svmlight_file(path)
 
@@ -186,65 +277,13 @@ def load_german():  # ok
     X_train, X_test, y_train, y_test = train_test_split(
         X_prep, y, test_size=0.2, random_state=42)
 
-    train_sklearn_log(X_train, y_train, X_test, y_test)
+    if disp:
+        train_sklearn_log(X_train, y_train, X_test, y_test)
 
     return X_train, y_train, X_test, y_test
 
 
 # %% More datasets
-
-
-def load_phishing():
-    path = "datasets/LIBSVM/phishing.txt"
-    X, y = load_svmlight_file(path)
-
-    # add constant column
-    X_prep = add_intercept(X)
-
-    # encode respponse variable in {-1,1}
-    encoder = LabelEncoder()
-    y_prep = 2 * encoder.fit_transform(y) - 1
-
-    # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_prep, y_prep, test_size=0.2, random_state=42)
-
-    train_sklearn_log(X_train, y_train, X_test, y_test)
-
-    return X_train, y_train, X_test, y_test
-
-
-def load_w1a():  # ok
-    path_train = "datasets/LIBSVM/w1a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/w1a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)
-
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
-
-def load_w3a():  # ok
-    path_train = "datasets/LIBSVM/w3a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/w3a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)
-
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
 
 def load_w6a():  # ok
     path_train = "datasets/LIBSVM/w6a.txt"
@@ -256,22 +295,6 @@ def load_w6a():  # ok
     # add constant column
     X_train_prep = add_intercept(X_train)
     X_test_prep = add_intercept(X_test)
-
-    train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
-
-    return X_train_prep, y_train, X_test_prep, y_test
-
-
-def load_a2a():  # ok
-    path_train = "datasets/LIBSVM/a2a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/a2a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    X_train_prep = add_intercept(X_train)
-    X_test_prep = add_intercept(X_test)[:, :120]
 
     train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
 
@@ -341,26 +364,19 @@ def load_a4a():
 
 
 # Regression
-def load_mg():
+@memory.cache
+def load_mg(disp=False):
     path = "datasets/LIBSVM/mg_scale.txt"
     X, y = load_svmlight_file(path)
-    # transform to array from CSR sparse matrix
-    X_arr = X.toarray()
-
-    # add constant column
-    X_prep = np.hstack((np.ones((X_arr.shape[0],1)), X_arr))
 
     # split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_prep, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    print(f"X_train = {X_train.shape}, y_train = {y_train.shape}")
-    print(f"X_test = {X_test.shape}, y_test = {y_test.shape}")
+    # add constant column
+    X_train_prep = add_intercept(X_train)
+    X_test_prep = add_intercept(X_test)
 
-    model = LinearRegression().fit(X_train, y_train)
-    mse = mean_squared_error(y_test, model.predict(X_test))
-
-    print(f"sklearn MSE: {mse:.6f}")
-    weights = np.insert(model.coef_, 0, model.intercept_)
-    print(f"sklearn sol norm: {np.linalg.norm(weights)}")
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
     
-    return X_train, y_train, X_test, y_test
+    return X_train_prep, y_train, X_test_prep, y_test

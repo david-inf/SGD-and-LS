@@ -55,7 +55,7 @@ class LogisticRegression():
         momentum : float, optional
             momentum term. The default is 0.
         stop : int, optional
-            stopping criterion. The default is 0.
+            stopping criterion. The default is 1, when reaches optimal solution.
 
         Returns
         -------
@@ -141,12 +141,13 @@ class LogisticRegression():
     def __str__(self):
 
         return (f"Solver: {self.solver}" +
-                f"\nTrain score: {self.accuracy_train}" +
-                f"\nTest score: {self.accuracy_test}" +
+                # f"\nTrain score: {self.metrics_train[0]}" +
+                f"\nTest score: {self.metrics_test[0]}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
                 f"\nSol norm: {np.linalg.norm(self.coef_):.6f}" +
-                f"\nRun-time: {self.opt_result.runtime:.6f}")
+                f"\nRun-time (seconds): {self.opt_result.runtime:.6f}" +
+                f"\nEpochs: {self.opt_result.nit}")
 
 
 class LinearRegression():
@@ -163,18 +164,21 @@ class LinearRegression():
 
         self.mse = None
 
-    def fit(self, dataset=(), max_epochs=200, batch_size=16, step_size=1,
-            momentum=0, stop=0, parallel=False):
+    def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0, stop=1,
+            max_epochs=600, damp_armijo=0.5, gamma_armijo=0.001, damp_momentum=0.5,
+            **kwargs):
+
+        sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
+                   "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R")
+
         # dataset = (X_train, y_train, X_test, y_test)
         X_train = dataset[0]
         y_train = dataset[1]
         X_test = dataset[2]
         y_test = dataset[3]
 
-        sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
-                   "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R")
-
-        w0 = (1 + 1) * np.random.default_rng(42).random(X_train.shape[1]) - 1
+        w0 = (0.5 + 0.5) * np.random.default_rng(42).random(X_train.shape[1] - 1) - 0.5
+        w0 = np.insert(w0, 0, 0)  # null bias
 
         if self.solver in ("L-BFGS-B", "CG"):
             model = minimize(linear, w0, args=(X_train, y_train, self.C),
@@ -198,7 +202,8 @@ class LinearRegression():
         elif self.solver in sgd_variants:
             model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
                                  step_size, momentum, max_epochs, self.solver,
-                                 stop, linear, linear_der, f_and_df_linear)
+                                 stop, damp_armijo, gamma_armijo, damp_momentum,
+                                 linear, linear_der, f_and_df_linear)
 
             self.opt_result = model
             self.coef_ = model.x
@@ -219,7 +224,11 @@ class LinearRegression():
 
     def __str__(self):
 
-        return (f"MSE: {self.mse:.6f}" +
+        return (f"Solver: {self.solver}" +
+                # f"\nTrain score: {self.metrics_train[0]}" +
+                f"MSE: {self.mse:.6f}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
-                f"\nSol norm: {np.linalg.norm(self.coef_):.6f}")
+                f"\nSol norm: {np.linalg.norm(self.coef_):.6f}" +
+                f"\nRun-time (seconds): {self.opt_result.runtime:.6f}" +
+                f"\nEpochs: {self.opt_result.nit}")

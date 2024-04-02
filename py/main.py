@@ -2,27 +2,77 @@
 #%% Packages
 # import time
 # import numpy as np
-import sys
+# import sys
 import matplotlib.pyplot as plt
-import pandas as pd
+# import pandas as pd
 
-from load_datasets import load_diabetes, load_mg, load_mushrooms, load_phishing
+from load_datasets import load_diabetes, load_mg, load_mushrooms, load_phishing, load_w1a
 from models import LogisticRegression, LinearRegression
-from ml_utils import (run_solvers, optim_data, run_bench, optim_bench,
-                      models_summary, diagnostic_epochs, diagnostic_time,
-                      plot_loss_time, plot_loss_epochs, diagnostic)
+from ml_utils import (optim_data, optim_bench,
+                      models_summary,
+                      plot_loss_time, plot_loss_epochs, diagnostic, plot_loss_epochs)
+from grid_search import run_solvers, run_bench, grid_search
 # from solvers_utils import f_and_df, logistic, logistic_der
 
 # %% Diabetes
 
-data_diab = load_phishing()
+# data_diab = load_phishing()
 
-CDiab = 0.2
-MDiab = 64
-kDiab = 200
+C = 0.5
+# MDiab = 64
+# kDiab = 200
 
-benchDiab = run_bench(data_diab, CDiab)
+benchDiab = run_bench(load_w1a(), 0.5)
 benchDiab_data = optim_bench(benchDiab)
+
+# %% Grid search
+
+# sgdfixed_opt1, _ = grid_search_seq("SGD-Fixed", 0.5, data_diab, (64, 128), (0.1, 0.01, 0.001, 0.0001))
+# print("% ----- %")
+sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, load_phishing(), (64, 128), (0.1, 0.01, 0.001, 0.0001))
+
+# sgdm_opt, _ = grid_search_seq("SGDM", 0.5, data_diab, (64, 128))
+
+# armijo_opt, _ = grid_search_seq("SGD-Armijo", 0.5, data_diab, (128,), (1, 0.1, 0.01), delta_a=(0.5, 0.9))
+# print("% ----- %")
+# armijo_opt, _ = grid_search_par("SGD-Armijo", 0.5, data_diab, (128,), (1, 0.1, 0.01), delta_a=(0.5, 0.9))
+
+# %% Run 3 solvers
+
+# SGD-Fixed
+sgdfixed_w1a = run_solvers("SGD-Fixed", C, load_w1a(), 32, do_parallel=False)
+# SGD-Decreasing
+sgddecre_w1a = run_solvers("SGD-Decreasing", C, load_w1a(), 64, do_parallel=False)
+# SGDM
+sgdm_w1a = run_solvers("SGDM", C, load_w1a(), 32, do_parallel=False)
+
+# SGD-Armijo
+sgdarmijo_w1a = run_solvers("SGD-Armijo", C, load_w1a(), 64, delta_a=0.5, do_parallel=False)
+# MSL-SGDM-C
+mslc_w1a = run_solvers("MSL-SGDM-C", C, load_w1a(), 64, delta_a=0.9, delta_m=0.7, do_parallel=False)
+# MSL-SGDM-R
+mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), 64, delta_a=0.9, do_parallel=False)
+
+# %% plot solvers
+
+# diagnostic(
+#     optim_data(sgdfixed_w1a + sgdarmijo_w1a),
+#     optim_data(sgddecre_w1a + sgdarmijo_w1a),
+#     optim_data(sgdm_w1a + mslc_w1a),
+#     optim_data(sgdm_w1a + mslr_w1a))
+
+diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a])
+
+fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
+                        figsize=(6.4*2, 4.8*1.5))
+
+# for i, ax in enumerate(axs.flat):
+#     if i in (0,1,4,5):
+        # 1) Train loss against epochs
+plot_loss_epochs(axs[0,0], optim_data([sgdfixed_w1a[2]]), ("log", "log"))
+# 
+# plot_loss_epochs(ax, data, scalexy)
+
 
 # %%% SGD-Fixed
 
@@ -30,17 +80,17 @@ benchDiab_data = optim_bench(benchDiab)
 # fixed1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01)
 # print(fixed1)
 
-fixed2 = LogisticRegression("SGD-Fixed", C=CDiab)
-fixed2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01, parallel=True)
-print(fixed2)
+# fixed2 = LogisticRegression("SGD-Fixed", 0.5)
+# fixed2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.01, parallel=True)
+# print(fixed2)
 
 # sgdfixed_diab = run_solvers("SGD-Fixed", CDiab, data_diab, kDiab, MDiab, (0.5, 0.1, 0.01))
 
 # %%% SGD-Decreasing
 
-decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
-decre1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
-print(decre1)
+# decre1 = LogisticRegression("SGD-Decreasing", C=CDiab)
+# decre1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
+# print(decre1)
 
 # decre2 = LogisticRegression("SGD-Decreasing", C=CDiab)
 # decre2.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1, parallel=True)
@@ -50,106 +100,43 @@ print(decre1)
 
 # %%% SGDM
 
-sgdm1 = LogisticRegression("SGDM", C=CDiab)
-sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.1, momentum=0.9)
-print(sgdm1)
+# sgdm1 = LogisticRegression("SGDM", C=CDiab)
+# sgdm1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=0.1, momentum=0.9)
+# print(sgdm1)
 
 # sgdm_diab = run_solvers("SGDM", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% SGD-Armijo
 
-armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
-armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
-print(armijo1)
+# armijo1 = LogisticRegression("SGD-Armijo", C=CDiab)
+# armijo1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
+# print(armijo1)
 
 # sgdarmijo_diab = run_solvers("SGD-Armijo", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01))
 
 # %%% MSL-SGDM-C
 
-mslc1 = LogisticRegression("MSL-SGDM-C", C=CDiab)
-mslc1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
-print(mslc1)
+# mslc1 = LogisticRegression("MSL-SGDM-C", C=CDiab)
+# mslc1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
+# print(mslc1)
 
 # mslc_diab = run_solvers("MSL-SGDM-C", CDiab, data_diab, kDiab, MDiab, (1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
 
 # %%% MSL-SGDM-R
 
-mslr1 = LogisticRegression("MSL-SGDM-R", C=CDiab)
-mslr1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
-print(mslr1)
+# mslr1 = LogisticRegression("MSL-SGDM-R", C)
+# mslr1.fit(dataset=data_diab, max_epochs=200, batch_size=64, step_size=1)
+# print(mslr1)
 
 # mslr_diab = run_solvers("MSL-SGDM-R", CDiab, data_diab, kDiab, MDiab, step_size=(1, 0.1, 0.01), momentum=(0.9, 0.9, 0.9))
-
-# %%% Diagnostic
-
-# diagnostic_epochs(
-#     optim_data(sgdfixed_diab + sgdarmijo_diab),
-#     optim_data(sgddecre_diab + sgdarmijo_diab),
-#     optim_data(sgdm_diab + mslc_diab),
-#     optim_data(sgdm_diab + mslr_diab),
-#     benchDiab[0])
-
-# diagnostic_time(
-#     optim_data(sgdfixed_diab + sgdarmijo_diab),
-#     optim_data(sgddecre_diab + sgdarmijo_diab),
-#     optim_data(sgdm_diab + mslc_diab),
-#     optim_data(sgdm_diab + mslr_diab),
-#     benchDiab[0])
-
-# models_diab = optim_data(sgdfixed_diab + sgddecre_diab + sgdm_diab + sgdarmijo_diab +
-#                          mslc_diab + mslr_diab)
-
-# diagnostic(
-#     optim_data(sgdfixed_diab + sgdarmijo_diab),
-#     optim_data(sgddecre_diab + sgdarmijo_diab),
-#     optim_data(sgdm_diab + mslc_diab),
-#     optim_data(sgdm_diab + mslr_diab),
-#     benchDiab[0])
-
-
-# fig, axs = plt.subplots(2, 2, layout="constrained", sharey=True, sharex=True,
-#                         figsize=(6.4, 4.8))
-
-# plot_loss_time(axs[0,0], optim_data(sgdfixed_diab), scalexy=("log", "log"))
-
-# diagnostic_epochs(
-#     optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
-#     optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
-#     optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslcDiab1, mslcDiab2, mslcDiab3]),
-#     optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslrDiab1, mslrDiab2, mslrDiab3]),
-#     benchDiab1)
-
-# diagnostic_time(
-#     optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
-#     optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3, sgdDiab_armijo1, sgdDiab_armijo2, sgdDiab_armijo3]),
-#     optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslcDiab1, mslcDiab2, mslcDiab3]),
-#     optim_data([sgdmDiab1, sgdmDiab2, sgdmDiab3, mslrDiab1, mslrDiab2, mslrDiab3]),
-#     benchDiab1)
-
-# models = [optim_data([sgdDiab_fixed1, sgdDiab_fixed2, sgdDiab_fixed3]),
-#           optim_data([sgdDiab_decre1, sgdDiab_decre2, sgdDiab_decre3])]
-
-# fig, axs = plt.subplots(2, 2, sharey=True, layout="constrained", figsize=(6.4, 4.8))
-# # i = 0
-# # for ax in axs.flat:
-# plot_loss_time(axs[0,0], models[0])
-# plot_loss_epochs(axs[1,0], models[0])
-
-# plot_loss_time(axs[0,1], models[1])
-# plot_loss_epochs(axs[1,1], models[1])
-#     # i += 1
-
-# diagnostic_epochs(data1, data2, data3, data4, bench)
-
 
 # %% Linear Regression
 
 # data_mg = load_mg()
 
-# %% SGD-Fixed
 
 # linearbench1 = LinearRegression().fit(data_mg)
 # linearbench2 = LinearRegression("CG").fit(data_mg)
 # linearbench3 = LinearRegression("Newton-CG").fit(data_mg)
 
-# linearmodel1 = LinearRegression("SGD-Fixed").fit(data_mg, step_size=0.1, stop=1)
+# linearmodel1 = LinearRegression("SGD-Fixed").fit(load_mg())

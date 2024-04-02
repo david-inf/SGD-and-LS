@@ -11,101 +11,6 @@ from scipy.optimize import OptimizeResult#, fsolve
 # %% One function for all solvers
 
 
-# def sgd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
-#         fun, jac, f_and_df):
-#     """
-#     alpha0:
-#         given learning rate
-#     beta0:
-#         given momentum term
-#     solver:
-#         SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R
-#     fun, jac, f_and_df: callables
-#     """
-
-#     # p = w0.size  # intercept and features size
-
-#     # w_seq = np.empty((epochs + 1, p))  # weights sequence
-#     fun_seq = np.empty(epochs + 1)       # full objective function sequence
-#     # grad_seq = np.empty_like(w_seq)    # full gradient sequence
-
-#     time_seq = np.empty_like(fun_seq)    # time per epoch sequence
-
-#     w_k = w0.copy()                           # starting solution
-#     # fun_k = fun(w_k, X, y, lam)             # full w.r.t. starting solution
-#     # grad_k = jac(w_k, X, y, lam             # full w.r.t. starting solution
-#     fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. starting solution
-
-#     # w_seq[0, :] = w_k        # add starting solution
-#     fun_seq[0] = fun_k         # add full evaluation
-#     # grad_seq[0, :] = grad_k  # add full evaluation
-
-#     time_seq[0] = 0.0    # count from 0
-#     start = time.time()  # start time counter
-
-#     k = 0  # epochs counter
-#     while stopping(fun_k, grad_k, k, epochs, criterion=stop):
-
-#         # split dataset indices randomly
-#         minibatches = shuffle_dataset(y.size, k, M)
-
-#         z_t = w_k.copy()          # ietrations starting model
-#         d_t = np.zeros_like(z_t)  # allocate iterations direction
-
-#         # start every epoch with the given step-size
-#         alpha_t = alpha0
-
-#         if solver == "SGD-Decreasing":
-#             # decrease stepsize at every epoch
-#             alpha_t = alpha0 / (k + 1)
-
-#         for t, minibatch in enumerate(minibatches):
-#             # t: iteration number
-#             # minibatch: numpy.ndarray of np.int32, contains minibatch indices
-
-#             # get minibatch samples
-#             samples_x = X[minibatch, :].copy()  # matrix
-#             samples_y = y[minibatch].copy()     # vector
-
-#             # samples w.r.t. iteration solution
-#             grad_t = jac(z_t, samples_x, samples_y, lam)
-
-#             # direction: anti-gradient or damped
-#             d_t = select_direction(solver, beta0, grad_t, d_t)
-
-#             if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
-#                 # reset step-size
-#                 alpha = reset_step(y.size, alpha_t, alpha0, M, t)
-
-#                 # weights update with line search
-#                 alpha_t = armijo_method(
-#                     z_t, d_t, samples_x, samples_y, lam, alpha, fun, f_and_df)
-
-#             # update weights
-#             z_t += alpha_t * d_t
-
-#         k += 1
-
-#         w_k = z_t.copy()                          # solution found
-#         # fun_k = fun(w_k, X, y, lam)             # full w.r.t. last solution found
-#         # grad_k = jac(w_k, X, y, lam)            # full w.r.t. last solution found
-#         fun_k, grad_k = f_and_df(w_k, X, y, lam)  # full w.r.t. last solution found
-
-#         # w_seq[k, :] = w_k         # add last solution found
-#         fun_seq[k] = fun_k          # add full evaluation
-#         # grad_seq[k, :] = grad_k   # add full evaluation
-
-#         time_seq[k] = time.time() - start  # time per epoch
-
-#     result = OptimizeResult(fun=fun_k.copy(), x=w_k.copy(), jac=grad_k.copy(),
-#                             success=(k > 1), solver=solver, minibatch_size=M,
-#                             nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
-#                             step_size=alpha0, momentum=beta0,
-#                             fun_per_epoch=fun_seq)
-
-#     return result
-
-
 def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                   delta_a, gamma, delta_m, fun, jac, f_and_df, **options):
     """
@@ -191,7 +96,8 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             # samples w.r.t. iteration solution
             grad_t = jac(z_t, samples_x, samples_y, lam)
 
-            # --------- # direction: anti-gradient or damped
+            # --------- #
+            # direction: anti-gradient or damped
             if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "SGD-Armijo"):
                 # negative gradient damped or not
                 d_t = -((1 - beta0) * grad_t + beta0 * d_t)
@@ -203,6 +109,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             elif solver == "MSL-SGDM-R":
                 # if not descent set direction to damped negative gradient
                 d_t = momentum_restart(beta0, grad_t, d_t)
+
             # --------- #
 
             if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
@@ -303,51 +210,6 @@ def stopping(fun_k, jac_k, nit, max_iter, criterion):
         stop = (la.norm(jac_k) > tol * (1 + fun_k)) and (nit < max_iter)
 
     return stop
-
-
-# def select_direction(solver, beta0, grad_t, d_t):
-#     """
-#     Select direction based on the selected solver
-#     Dataset not required for this operation
-
-#     Parameters
-#     ----------
-#     solver : string
-#     beta0 : int
-#         initial momentum term
-#     grad_t : numpy.ndarray of size d_t.size
-#         w.r.t. z_t
-#     d_t : numpy.ndarray
-#         previous iteration direction
-
-#     Returns
-#     -------
-#     d_next : numpy.ndarray
-#         current iteration direction
-#     """
-
-#     # allocate next direction
-#     d_next = np.empty_like(d_t)
-
-#     # beta = beta0
-
-#     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
-#         # set negative gradient
-#         d_next = -grad_t
-
-#     elif solver == "SGDM":
-#         # damped negative gradient
-#         d_next = -((1 - beta0) * grad_t + beta0 * d_t)
-
-#     elif solver == "MSL-SGDM-C":
-#         # update momentum until the direction is descent
-#         d_next = momentum_correction(beta0, grad_t, d_t)
-
-#     elif solver == "MSL-SGDM-R":
-#         # if not descent set direction to damped negative gradient
-#         d_next = momentum_restart(beta0, grad_t, d_t)
-
-#     return d_next
 
 
 # %% utils sls
