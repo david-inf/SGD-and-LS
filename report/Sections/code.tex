@@ -10,6 +10,10 @@
 \newcommand{\algGrad}{$\nabla f_{i_t}(z^t) \gets \sum_{j\in B_t}\nabla f_j(z^t)$}
 \newcommand{\stopping}{$\norma{\nabla\func(w^k)}>\epsilon$ \And $k<k^\ast$}
 
+\cleardoublepage
+\changetext{0.3\textwidth}{}{}{}{}
+\pagestyle{myplain}
+%
 \noindent%
 \begin{center}
 \begin{minipage}[t]{0.5\textwidth}
@@ -41,7 +45,7 @@ $q\gets0$\;
 \end{algorithm}
 \end{minipage}
 \end{center}
-
+%
 \noindent%
 \begin{center}
 \begin{minipage}[t]{0.5\textwidth}
@@ -72,16 +76,17 @@ $q\gets0$\;
 $d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr)$\;
 \If{\Not$\nabla f_{i_t}(z^t)^Td_t<0$}{
 	$d_{t-1}\gets d_0$\;
+	compute $d_t$\;
 %	$d_t\gets-\bigl((1-\beta_0)\nabla f_{i_t}(z^t)+\beta_0d_{t-1}\bigr)$\;
 }
 \KwOut{$d_t$}
 \end{algorithm}
 \end{minipage}
 \end{center}
-
+%
 \begin{algorithm}
 \caption{\texttt{SGD} variants}\label{alg:SGD-variants}
-\KwData{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
+\KwIn{$w^0\in\R^{(p+1)}$, $M>1$, $k^\ast$, $\epsilon>0$, $\alpha_0\in\R^+$, $\beta_0\in(0,1)$}
 $k \gets 0$\;
 \While{\stopping}{
 	\shuffleDB\;
@@ -101,12 +106,17 @@ $k \gets 0$\;
 			\text{\texttt{momentum-correction}}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-C}} \\
 			\text{\texttt{momentum-restart}}\bigl(\beta_0,\nabla f_{i_t}(z^t),d_{t-1}\bigr) & \text{if \texttt{MSL-SGDM-R}}
 		\end{cases}$\;
-		\If{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R}}{%
+		\uIf{\texttt{SGD-Armijo}, \texttt{MSL-SGDM-C/R}}{%
 			$\alpha\gets\mathtt{reset}(\alpha_{t-1},\alpha_0,M,N,t,a,\mathtt{opt})$\; 
 			$\alpha_t\gets\text{\texttt{armijo-method}}(z^t,d_t,\alpha)$\;}
+		\Else{$\alpha_t\gets\alpha_{-1}$\;}
 		$z^{t+1} \gets z^t+\alpha_td_t$\;
 	}
-	$w^{k+1} \gets z^{N/M}$\;
-	$k \gets k+1$\;
+	$w^{k+1} \gets z^{N/M}$; $k \gets k+1$\;
 }
+\KwOut{$w^\ast$}
 \end{algorithm}
+
+\cleardoublepage
+\changetext{-0.3\textwidth}{}{}{}{}
+\pagestyle{main}

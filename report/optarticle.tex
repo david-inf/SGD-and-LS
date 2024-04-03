@@ -98,7 +98,7 @@
 %\usepackage{multirow}
 \graphicspath{{./Figures/},{../py/plots/}}
 \usepackage{subfig}
-%\usepackage{wrapfig}
+\usepackage{wrapfig}
 \usepackage{caption}
 \captionsetup{format=hang,labelsep=colon,font={small,rm},labelfont={sf,bf}}
 \captionsetup[table]{skip=0.2\medskipamount,position=top}
@@ -118,6 +118,9 @@
 % -------------------------------- %
 % Miscellaneous
 % -------------------------------- %
+%\usepackage{etoolbox}
+%\preto\chapter{\addtocontents{toc}{\protect\addvspace{}}}
+
 \interfootnotelinepenalty=10000
 \dimen\footins=2.5cm
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
@@ -128,7 +131,7 @@
 \newcommand{\mySubject}{Project work in Optimization Techniques for Machine Learning}
 \newcommand{\myName}{David Nardi}
 \newcommand{\myNameShort}{D. Nardi}
-\newcommand{\mySummary}{MSc student in Artificial Intelligence\\ Univeristy of Florence}
+\newcommand{\mySummary}{MSc in Artificial Intelligence\\ Univeristy of Florence}
 \newcommand{\omissis}{[\textellipsis\unkern]}
 \newcommand{\inToc}[1]%
 	{\addcontentsline{toc}{section}{\texorpdfstring{\protect\numberline{}#1}{#1}}}
@@ -145,6 +148,12 @@
 	{\slshape\myNameShort}{}{\slshape\myTitle}%
 	\setfoot[][][]%
 	{}{\thepage}{}}
+\newpagestyle{myplain}{% oneside mainmatter
+	\sethead[][][]%
+	{\slshape\myNameShort}{}{\thepage}%
+	\setfoot[][][]%
+	{}{}{}}
+\usepackage[strict]{changepage}
 % -------------------------------- %
 % Bibliography
 % -------------------------------- %
