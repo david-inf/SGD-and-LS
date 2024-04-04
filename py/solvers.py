@@ -10,7 +10,6 @@ from scipy.optimize import OptimizeResult#, fsolve
 
 # %% One function for all solvers
 
-
 def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                   delta_a, gamma, delta_m, fun, jac, f_and_df, **options):
     """
@@ -36,7 +35,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
     epochs : int
         maximum number of epochs
     solver : string
-        SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R
+        SGD-Fixed, SGD-Decreasing, SGDM, SGD-Armijo, MSL-SGDM-C, MSL-SGDM-R, Adam, Adamax
     stop : int
         stopping criterion to be used
     delta_a : float
@@ -76,10 +75,18 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
         minibatches = shuffle_dataset(y.size, k, M)
 
         z_t = w_k.copy()          # iterations starting model
-        d_t = np.zeros_like(z_t)  # allocate iterations direction
+        d_t = np.zeros_like(z_t)  # initialize iterations direction
 
-        # start every epoch with the given step-size
+        # start iterations with the given step-size
+        # all solvers except SGD-Decreasing
         alpha_t = alpha0
+
+        # Adam initialization
+        beta1 = 0.9      # for vector m^t
+        beta2 = 0.999    # for vector v^t
+        # adam_eps = 1e-8  # when updating z^t
+        m_t = zeros_like(z_t)
+        v_t = np.zeros_like(z_t)
 
         if solver == "SGD-Decreasing":
             # decrease stepsize at every epoch
@@ -90,10 +97,10 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             # minibatch : numpy.ndarray, minibatch indices
 
             # get minibatch samples
-            samples_x = X[minibatch]  # scipy.sparse.csr_matrix
+            samples_x = X[minibatch]  # scipy.sparse.csr_matrix, select rows
             samples_y = y[minibatch]  # numpy.ndarray
 
-            # samples w.r.t. iteration solution
+            # samples gradient w.r.t. iteration solution
             grad_t = jac(z_t, samples_x, samples_y, lam)
 
             # --------- #
@@ -110,6 +117,12 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                 # if not descent set direction to damped negative gradient
                 d_t = momentum_restart(beta0, grad_t, d_t)
 
+            elif solver == ("Adam", "Adamax"):
+                # get vectors m^t and v^t
+                # m_t, v_t = adam_vectors(solver, m_t, v_t, beta1, beta2, grad_t, t)
+                # d_t = adam_direction(solver, m_t, v_t, beta1, beta2)
+                m_t, v_t, d_t = adam_things(solver, m_t, v_t, beta1, beta2, grad_t, t)
+
             # --------- #
 
             if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R"):
@@ -120,6 +133,8 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                 alpha_t = armijo_method(
                     z_t, d_t, samples_x, samples_y, lam, alpha, delta_a, gamma,
                     grad_t, fun)
+
+            # elif solver == "MSL-Adam":
 
             # update weights
             z_t += alpha_t * d_t
@@ -212,8 +227,60 @@ def stopping(fun_k, jac_k, nit, max_iter, criterion):
     return stop
 
 
-# %% utils sls
+# %% Adam
 
+# def adam_vectors(solver, m_t, v_t, beta1, beta2, grad_t, t):
+#     # beta1 = 0.9      # for vector m^t
+#     # beta2 = 0.999    # for vector v^t
+
+#     # vector m^t
+#     m_t = beta1 * m_t + (1 - beta1) * grad_t
+#     # vector v^t
+#     v_t = beta2 * v_t + (1 - beta2) * np.square(grad_t)
+
+#     return m_t, v_t
+
+
+# def adam_direction(solver, m_t, v_t, beta1, beta2):
+#     # beta1 = 0.9      # for vector m^t
+#     # beta2 = 0.999    # for vector v^t
+#     eps = 1e-8
+#     I = np.eye(v_t.size)
+
+#     # bias correction
+#     m_tcap = m_t / (1 - beta1**t)
+#     v_tcap = v_t / (1 - beta2**t)
+
+#     # matrix inversion
+#     V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + adam_eps * I)
+
+#     return -np.dot(V_k, m_tcap)
+
+
+def adam_things(solver, m_t, v_t, beta1, beta2, grad_t, t):
+    # beta1 = 0.9      # for vector m^t
+    # beta2 = 0.999    # for vector v^t
+    eps = 1e-8
+    I = np.eye(v_t.size)
+
+    # vector m^t and v^t
+    m_t = beta1 * m_t + (1 - beta1) * grad_t
+    v_t = beta2 * v_t + (1 - beta2) * np.square(grad_t)
+
+    # bias correction
+    m_tcap = m_t / (1 - beta1**t)
+    v_tcap = v_t / (1 - beta2**t)
+
+    # TODO: Adamax routine
+
+    # matrix inversion
+    V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + adam_eps * I)
+    d_t = -np.dot(V_k, m_tcap)
+
+    return m_t, v_t, d_t
+
+
+# %% utils sls
 
 def momentum_correction(beta0, grad_t, d_t, delta):
     """
