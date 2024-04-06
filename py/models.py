@@ -9,6 +9,8 @@ from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logisti
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
 
 
+# %% Logistic Regression
+
 class LogisticRegression():
     def __init__(self, solver="L-BFGS-B", C=1):
         """
@@ -64,7 +66,8 @@ class LogisticRegression():
         """
 
         sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
-                   "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R")
+                        "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R",
+                        "Adam")
 
         X_train = dataset[0]  # scipy.sparse.csr_matrix
         y_train = dataset[1]  # numpy.ndarray
@@ -149,6 +152,8 @@ class LogisticRegression():
                 f"\nRun-time (seconds): {self.opt_result.runtime:.6f}" +
                 f"\nEpochs: {self.opt_result.nit}")
 
+
+# %% Linear Regression
 
 class LinearRegression():
     def __init__(self, solver="L-BFGS-B", C=1):

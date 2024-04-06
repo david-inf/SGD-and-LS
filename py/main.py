@@ -57,6 +57,13 @@ mslc_w1a = run_solvers("MSL-SGDM-C", C, load_w1a(), M_grid, delta_a=delta_a_grid
 # MSL-SGDM-R
 mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), M_grid, delta_a=delta_a_grid)
 
+# %% Adam
+
+# adam_w1a = LogisticRegression("Adam", C)
+# adam_w1a.fit(load_w1a(), 32, 0.001)
+
+adam_opt = grid_search("Adam", C, load_w1a(), (64,), (0.01, 0.001, 0.0001))
+
 # %% plot solvers
 
 # diagnostic(
@@ -65,15 +72,16 @@ mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), M_grid, delta_a=delta_a_grid
 #     optim_data(sgdm_w1a + mslc_w1a),
 #     optim_data(sgdm_w1a + mslr_w1a))
 
-diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a])
+diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a],
+           scalexy=("log", "log", "log", "log"))
 
-fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
-                        figsize=(6.4*2, 4.8*1.5))
+# fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
+#                         figsize=(6.4*2, 4.8*1.5))
 
 # for i, ax in enumerate(axs.flat):
 #     if i in (0,1,4,5):
         # 1) Train loss against epochs
-plot_loss_epochs(axs[0,0], optim_data([sgdfixed_w1a[2]]), ("log", "log"))
+# plot_loss_epochs(axs[0,0], optim_data([sgdfixed_w1a[2]]), ("log", "log"))
 # 
 # plot_loss_epochs(ax, data, scalexy)
 

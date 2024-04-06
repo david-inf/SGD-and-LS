@@ -1,0 +1,21 @@
+name: C:\Users\Utente\Documents\Python Projects\Optimization-Project\env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cudatoolkit
+  - ipython
+  - matplotlib
+  - numba
+  - numpy
+  - pandas
+  - python
+  - scikit-learn
+  - scipy
+  - spyder
+  - ipywidgets
+  - jupyterlab
+  - libsvmdata
+  - joblib
+  - loky
+prefix: C:\Users\Utente\Documents\Python Projects\Optimization-Project\env
