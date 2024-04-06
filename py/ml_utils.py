@@ -74,14 +74,22 @@ def plot_loss_time(ax, data, scalexy):
         "(" + df["Alpha0"].astype(str) + ")"
 
     end = data["Fun/Epochs"][0].shape[0]
-    indices = np.arange(0, end, 10)
+    indices = np.arange(0, end, 4)
+
+    for time_seq in df["Time/Epochs"]:
+        for i in range(10):
+            if time_seq[i] <= 1e-4:
+                time_seq[i] = 1e-4
+        # time_seq += 1e-5
 
     R = data.shape[0]
     for i in range(R//2):
         ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="dashed")
+        # ax.plot(df["Time/Epochs"][i][:-1], df["Fun/Epochs"][i][:-1], linestyle="dashed")
 
     for i in range(R//2, R):
         ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="solid")
+        # ax.plot(df["Time/Epochs"][i][:-1], df["Fun/Epochs"][i][:-1], linestyle="solid")
 
     ax.set_xscale(scalexy[0])
     ax.set_yscale(scalexy[1])
@@ -112,7 +120,7 @@ def plot_loss_epochs(ax, data, scalexy):
     ax.legend(df["labels"], fontsize="x-small")
 
 
-def diagnostic(models, scalexy=("log", "log", "linear", "log")):
+def diagnostic(models, scalexy=("log", "log", "log", "log")):
 
     # models is a list of list of LogisticRegression
     # list of length 6

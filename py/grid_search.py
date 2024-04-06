@@ -40,11 +40,11 @@ def prepare_grid(solver, batches, alphas, betas, delta_a, delta_m):
     param_grid = {}
     param_names = ["batch", "alpha", "beta", "delta_a", "delta_m"]
 
-    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo"):
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo", "Adam"):
         betas = (0,)
         delta_m = (0,)
 
-    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM"):
+    if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "Adam"):
         delta_a = (0,)
 
     if solver in ("SGDM", "MSL-SGDM-R"):
@@ -124,6 +124,7 @@ def compare_performance(perf, best_perf):
 
     return result
 
+
 # %% Solvers plot
 
 def run_bench(dataset, C):
@@ -136,7 +137,7 @@ def run_bench(dataset, C):
 
 def run_solvers(solver, C, dataset, batches, alphas=(1,0.1,0.01),
                 betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,),
-                do_parallel=False, n_jobs=4, **kwargs):
+                do_parallel=False, n_jobs=2, **kwargs):
 
     # for each learning rate value, chooses the other best hyper-params
 
@@ -145,6 +146,15 @@ def run_solvers(solver, C, dataset, batches, alphas=(1,0.1,0.01),
     ### grid search fine-tuning
     solvers_output = []
 
+    # if do_parallel:
+    #     # I'm reusing the same pool through Parallel context manager
+    #     with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
+    #         results = parallel(
+    #             delayed(fit_model)(params, solver, C, dataset, plot)
+    #             for params in params_combos)
+    #         # results = performance, model, params
+
+    # else:
     for i in range(3):
         model, _ = grid_search(solver, C, dataset, batches, (alphas[i],),
                                betas, delta_a, delta_m, output=False,
