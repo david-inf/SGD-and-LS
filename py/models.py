@@ -7,9 +7,8 @@ from scipy.optimize import minimize
 from solvers import minibatch_gd
 from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
+from ml_utils import my_accuracy
 
-
-# %% Logistic Regression
 
 class LogisticRegression():
     def __init__(self, solver="L-BFGS-B", C=1):
@@ -33,31 +32,37 @@ class LogisticRegression():
 
         self.coef_ = None
         self.fun = None
-        self.fun_seq = None
+        # self.fun_seq = None
         self.grad = None
 
         self.metrics_train = None  # list of floats
         self.metrics_test = None   # list of floats
 
 
-    def fit(self, dataset=(), batch_size=16, step_size=0.1, momentum=0, stop=1,
+    def fit(self, dataset, batch_size=32, step_size=0.1, momentum=0, stop=1,
             max_epochs=600, damp_armijo=0.5, gamma_armijo=0.001, damp_momentum=0.5,
             **kwargs):
         """
         Parameters
         ----------
         dataset : tuple, optional
-            (X_train, y_train, X_test, y_test) The default is ().
-        max_epochs : int, optional
-            maximum number of epochs. The default is 200.
+            (X_train, y_train, X_test, y_test).
         batch_size : int, optional
-            mini-batch size. The default is 16.
+            mini-batch size. The default is 32.
         step_size : float, optional
-            initial learning rate. The default is 1.
+            initial learning rate. The default is 0.1.
         momentum : float, optional
             momentum term. The default is 0.
         stop : int, optional
             stopping criterion. The default is 1, when reaches optimal solution.
+        max_epochs : int, optional
+            maximum number of epochs. The default is 600.
+        damp_armijo : float, optional
+            damping for Armijo line search. The default is 0.5.
+        gamma_armijo : float, optional
+            Armijo condition aggressiveness. The default is 0.001.
+        damp_momentum : TYPE, optional
+            damping for momentum correction. The default is 0.5.
 
         Returns
         -------
@@ -67,7 +72,7 @@ class LogisticRegression():
 
         sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
                         "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R",
-                        "Adam")
+                        "Adam", "MSL-Adam")
 
         X_train = dataset[0]  # scipy.sparse.csr_matrix
         y_train = dataset[1]  # numpy.ndarray
@@ -106,12 +111,19 @@ class LogisticRegression():
             self.coef_ = model.x
             self.fun = model.fun
             self.grad = np.linalg.norm(model.jac)
-            self.fun_seq = model.fun_per_epoch
+            # self.fun_seq = model.fun_per_epoch
 
-        self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
-                              balanced_accuracy_score(y_train, self.predict(X_train))]
-        self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
-                             balanced_accuracy_score(y_test, self.predict(X_test))]
+        if self.opt_result:
+            # self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
+            #                       balanced_accuracy_score(y_train, self.predict(X_train))]
+            self.metrics_train = [my_accuracy(y_train, self.predict(X_train))]
+
+            # self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
+            #                      balanced_accuracy_score(y_test, self.predict(X_test))]
+            self.metrics_test = [my_accuracy(y_test, self.predict(X_test))]
+
+        else:
+            print("Optimization not performed")
 
         return self
 
@@ -152,8 +164,6 @@ class LogisticRegression():
                 f"\nRun-time (seconds): {self.opt_result.runtime:.6f}" +
                 f"\nEpochs: {self.opt_result.nit}")
 
-
-# %% Linear Regression
 
 class LinearRegression():
     def __init__(self, solver="L-BFGS-B", C=1):

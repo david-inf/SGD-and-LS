@@ -5,8 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+# %% DataFrames
+
 def optim_data(models):
-    # models: LogisticRegression
+    # models: list of LogisticRegression
+
     models_data = pd.DataFrame(
         {
             "Solver": [model.solver for model in models],
@@ -24,14 +27,18 @@ def optim_data(models):
             "Test score": [model.metrics_test[0] for model in models],
             "Bal train score": [model.metrics_train[1] for model in models],
             "Bal test score": [model.metrics_test[1] for model in models],
-            "Fun/Epochs": [model.fun_seq for model in models],
+            # "Fun/Epochs": [model.fun_seq for model in models],
+            "Fun/Epochs": [model.opt_result.fun_per_epoch for model in models],
             "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
         }
     )
+
     return models_data
 
 
 def optim_bench(models):
+    # models: list of LogisticRegression
+
     data = pd.DataFrame(
         {
             "Solver": [model.solver for model in models],
@@ -53,6 +60,7 @@ def optim_bench(models):
             "Time/Epochs": np.nan
         }
     )
+
     return data
 
 
@@ -68,6 +76,39 @@ def models_summary(custom, bench):
     return models_data.drop(columns={"Solution", "Fun/Epochs", "Time/Epochs"})
 
 
+# %% Classification metrics
+
+def my_accuracy(y_true, y_pred):
+    res = y_true == y_pred
+
+    return np.sum(res) / res.size
+
+# TODO
+def my_sensitivity(y_true, y_pred):
+    return None
+
+# TODO
+def my_specificity(y_true, y_pred):
+    return None
+
+
+def my_bal_accuracy(y_true, y_pred):
+    return 0.5 * (my_sensitivity(y_true, y_pred) + my_specificity(y_true, y_pred))
+
+# TODO
+def my_f1(y_true, y_pred):
+    return None
+
+
+def metrics_list(y_true, y_pred):
+    """ Returns a list with some metrics for classification """
+
+    return [my_accuracy(y_true, y_pred),
+            my_bal_accuracy(y_true, y_pred),
+            my_f1(y_true, y_pred)]
+
+# %% Plotting
+
 def plot_loss_time(ax, data, scalexy):
     df = data.copy()
     df.loc[:, "labels"] = df["Solver"] + \
@@ -78,8 +119,8 @@ def plot_loss_time(ax, data, scalexy):
 
     for time_seq in df["Time/Epochs"]:
         for i in range(10):
-            if time_seq[i] <= 1e-4:
-                time_seq[i] = 1e-4
+            if time_seq[i] <= 1e-3:
+                time_seq[i] = 1e-3
         # time_seq += 1e-5
 
     R = data.shape[0]

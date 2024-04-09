@@ -11,7 +11,7 @@ from models import LogisticRegression, LinearRegression
 from ml_utils import (optim_data, optim_bench,
                       models_summary,
                       plot_loss_time, plot_loss_epochs, diagnostic, plot_loss_epochs)
-from grid_search import run_solvers, run_bench, grid_search
+from grid_search import run_solvers, run_bench, grid_search, cross_val
 # from solvers_utils import f_and_df, logistic, logistic_der
 
 # %% Diabetes
@@ -24,6 +24,14 @@ C = 0.5
 
 benchDiab = run_bench(load_w1a(), 0.5)
 benchDiab_data = optim_bench(benchDiab)
+
+# %%
+
+model1 = LogisticRegression("SGD-Fixed").fit(load_w1a(), **dict(batch_size=64))
+
+# %% cross-validation
+
+sgd1_cv = cross_val(LogisticRegression("SGD-Fixed"), load_w1a(), solver_options=dict(batch_size=64))
 
 # %% Grid search
 

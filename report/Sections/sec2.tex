@@ -107,6 +107,11 @@ so the direction is defined as $d_t=-\nabla f_{i_t}(z^t)$ that is the negative g
 \addplot[samples=200,domain=0:200,blue,smooth] {1/(x+1)};
 \end{axis}
 \end{tikzpicture}
+%\begin{tikzpicture}
+%\begin{axis}[xlabel=$k$,ylabel={$\alpha=\frac{\alpha_0}{k+1}$},axis lines=middle,enlargelimits,width=0.33\textwidth,xmin=0.001,xtick={1,10,100},xmode=log]
+%\addplot[samples=200,domain=0.001:100,blue,smooth] {1/(x+1)};
+%\end{axis}
+%\end{tikzpicture}
 %\caption{Inverse decay}
 %\label{fig:decre-step}
 \end{wrapfloat}
@@ -192,7 +197,7 @@ which is applied as the general update rule in algorithm~\ref{alg:SGD-variants},
 \end{tikzpicture}
 \end{center}
 
-\subsubsection{Stochastic line search}
+\subsubsection{Momentum and stochastic line search}
 
 As the paper by~\textcite{fan_msl_2023} says, when using the momentum term together with a line search, $\beta_0$ complicates the selection of a suitable step-size. The Armijo line search applied to the \texttt{SGDM} algorithm has the following condition
 \begin{equation}\label{eq:armijo-sgdm}

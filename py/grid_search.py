@@ -7,11 +7,62 @@ from joblib import Parallel, delayed
 
 from models import LogisticRegression
 
+# %% cross-validation
+
+def cross_val(model, data, k=5, solver_options={}):
+    # data: (X_train, y_train, X_test, y_test)
+    # k: number of folds
+
+    # dataset size
+    X_train, y_train, _, _ = data
+    N = X_train.shape[0]  # int
+    # get indices for splitting
+    folds_idx = np.array_split(np.arange(N), k)  # list of numpy.ndarray of np.int32
+
+    scores = np.empty(k)
+    for i in range(k):
+        this_folds_idx = folds_idx.copy()
+
+        validate_idx = this_folds_idx.pop(i)
+        fold_X_validate = X_train[validate_idx]
+        fold_y_validate = y_train[validate_idx]
+
+        folds_X_train = X_train[np.concatenate(this_folds_idx)]
+        folds_y_train = y_train[np.concatenate(this_folds_idx)]
+
+        fold_data = (folds_X_train, folds_y_train, fold_X_validate, fold_y_validate)
+
+        scores[i] = model.fit(fold_data, **solver_options).fun  # not working
+
+    return np.mean(scores)
 
 # %% Grid search
 
 def fit_model(params, solver, C, dataset, plot=False):
     """ fit the model with the specified parameters """
+
+    # get all the model parameters
+    batch_size, alpha, beta, delta_a, delta_m = params
+
+    model = LogisticRegression(solver, C)
+
+    if plot:
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
+                  damp_armijo=delta_a, damp_momentum=delta_m)
+
+    else:
+        model.fit(dataset, batch_size, alpha, beta, damp_armijo=delta_a,
+                  damp_momentum=delta_m)
+
+    # test accuracy and loss
+    # performance = model.metrics_test[0]
+    performance = np.array([model.metrics_test[0], model.fun])
+
+    return performance, model, params
+
+
+def fit_model_cv(params, solver, C, dataset, plot=False):
+    """ cross-validate the model with the specified parameters """
 
     # get all the model parameters
     batch_size, alpha, beta, delta_a, delta_m = params
@@ -56,6 +107,8 @@ def prepare_grid(solver, batches, alphas, betas, delta_a, delta_m):
     return param_grid
 
 
+# dumb grid search without cross-validation
+# TODO: use k-fold cross-validation for tuning
 def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
                 betas=(0.9,), delta_a=(0.5,), delta_m=(0.5,),
                 output=True, do_parallel=True, plot=False, n_jobs=7):
@@ -90,7 +143,8 @@ def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
             res = fit_model(params, solver, C, dataset)
             results.append(res)
 
-    # sort elements by test accuracy and loss
+    ### comparison
+    # sort elements by test (validation) accuracy and loss
     results.sort(key=lambda x: (x[0][0], -x[0][1]))
     best_model = results[-1][1]
     best_params = results[-1][2]
@@ -113,16 +167,17 @@ def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
     return best_model, best_params
 
 
-def compare_performance(perf, best_perf):
-    result = False
+# not scalable, make more general
+# def compare_performance(perf, best_perf):
+#     result = False
 
-    if perf[0] > best_perf[0]:
-        result = True
+#     if perf[0] > best_perf[0]:
+#         result = True
 
-    elif perf[0] == best_perf[0] and perf[1] < best_perf[1]:
-        result = True
+#     elif perf[0] == best_perf[0] and perf[1] < best_perf[1]:
+#         result = True
 
-    return result
+#     return result
 
 
 # %% Solvers plot
@@ -142,6 +197,8 @@ def run_solvers(solver, C, dataset, batches, alphas=(1,0.1,0.01),
     # for each learning rate value, chooses the other best hyper-params
 
     start_time = time.time()
+
+    # def run_solvers_fit():
 
     ### grid search fine-tuning
     solvers_output = []

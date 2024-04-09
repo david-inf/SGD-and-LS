@@ -42,7 +42,7 @@ Then a \emph{hyper-parameters tuning} is performed. We set fixed values for the 
 \end{array}
 \]
 
-Moving to the other hyper-parameters, a \emph{grid search} is applied to find the best combination for each algorithm. The procedure confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, and in the latter are confronted also different values for the damping both in the Armijo method and momentum correction.
+Moving to the other hyper-parameters, a \emph{grid search}, without cross-validation but just using test data for comparison, is applied to find the best combination for each algorithm. The procedure confronts different combinations of the mini-batch size, the learning rate in the basic SGD version and the ones with line search, and in the latter are confronted also different values for the damping both in the Armijo method and momentum correction.
 
 The mini-batch size grid depends on the dataset being considered. As said, the retrieved datasets vary in size, but the general rule is to stay around 100 iterations using values that are powers of 2, the grid is composed by at least two values. For the first five datasets, the size starts at 32. Follows the grids used
 %\begin{center}
@@ -94,11 +94,12 @@ Regarding the grid search implementation, the \texttt{Joblib} module was used to
 
 %Thanks to the $\ell_2\text{-regularization}$ the algorithm searches for near the null model
 
-First thing to say, the regularization term has a great influence on the final model, as you can see in the solution norm column the values are not that high, however lowering the $\lambda$ coefficient would have led to a smaller solution norm, so the null model, possibly when the stochastic line search is used.
+First thing to say, the regularization term has a great influence on the final model, as you can see in the solution norm column the values are not that high, %however lowering the $\lambda$ coefficient would have led to a smaller solution norm, so the null model, possibly when the stochastic line search is used.
+lowering the $\lambda$ coefficient would lead to a lower objective function value, should be seen the change in the solution norm.
 
 Speaking of the algorithms that use the Armijo line search, first of all one notices that their execution time is obviously longer than the others. More important, in each dataset you can see that the $\epsilon$ tolerance value is never reached though the limit of 600 epochs, especially the \texttt{SGD-Armijo} algorithm. However, in machine learning a very low tolerance is not necessarily required. Nonetheless the SLS solvers prove to achieve a higher accuracy, particularly the \texttt{SGD-Armijo}.
 
-The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, most of all has the lower run-time among the SGD solvers, followed by the \texttt{SGD-Decreasing}. Same for the \texttt{SciPy} solvers that can reach the smallest gradient norm. The \texttt{Mushrooms} dataset is an exception, where these solvers converge to the lowest solution norm with the lowest accuracy.
+The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, most of all has the lower run-time among the SGD solvers, followed by the \texttt{SGD-Decreasing}. Same for the \texttt{scipy.optimize} solvers that can reach the smallest gradient norm. The \texttt{Mushrooms} dataset is an exception, where these solvers converge to the lowest solution norm with the lowest accuracy.
 
 As expected the accuracy is greatly influenced by the class distribution of each datasets, for which different metrics that deal with unbalanced datasets could be used. Between al solvers the test score is very similar, as the $f(w^\ast)$ except in some cases for the \texttt{SGD-Armijo} solver that ended on a different solution with even higher accuracy.
 
@@ -141,7 +142,7 @@ where the mini-batch size $M$ as in the previous grid search is composed by at l
 
 The algorithm finds the best values for each $\alpha_0$, then the objective function for every epoch and for the time took by each epoch is plotted in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}; for each plot, both axis are set to logarithmic scale with base 10.
 
-Regarding the $f(w)$ against run-time plot, we saw that between certain epochs, the run-time can be the same or slightly different, so the $f(w)$ values were taken every 4 epochs, also to avoid problems due to the run-time sequence beginning at \num{0.0}, the starting value was set at \num{e-4}.\par\smallskip
+Regarding the $f(w)$ against run-time plot, we saw that between certain epochs, the run-time can be the same or slightly different, so the $f(w)$ values were taken every 4 epochs, also to avoid problems due to the run-time sequence beginning at \num{0.0}, the starting value was set to \num{e-3}.\par\smallskip
 
 %Nonostante i primi due dataset siano sbilanciati, l'andamento della funzione obiettivo tende al minimo senza significative oscillazioni 
 
@@ -166,28 +167,52 @@ Among the basic versions, the \texttt{SGD-Decreasing} seems to be the least affe
 \begin{algorithm}
 \caption{Grid search for hyper-parameters tuning}\label{alg:grid-search}
 \KwIn{$\alpha_0$, $M$, $\delta_a$, $\delta_m$}
-prepare the combinations using the given grids\;
+prepare the combinations using the given grids, store in \texttt{params} list\;
+store evaluations in \texttt{performance} list, whose elements are \texttt{(param, metrics)}\;
 \For{\texttt{param} in \texttt{params}}{
-	model training using \texttt{param}\;
-	confront metrics with current \texttt{best-model} and update \texttt{best-param} if necessary\;
+	model training using \texttt{param} (training data)\;
+	model testing and metrics computation (test data)\;
+	add current \texttt{param} and \texttt{metrics} to \texttt{performance}\;
+%	confront metrics with current \texttt{best-model} and update \texttt{best-param} if necessary\;
 }
+order \texttt{performance} list by metrics\;
 \KwOut{\texttt{best-model}, \texttt{best-param}}
 \end{algorithm}
+
+%\begin{algorithm}
+%\caption{Grid search for hyper-parameters tuning using cross-validation}\label{alg:grid-search-cv}
+%\KwIn{$\alpha_0$, $M$, $\delta_a$, $\delta_m$}
+%prepare the combinations using the given grids, store in \texttt{params} list\;
+%store evaluations in \texttt{performance} list, whose elements are \texttt{(param, metrics)}\;
+%\For{\texttt{param} in \texttt{params}}{
+%	$k\text{-fold}$ cross-validation using \texttt{param} (training data)\;
+%	add current \texttt{param} and \texttt{metrics} from cross-validation to \texttt{performance}\;
+%}
+%order \texttt{performance} list by metrics\;
+%model training with best hyper-parameters (training data) and testing (test data)\;
+%\KwOut{\texttt{best-model}, \texttt{best-param}}
+%\end{algorithm}
 
 \begin{table}
 \centering
 \caption{Benchmark datasets}
 \label{tab:datasets}
-\begin{tabular}{lSSSc}
+\begin{tabular}{lSSScc}
 \toprule
-Name & {Train} & {Test} & {Features} & {Distribution} \\
+Name & {Train} & {Test} & {Features} & {Distribution} & {$M$ grid} \\
 \midrule
-w1a & 2477 & 47272 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
-w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
-Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ \\
-a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ \\
-Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ \\
-German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
+w1a & 2477 & 47272 & 300 & -1:$0.97$\,\,\,1:$0.03$ &
+\numlist[list-pair-separator={, }]{32;64} \\
+w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ &
+\numlist[list-pair-separator={, }]{64;128} \\
+Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ &
+\numlist[list-pair-separator={, }]{64;128} \\
+a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ &
+\numlist[list-pair-separator={, }]{32;64} \\
+Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ &
+\numlist[list-pair-separator={, }]{64;128} \\
+German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ &
+\numlist[list-pair-separator={, }]{16;32} \\
 \bottomrule
 \end{tabular}
 \end{table}

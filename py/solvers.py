@@ -6,7 +6,6 @@ import sys
 import numpy as np
 import numpy.linalg as la
 from scipy.optimize import OptimizeResult#, fsolve
-# from joblib import Parallel, delayed
 
 # %% One function for all solvers
 
@@ -92,7 +91,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
 
         for t, minibatch in enumerate(minibatches):
             # t : iteration number
-            # minibatch : numpy.ndarray, minibatch indices
+            # minibatch : numpy.ndarray of np.int32, minibatch indices
 
             # get minibatch samples
             samples_x = X[minibatch]  # scipy.sparse.csr_matrix, select rows
@@ -102,6 +101,7 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
             grad_t = jac(z_t, samples_x, samples_y, lam)
 
             # --------- #
+
             # direction: anti-gradient or damped
             if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "SGD-Armijo"):
                 # negative gradient damped or not
@@ -115,13 +115,13 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                 # if not descent set direction to damped negative gradient
                 d_t = momentum_restart(beta0, grad_t, d_t)
 
-            elif solver in ("Adam", "Adamax"):
+            elif solver in ("Adam", "Adamax", "MSL-Adam"):
                 # get vectors m^t and v^t, and direction
                 m_t, v_t, d_t = adam_things(solver, m_t, v_t, grad_t, t)
 
-            elif solver == "MSL-Adam":
+            # elif solver == "MSL-Adam":
                 # restart direction if not descent
-                m_t, v_t, d_t = adam_restart(solver, m_t, v_t, grad_t, t)
+                # m_t, v_t, d_t = adam_restart(solver, m_t, v_t, grad_t, t)
 
             # --------- #
 
@@ -148,17 +148,15 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
 
         time_seq[k] = time.time() - start  # time per epoch
 
-    result = OptimizeResult(fun=fun_k, x=w_k, jac=grad_k,
-                            success=(k > 1), solver=solver, minibatch_size=M,
-                            nit=k, runtime=time_seq[k], time_per_epoch=time_seq,
-                            step_size=alpha0, momentum=beta0,
-                            fun_per_epoch=fun_seq)
+    result = OptimizeResult(fun=fun_k, x=w_k, jac=grad_k, success=(k > 1),
+                            solver=solver, minibatch_size=M, nit=k,
+                            runtime=time_seq[k], time_per_epoch=time_seq,
+                            step_size=alpha0, momentum=beta0, fun_per_epoch=fun_seq)
 
     return result
 
 
 # %% utils
-
 
 def shuffle_dataset(N, k, M):
     """
@@ -224,10 +222,33 @@ def stopping(fun_k, jac_k, nit, max_iter, criterion):
 
     return stop
 
-
 # %% Adam
 
 def adam_things(solver, m_t, v_t, grad_t, t):
+    """
+    Parameters
+    ----------
+    solver : string
+        Adam, MSL-Adam.
+    m_t : numpy.ndarray
+        first moment form previous iteration.
+    v_t : numpy.ndarray
+        second moment from previous iteration.
+    grad_t : numpy.ndarray
+        mini-batch gradient.
+    t : int
+        iterations counter.
+
+    Returns
+    -------
+    m_t : numpy.ndarray
+        updated first moment.
+    v_t : numpy.ndarray
+        updatede second moment.
+    d_t : numpy.ndarray
+        new direction.
+    """
+
     beta1 = 0.9      # for vector m^t
     beta2 = 0.999    # for vector v^t
     eps = 1e-8
@@ -243,48 +264,63 @@ def adam_things(solver, m_t, v_t, grad_t, t):
 
     # TODO: Adamax routine
 
-    # matrix inversion
+    # matrix inversion and direction computation
     V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
     d_t = -np.dot(V_k, m_tcap)
+
+    # MSL-Adam restart routine
+    if solver == "MSL-Adam":
+        if not np.dot(grad_t, d_t) < 0:
+            # initial moments
+            m_0 = np.zeros_like(m_t)
+            v_0 = np.zeros_like(v_t)
+            # recompute moments
+            m_t = beta1 * m_0 + (1 - beta1) * grad_t
+            v_t = beta2 * v_0 + (1 - beta2) * np.square(grad_t)
+            # bias correction
+            m_tcap = m_t / (1 - beta1**(t + 1))
+            v_tcap = v_t / (1 - beta2**(t + 1))
+            # inverse matrix and recompute direction
+            V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
+            d_t = -np.dot(V_k, m_tcap)
 
     return m_t, v_t, d_t
 
 
-def adam_restart(solver, m_t, v_t, grad_t, t):
-    beta1 = 0.9      # for vector m^t
-    beta2 = 0.999    # for vector v^t
-    eps = 1e-8
-    I = np.eye(v_t.size)
+# def adam_restart(solver, m_t, v_t, grad_t, t):
+#     beta1 = 0.9      # for vector m^t
+#     beta2 = 0.999    # for vector v^t
+#     eps = 1e-8
+#     I = np.eye(v_t.size)
 
-    # vector m^t and v^t
-    m_t = beta1 * m_t + (1 - beta1) * grad_t
-    v_t = beta2 * v_t + (1 - beta2) * np.square(grad_t)
+#     # vector m^t and v^t
+#     m_t = beta1 * m_t + (1 - beta1) * grad_t
+#     v_t = beta2 * v_t + (1 - beta2) * np.square(grad_t)
 
-    # bias correction
-    m_tcap = m_t / (1 - beta1**(t + 1))
-    v_tcap = v_t / (1 - beta2**(t + 1))
+#     # bias correction
+#     m_tcap = m_t / (1 - beta1**(t + 1))
+#     v_tcap = v_t / (1 - beta2**(t + 1))
 
-    # matrix inversion
-    V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
-    d_t = -np.dot(V_k, m_tcap)
+#     # matrix inversion
+#     V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
+#     d_t = -np.dot(V_k, m_tcap)
 
-    # check descent direction
-    if not np.dot(grad_t, d_t) < 0:
-        # initial moments
-        m_0 = np.zeros_like(m_t)
-        v_0 = np.zeros_like(v_t)
-        # recompute moments
-        m_t = beta1 * m_0 + (1 - beta1) * grad_t
-        v_t = beta2 * v_0 + (1 - beta2) * np.square(grad_t)
-        # bias correction
-        m_tcap = m_t / (1 - beta1**(t + 1))
-        v_tcap = v_t / (1 - beta2**(t + 1))
-        # recompute direction
-        V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
-        d_t = -np.dot(V_k, m_tcap)
+#     # check descent direction
+#     if not np.dot(grad_t, d_t) < 0:
+#         # initial moments
+#         m_0 = np.zeros_like(m_t)
+#         v_0 = np.zeros_like(v_t)
+#         # recompute moments
+#         m_t = beta1 * m_0 + (1 - beta1) * grad_t
+#         v_t = beta2 * v_0 + (1 - beta2) * np.square(grad_t)
+#         # bias correction
+#         m_tcap = m_t / (1 - beta1**(t + 1))
+#         v_tcap = v_t / (1 - beta2**(t + 1))
+#         # recompute direction
+#         V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
+#         d_t = -np.dot(V_k, m_tcap)
 
-    return m_t, v_t, d_t
-
+#     return m_t, v_t, d_t
 
 # %% utils sls
 
@@ -312,7 +348,6 @@ def momentum_correction(beta0, grad_t, d_t, delta):
     """
 
     beta = beta0  # starting momentum tern
-    # delta = 0.9  # momentum term  damping factor
 
     d_next = -((1 - beta) * grad_t + beta * d_t)  # starting direction
     # bestbeta = beta0
@@ -440,9 +475,6 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
         selected step-size
     """
 
-    # delta = 0.9  # step-size damping factor
-    # gamma = 0.01  # Armijo condition coefficient
-
     # set starting step-size
     if alpha_reset < 1:
         alpha = alpha_reset / delta
@@ -453,11 +485,10 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
     # samples w.r.t. z_t
     fun_t = fun(z_t, samples_x, samples_y, lam)
 
-    z_next = z_t + alpha * d_t  # model update
-
+    # model update
+    z_next = z_t + alpha * d_t
     # samples w.r.t. potential next weights
     fun_next = fun(z_next, samples_x, samples_y, lam)
-    # fun_next, grad_next = f_and_df(z_next, samples_x, samples_y, lam)
 
     # stochastic Armijo condition
     # armijo_thresh should be greater than fun_next
