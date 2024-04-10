@@ -60,7 +60,7 @@ def fit_model(params, solver, C, dataset, plot=False):
 
     return performance, model, params
 
-
+# TODO
 def fit_model_cv(params, solver, C, dataset, plot=False):
     """ cross-validate the model with the specified parameters """
 

@@ -21,8 +21,8 @@ memory = Memory(cachedir, verbose=0)
 
 # %% Utils
 
-def dataset_distrib(y_train):
-    values, counts = np.unique(y_train, return_counts=True)
+def dataset_distrib(y):
+    values, counts = np.unique(y, return_counts=True)
     samples = np.sum(counts)
 
     return dict(zip(values, counts / samples))

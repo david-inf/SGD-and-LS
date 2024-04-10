@@ -78,26 +78,47 @@ def models_summary(custom, bench):
 
 # %% Classification metrics
 
+def confusion_matrix(y_true, y_pred):
+    true_pos = np.sum(np.logical_and(y_pred == 1, y_true == 1))
+    false_neg = np.sum(np.logical_and(y_pred == -1, y_true == 1))
+
+    false_pos = np.sum(np.logical_and(y_pred == 1, y_true == -1))
+    true_neg = np.sum(np.logical_and(y_pred == -1, y_true == -1))
+
+    return np.array([[true_pos, false_neg],
+                     [false_pos, true_neg]])
+
 def my_accuracy(y_true, y_pred):
-    res = y_true == y_pred
+    res = y_pred == y_true
 
     return np.sum(res) / res.size
 
-# TODO
-def my_sensitivity(y_true, y_pred):
-    return None
 
-# TODO
+def my_recall(y_true, y_pred):
+    true_pos = confusion_matrix(y_true, y_pred)[0, 0]
+    false_neg = confusion_matrix(y_true, y_pred)[0, 1]
+
+    return true_pos / (true_pos + false_neg)
+
+
 def my_specificity(y_true, y_pred):
-    return None
+    true_neg = confusion_matrix(y_true, y_pred)[1, 1]
+    false_pos = confusion_matrix(y_true, y_pred)[1, 0]
+
+    return true_neg / (true_neg + false_pos)
 
 
 def my_bal_accuracy(y_true, y_pred):
-    return 0.5 * (my_sensitivity(y_true, y_pred) + my_specificity(y_true, y_pred))
 
-# TODO
+    return 0.5 * (my_recall(y_true, y_pred) + my_specificity(y_true, y_pred))
+
+
 def my_f1(y_true, y_pred):
-    return None
+    true_pos = confusion_matrix(y_true, y_pred)[0, 0]
+    false_pos = confusion_matrix(y_true, y_pred)[1, 0]
+    false_neg = confusion_matrix(y_true, y_pred)[0, 1]
+
+    return 2 * true_pos / (2 * true_pos + false_pos + false_neg)
 
 
 def metrics_list(y_true, y_pred):

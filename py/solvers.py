@@ -119,20 +119,23 @@ def minibatch_gd(w0, X, y, lam, M, alpha0, beta0, epochs, solver, stop,
                 # get vectors m^t and v^t, and direction
                 m_t, v_t, d_t = adam_things(solver, m_t, v_t, grad_t, t)
 
-            # elif solver == "MSL-Adam":
-                # restart direction if not descent
-                # m_t, v_t, d_t = adam_restart(solver, m_t, v_t, grad_t, t)
-
             # --------- #
 
             if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R", "MSL-Adam"):
+
+                if not np.dot(grad_t, d_t) < 0:
+                    return "not a descent direction in current mini-batch"
+
                 # reset step-size
                 alpha = reset_step(y.size, alpha_t, alpha0, M, t)
 
                 # weights update with line search
+                # TODO: consider a try-except
+                # try:
                 alpha_t = armijo_method(
                     z_t, d_t, samples_x, samples_y, lam, alpha, delta_a, gamma,
                     grad_t, fun)
+                # except _LineSearchError:
 
             # update weights
             z_t += alpha_t * d_t
@@ -286,41 +289,6 @@ def adam_things(solver, m_t, v_t, grad_t, t):
 
     return m_t, v_t, d_t
 
-
-# def adam_restart(solver, m_t, v_t, grad_t, t):
-#     beta1 = 0.9      # for vector m^t
-#     beta2 = 0.999    # for vector v^t
-#     eps = 1e-8
-#     I = np.eye(v_t.size)
-
-#     # vector m^t and v^t
-#     m_t = beta1 * m_t + (1 - beta1) * grad_t
-#     v_t = beta2 * v_t + (1 - beta2) * np.square(grad_t)
-
-#     # bias correction
-#     m_tcap = m_t / (1 - beta1**(t + 1))
-#     v_tcap = v_t / (1 - beta2**(t + 1))
-
-#     # matrix inversion
-#     V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
-#     d_t = -np.dot(V_k, m_tcap)
-
-#     # check descent direction
-#     if not np.dot(grad_t, d_t) < 0:
-#         # initial moments
-#         m_0 = np.zeros_like(m_t)
-#         v_0 = np.zeros_like(v_t)
-#         # recompute moments
-#         m_t = beta1 * m_0 + (1 - beta1) * grad_t
-#         v_t = beta2 * v_0 + (1 - beta2) * np.square(grad_t)
-#         # bias correction
-#         m_tcap = m_t / (1 - beta1**(t + 1))
-#         v_tcap = v_t / (1 - beta2**(t + 1))
-#         # recompute direction
-#         V_k = np.linalg.inv(np.diag(np.sqrt(v_tcap)) + eps * I)
-#         d_t = -np.dot(V_k, m_tcap)
-
-#     return m_t, v_t, d_t
 
 # %% utils sls
 
@@ -476,6 +444,7 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
     """
 
     # set starting step-size
+    alpha = 1
     if alpha_reset < 1:
         alpha = alpha_reset / delta
 
@@ -500,7 +469,8 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
 
         # step_in_range = check_step(alpha, gamma, d_t, z_t, z_next, grad_t, grad_next)
         if not check_step(alpha, d_t, z_t):
-            return alpha / delta
+            # return alpha / delta
+            return alpha_reset
 
         alpha *= delta         # reduce step-size
         z_next += alpha * d_t  # model update
@@ -513,6 +483,7 @@ def armijo_method(z_t, d_t, samples_x, samples_y, lam, alpha_reset, delta, gamma
         armijo_condition = fun_next - armijo_thresh
 
         q += 1
+        # TODO: if q breaks consider raising error
 
     return alpha
 
@@ -542,7 +513,7 @@ def check_step(alpha, d, x):
     alpha : float
         step-size to check
     d : numpy.ndarray
-        direction found at previous iteration
+        direction found at previous iteration, same size as x
     x : numpy.ndarray
         solution found at previous iteration
 
@@ -553,7 +524,7 @@ def check_step(alpha, d, x):
 
     # relative length of the direction
     # check if there is a significant improvement
-    s_max = np.max(np.divide(d, x + 1))
+    s_max = np.max(np.absolute(d) / (np.absolute(x) + 1))
 
     alpha_min = sys.float_info.epsilon**(2/3) / s_max
 
@@ -562,6 +533,12 @@ def check_step(alpha, d, x):
     return alpha_min <= alpha <= alpha_max
 
 
-def lipschitz(L, x, y, jac_x, jac_y):
-    """ Lipschitz L constant """
-    return np.linalg.norm(jac_x - jac_y) - L * np.linalg.norm(x - y)
+# def lipschitz(L, x, y, jac_x, jac_y):
+#     """ Lipschitz L constant """
+#     return np.linalg.norm(jac_x - jac_y) - L * np.linalg.norm(x - y)
+
+
+# utils from scipy
+
+class _LineSearchError(RuntimeError):
+    pass

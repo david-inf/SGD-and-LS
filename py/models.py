@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 from solvers import minibatch_gd
 from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
-from ml_utils import my_accuracy
+from ml_utils import metrics_list
 
 
 class LogisticRegression():
@@ -41,7 +41,7 @@ class LogisticRegression():
 
     def fit(self, dataset, batch_size=32, step_size=0.1, momentum=0, stop=1,
             max_epochs=600, damp_armijo=0.5, gamma_armijo=0.001, damp_momentum=0.5,
-            **kwargs):
+            w0=None, **kwargs):
         """
         Parameters
         ----------
@@ -79,8 +79,9 @@ class LogisticRegression():
         X_test = dataset[2]   # scipy.sparse.csr_matrix
         y_test = dataset[3]   # numpy.ndarray
 
-        w0 = (0.5 + 0.5) * np.random.default_rng(42).random(X_train.shape[1] - 1) - 0.5
-        w0 = np.insert(w0, 0, 0)  # null bias
+        if not w0:
+            w0 = (0.5 + 0.5) * np.random.default_rng(42).random(X_train.shape[1] - 1) - 0.5
+            w0 = np.insert(w0, 0, 0)  # null bias
 
         if self.solver in ("L-BFGS-B", "CG"):
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
@@ -116,11 +117,11 @@ class LogisticRegression():
         if self.opt_result:
             # self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
             #                       balanced_accuracy_score(y_train, self.predict(X_train))]
-            self.metrics_train = [my_accuracy(y_train, self.predict(X_train))]
+            self.metrics_train = metrics_list(y_train, self.predict(X_train))
 
             # self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
             #                      balanced_accuracy_score(y_test, self.predict(X_test))]
-            self.metrics_test = [my_accuracy(y_test, self.predict(X_test))]
+            self.metrics_test = metrics_list(y_test, self.predict(X_test))
 
         else:
             print("Optimization not performed")

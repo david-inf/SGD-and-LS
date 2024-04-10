@@ -16,7 +16,7 @@ from grid_search import run_solvers, run_bench, grid_search, cross_val
 
 # %% Diabetes
 
-# data_diab = load_phishing()
+data = load_w1a()
 
 C = 0.5
 # MDiab = 64
@@ -24,6 +24,12 @@ C = 0.5
 
 benchDiab = run_bench(load_w1a(), 0.5)
 benchDiab_data = optim_bench(benchDiab)
+
+# %% debug line search
+
+armijo1 = LogisticRegression("SGD-Armijo", C)
+# armijo1 = LogisticRegression("MSL-SGDM-C", C)
+armijo1.fit(data, 32, 1)
 
 # %%
 
