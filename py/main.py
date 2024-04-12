@@ -6,7 +6,7 @@
 import matplotlib.pyplot as plt
 # import pandas as pd
 
-from load_datasets import load_diabetes, load_mg, load_mushrooms, load_phishing, load_w1a
+from load_datasets import load_mg, load_mushrooms, load_phishing, load_w1a, load_a2a
 from models import LogisticRegression, LinearRegression
 from ml_utils import (optim_data, optim_bench,
                       models_summary,
@@ -16,20 +16,27 @@ from grid_search import run_solvers, run_bench, grid_search, cross_val
 
 # %% Diabetes
 
-data = load_w1a()
+data = load_a2a()
 
 C = 0.5
 # MDiab = 64
 # kDiab = 200
 
-benchDiab = run_bench(load_w1a(), 0.5)
+benchDiab = run_bench(data, 0.5)
 benchDiab_data = optim_bench(benchDiab)
 
 # %% debug line search
 
 armijo1 = LogisticRegression("SGD-Armijo", C)
 # armijo1 = LogisticRegression("MSL-SGDM-C", C)
-armijo1.fit(data, 32, 1)
+armijo1.fit(data, 64, 1)
+print(armijo1)
+
+# %%
+
+mslc1 = LogisticRegression("MSL-SGDM-C", C)
+mslc1.fit(load_phishing(), 64, 1, 0.9)
+print(mslc1)
 
 # %%
 
@@ -53,23 +60,24 @@ sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, load_phishing(), (64, 128), (0.
 
 # %% Run 3 solvers
 
-M_grid = (32, 64)
-delta_a_grid = (0.3, 0.5, 0.7, 0.9)
+# M_grid = (32, 64)
+M_grid = (64,)
+delta_a_grid = (0.3, 0.5, 0.7)
 delta_m_grid = (0.3, 0.5, 0.7)
 
 # SGD-Fixed
-sgdfixed_w1a = run_solvers("SGD-Fixed", C, load_w1a(), M_grid)
+sgdfixed_w1a = run_solvers("SGD-Fixed", C, data, M_grid)
 # SGD-Decreasing
-sgddecre_w1a = run_solvers("SGD-Decreasing", C, load_w1a(), M_grid)
+sgddecre_w1a = run_solvers("SGD-Decreasing", C, data, M_grid)
 # SGDM
-sgdm_w1a = run_solvers("SGDM", C, load_w1a(), M_grid)
+sgdm_w1a = run_solvers("SGDM", C, data, M_grid)
 
 # SGD-Armijo
-sgdarmijo_w1a = run_solvers("SGD-Armijo", C, load_w1a(), M_grid, delta_a=delta_a_grid)
+sgdarmijo_w1a = run_solvers("SGD-Armijo", C, data, M_grid, delta_a=delta_a_grid)
 # MSL-SGDM-C
-mslc_w1a = run_solvers("MSL-SGDM-C", C, load_w1a(), M_grid, delta_a=delta_a_grid, delta_m=delta_m_grid, n_jobs=6)
+mslc_w1a = run_solvers("MSL-SGDM-C", C, data, M_grid, delta_a=delta_a_grid, delta_m=delta_m_grid, n_jobs=6)
 # MSL-SGDM-R
-mslr_w1a = run_solvers("MSL-SGDM-R", C, load_w1a(), M_grid, delta_a=delta_a_grid)
+mslr_w1a = run_solvers("MSL-SGDM-R", C, data, M_grid, delta_a=delta_a_grid)
 
 # %% Adam
 
@@ -86,8 +94,7 @@ adam_opt = grid_search("Adam", C, load_w1a(), (64,), (0.01, 0.001, 0.0001))
 #     optim_data(sgdm_w1a + mslc_w1a),
 #     optim_data(sgdm_w1a + mslr_w1a))
 
-diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a],
-           scalexy=("log", "log", "log", "log"))
+diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a])
 
 # fig, axs = plt.subplots(2, 4, layout="constrained", sharey=True, sharex="col",
 #                         figsize=(6.4*2, 4.8*1.5))

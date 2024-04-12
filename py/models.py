@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, mean_squared_error
+from sklearn.metrics import mean_squared_error
 from scipy.optimize import minimize
 
 from solvers import minibatch_gd
@@ -39,8 +39,8 @@ class LogisticRegression():
         self.metrics_test = None   # list of floats
 
 
-    def fit(self, dataset, batch_size=32, step_size=0.1, momentum=0, stop=1,
-            max_epochs=600, damp_armijo=0.5, gamma_armijo=0.001, damp_momentum=0.5,
+    def fit(self, dataset, batch_size=32, step_size=0.1, momentum=0., stop=1,
+            max_epochs=600, damp_armijo=0.5, gamma_armijo=1e-4, damp_momentum=0.5,
             w0=None, **kwargs):
         """
         Parameters
@@ -87,20 +87,10 @@ class LogisticRegression():
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
                              method=self.solver, jac=True, bounds=None)
 
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
-
         elif self.solver == "Newton-CG":
             model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
                              method=self.solver, jac=True, hess=logistic_hess,
                              bounds=None)
-
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
 
         elif self.solver in sgd_variants:
             model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
@@ -108,23 +98,17 @@ class LogisticRegression():
                                  stop, damp_armijo, gamma_armijo, damp_momentum,
                                  logistic, logistic_der, f_and_df_log)
 
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
-            # self.fun_seq = model.fun_per_epoch
+        if not model.success:
+            print(model.message)
+            return self
 
-        if self.opt_result:
-            # self.metrics_train = [accuracy_score(y_train, self.predict(X_train)),
-            #                       balanced_accuracy_score(y_train, self.predict(X_train))]
-            self.metrics_train = metrics_list(y_train, self.predict(X_train))
+        self.opt_result = model
+        self.coef_ = model.x
+        self.fun = model.fun
+        self.grad = np.linalg.norm(model.jac)
 
-            # self.metrics_test = [accuracy_score(y_test, self.predict(X_test)),
-            #                      balanced_accuracy_score(y_test, self.predict(X_test))]
-            self.metrics_test = metrics_list(y_test, self.predict(X_test))
-
-        else:
-            print("Optimization not performed")
+        self.metrics_train = metrics_list(y_train, self.predict(X_train))
+        self.metrics_test = metrics_list(y_test, self.predict(X_test))
 
         return self
 
@@ -155,6 +139,9 @@ class LogisticRegression():
 
 
     def __str__(self):
+
+        if not self.opt_result:
+            return "Optimization went wrong"
 
         return (f"Solver: {self.solver}" +
                 # f"\nTrain score: {self.metrics_train[0]}" +
@@ -200,20 +187,10 @@ class LinearRegression():
             model = minimize(linear, w0, args=(X_train, y_train, self.C),
                              method=self.solver, jac=linear_der, bounds=None)
 
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
-
         elif self.solver == "Newton-CG":
             model = minimize(linear, w0, args=(X_train, y_train, self.C),
                              method=self.solver, jac=linear_der, hess=linear_hess,
                              bounds=None)
-
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
 
         elif self.solver in sgd_variants:
             model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
@@ -221,11 +198,10 @@ class LinearRegression():
                                  stop, damp_armijo, gamma_armijo, damp_momentum,
                                  linear, linear_der, f_and_df_linear)
 
-            self.opt_result = model
-            self.coef_ = model.x
-            self.fun = model.fun
-            self.grad = np.linalg.norm(model.jac)
-            self.fun_seq = model.fun_per_epoch
+        self.opt_result = model
+        self.coef_ = model.x
+        self.fun = model.fun
+        self.grad = np.linalg.norm(model.jac)
 
         self.mse = mean_squared_error(y_test, self.predict(X_test))
 

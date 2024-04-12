@@ -47,7 +47,7 @@ def fit_model(params, solver, C, dataset, plot=False):
     model = LogisticRegression(solver, C)
 
     if plot:
-        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=300,
                   damp_armijo=delta_a, damp_momentum=delta_m)
 
     else:
@@ -70,7 +70,7 @@ def fit_model_cv(params, solver, C, dataset, plot=False):
     model = LogisticRegression(solver, C)
 
     if plot:
-        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=300,
                   damp_armijo=delta_a, damp_momentum=delta_m)
 
     else:
@@ -92,14 +92,14 @@ def prepare_grid(solver, batches, alphas, betas, delta_a, delta_m):
     param_names = ["batch", "alpha", "beta", "delta_a", "delta_m"]
 
     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGD-Armijo", "Adam"):
-        betas = (0,)
-        delta_m = (0,)
+        betas = (0.,)
+        delta_m = (0.,)
 
     if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "Adam"):
-        delta_a = (0,)
+        delta_a = (0.,)
 
     if solver in ("SGDM", "MSL-SGDM-R"):
-        delta_m = (0,)
+        delta_m = (0.,)
 
     param_values = [batches, alphas, betas, delta_a, delta_m]
     param_grid = dict(zip(param_names, param_values))
@@ -165,19 +165,6 @@ def grid_search(solver, C, dataset, batches, alphas=(1, 0.1, 0.01),
         print(best_model)
 
     return best_model, best_params
-
-
-# not scalable, make more general
-# def compare_performance(perf, best_perf):
-#     result = False
-
-#     if perf[0] > best_perf[0]:
-#         result = True
-
-#     elif perf[0] == best_perf[0] and perf[1] < best_perf[1]:
-#         result = True
-
-#     return result
 
 
 # %% Solvers plot

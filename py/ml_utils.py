@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import copy
 
 # %% DataFrames
 
@@ -27,7 +27,6 @@ def optim_data(models):
             "Test score": [model.metrics_test[0] for model in models],
             "Bal train score": [model.metrics_train[1] for model in models],
             "Bal test score": [model.metrics_test[1] for model in models],
-            # "Fun/Epochs": [model.fun_seq for model in models],
             "Fun/Epochs": [model.opt_result.fun_per_epoch for model in models],
             "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
         }
@@ -118,7 +117,7 @@ def my_f1(y_true, y_pred):
     false_pos = confusion_matrix(y_true, y_pred)[1, 0]
     false_neg = confusion_matrix(y_true, y_pred)[0, 1]
 
-    return 2 * true_pos / (2 * true_pos + false_pos + false_neg)
+    return 2. * true_pos / (2. * true_pos + false_pos + false_neg)
 
 
 def metrics_list(y_true, y_pred):
@@ -130,61 +129,71 @@ def metrics_list(y_true, y_pred):
 
 # %% Plotting
 
-def plot_loss_time(ax, data, scalexy):
-    df = data.copy()
-    df.loc[:, "labels"] = df["Solver"] + \
-        "(" + df["Alpha0"].astype(str) + ")"
+def plot_loss_time(ax, models, scalexy):
+    # models: list of LogisticRegression
 
-    end = data["Fun/Epochs"][0].shape[0]
-    indices = np.arange(0, end, 4)
+    labels = []
+    for model in models:
+        res = model.opt_result
+        labels.append(model.solver + f"({res.step_size}, {res.minibatch_size})")
 
-    for time_seq in df["Time/Epochs"]:
+    end = models[0].opt_result.time_per_epoch.shape[0]
+    indices = np.arange(0, end, 3)
+
+    models_deep = copy.deepcopy(models)
+    for model in models_deep:
+        seq = model.opt_result.time_per_epoch
         for i in range(10):
-            if time_seq[i] <= 1e-3:
-                time_seq[i] = 1e-3
-        # time_seq += 1e-5
+            if seq[i] <= 1e-3:
+                seq[i] = 1e-3
 
-    R = data.shape[0]
+    R = len(models)
     for i in range(R//2):
-        ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="dashed")
-        # ax.plot(df["Time/Epochs"][i][:-1], df["Fun/Epochs"][i][:-1], linestyle="dashed")
+        ax.plot(models_deep[i].opt_result.time_per_epoch[indices],
+                models_deep[i].opt_result.fun_per_epoch[indices],
+                linestyle="dashed")
 
     for i in range(R//2, R):
-        ax.plot(df["Time/Epochs"][i][indices], df["Fun/Epochs"][i][indices], linestyle="solid")
-        # ax.plot(df["Time/Epochs"][i][:-1], df["Fun/Epochs"][i][:-1], linestyle="solid")
+        ax.plot(models_deep[i].opt_result.time_per_epoch[indices],
+                models_deep[i].opt_result.fun_per_epoch[indices],
+                linestyle="solid")
 
     ax.set_xscale(scalexy[0])
     ax.set_yscale(scalexy[1])
 
     ax.grid(True, which="both", axis="both")
-    ax.legend(df["labels"], fontsize="x-small")
+    ax.legend(labels, fontsize="xx-small")
 
 
-def plot_loss_epochs(ax, data, scalexy):
-    df = data.copy()
-    df.loc[:, "labels"] = df["Solver"] + \
-        "(" + df["Alpha0"].astype(str) + ")"
+def plot_loss_epochs(ax, models, scalexy):
+    # models: list of LogisticRegression
+
+    labels = []
+    for model in models:
+        res = model.opt_result
+        labels.append(model.solver + f"({res.step_size}, {res.minibatch_size})")
 
     start = 1  # only in np.range
-    end = data["Fun/Epochs"][0].shape[0]
+    end = models[0].opt_result.fun_per_epoch.shape[0]
 
-    R = data.shape[0]  # number of rows
+    R = len(models)
     for i in range(R//2):
-        ax.plot(np.arange(start, end), df["Fun/Epochs"][i][:-1], linestyle="dashed")
+        ax.plot(np.arange(start, end + 1), models[i].opt_result.fun_per_epoch,
+                linestyle="dashed")
 
     for i in range(R//2, R):
-        ax.plot(np.arange(start, end), df["Fun/Epochs"][i][:-1], linestyle="solid")
+        ax.plot(np.arange(start, end + 1), models[i].opt_result.fun_per_epoch,
+                linestyle="solid")
 
     ax.set_xscale(scalexy[0])
     ax.set_yscale(scalexy[1])
 
     ax.grid(True, which="both", axis="both")
-    ax.legend(df["labels"], fontsize="x-small")
+    ax.legend(labels, fontsize="xx-small")
 
 
 def diagnostic(models, scalexy=("log", "log", "log", "log")):
-
-    # models is a list of list of LogisticRegression
+    # models: list of list of LogisticRegression
     # list of length 6
     # [sgdf, sgdd, sgdm, armijo, mslc, mslr]
 
@@ -198,14 +207,18 @@ def diagnostic(models, scalexy=("log", "log", "log", "log")):
 
     for i, ax in enumerate(axs.flat):
         if i in (0,1,2,3):  # first row
-            # 1) Train loss against epochs
-            plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
+            # 1) f(w) against epochs
+            # plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
+            plot_loss_epochs(ax, models_choose[i % 4], scalexy_epochs)
             ax.set_xticks([1, 10, 100])
-            ax.set_xticklabels([1, 10, 100])
+            ax.set_xticklabels([0, 10, 100])
 
         elif i in (4,5,6,7):  # second row
-            # 2) Train loss against runtime
-            plot_loss_time(ax, optim_data(models_choose[i % 4]), scalexy_runtime)
+            # 2) f(w) against runtime per epoch
+            # plot_loss_time(ax, optim_data(models_choose[i % 4]), scalexy_runtime)
+            plot_loss_time(ax, models_choose[i % 4], scalexy_runtime)
+            ax.set_xticks([0.001, 0.01, 0.1, 1])
+            ax.set_xticklabels([0, 0.01, 0.1, 1])
 
     xlabel1 = "Epochs"
     xlabel2 = "Time (seconds)"

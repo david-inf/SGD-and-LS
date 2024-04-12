@@ -66,7 +66,7 @@ The mini-batch size grid depends on the dataset being considered. As said, the r
 \alpha_0 & \text{\texttt{SGD-Decreasing}} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
 \alpha_0 & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
 M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
-\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3;0.5;0.7} \\
 \delta_m & \text{\texttt{MSL-SGDM-C}} & \numlist{0.3; 0.5; 0.7} \\
 \bottomrule
 \end{array}
@@ -133,7 +133,7 @@ What differs now is that the grid search finds the best hyper-parameters for eac
 \toprule
 \alpha_0 & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{\numlist[list-separator={ or },list-final-separator={ or }]{1;0.1;0.01}} \\
 M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
-\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3; 0.5; 0.7; 0.9} \\
+\delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3;0.5;0.7} \\
 \delta_m & \text{\texttt{MSL-SGDM-C}} & \numlist{0.3; 0.5; 0.7} \\
 \bottomrule
 \end{array}
