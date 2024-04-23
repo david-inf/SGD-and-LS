@@ -3,19 +3,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - cudatoolkit
   - ipython
+  - ipywidgets
+  - joblib
+  - jupyterlab
   - matplotlib
-  - numba
   - numpy
   - pandas
-  - python
   - scikit-learn
   - scipy
   - spyder
-  - ipywidgets
-  - jupyterlab
-  - libsvmdata
-  - joblib
-  - loky
 prefix: C:\Users\Utente\Documents\Python Projects\Optimization-Project\env

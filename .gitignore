@@ -168,6 +168,8 @@ cython_debug/
 
 # Altro
 py/tmp/
+*.t
+*.txt
 
 
 #######

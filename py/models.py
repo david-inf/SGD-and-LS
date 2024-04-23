@@ -5,8 +5,8 @@ from sklearn.metrics import mean_squared_error
 from scipy.optimize import minimize
 
 from solvers import minibatch_gd
-from solvers_utils import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
-from solvers_utils import linear, linear_der, f_and_df_linear, linear_hess
+from functions import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
+from functions import linear, linear_der, f_and_df_linear, linear_hess
 from ml_utils import metrics_list
 
 
@@ -40,7 +40,7 @@ class LogisticRegression():
 
 
     def fit(self, dataset, batch_size=32, step_size=0.1, momentum=0., stop=1,
-            max_epochs=600, damp_armijo=0.5, gamma_armijo=1e-4, damp_momentum=0.5,
+            max_epochs=600, damp_armijo=0.5, gamma_armijo=1e-5, damp_momentum=0.5,
             w0=None, **kwargs):
         """
         Parameters
@@ -93,10 +93,10 @@ class LogisticRegression():
                              bounds=None)
 
         elif self.solver in sgd_variants:
-            model = minibatch_gd(w0, X_train, y_train, self.C, batch_size,
-                                 step_size, momentum, max_epochs, self.solver,
-                                 stop, damp_armijo, gamma_armijo, damp_momentum,
-                                 logistic, logistic_der, f_and_df_log)
+            model = minibatch_gd(logistic, w0, (X_train, y_train, self.C),
+                                 self.solver, logistic_der, f_and_df_log,
+                                 batch_size, step_size, momentum, max_epochs,
+                                 stop, damp_armijo, gamma_armijo, damp_momentum)
 
         if not model.success:
             print(model.message)

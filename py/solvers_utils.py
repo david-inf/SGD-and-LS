@@ -2,221 +2,99 @@
 
 import numpy as np
 import numpy.linalg as la
-from scipy.sparse import csr_matrix#, isspmatrix_csr
 
-# %% Logistic Regression
+# standard status messages of optimizers
+_status_message = {"success": "Optimization terminated successfully.",
+                   'maxfev': 'Maximum number of function evaluations has '
+                              'been exceeded.',
+                   "maxiter": "Maximum number of epochs has been exceeded.",
+                   "nan": "NaN result encountered.",
+                   'out_of_bounds': 'The result is outside of the provided '
+                                    'bounds.'}
 
-def sigmoid(z):
+def _check_errors(warnflag, k, max_epochs, gfk, fk, wk):
+    if warnflag == 1:
+        msg = "Something went wrong in line search or momentum correction"
+    elif k >= max_epochs:
+        warnflag = 2
+        msg = _status_message["maxiter"]
+    elif np.isnan(gfk).any() or np.isnan(fk) or np.isnan(wk).any():
+        warnflag = 3
+        msg = _status_message["nan"]
+    else:
+        msg = _status_message["success"]
+
+    return msg, warnflag
+
+
+def _check_descent(gfk, dk):
+    # 0. is the mathematical formulation
+    # need to check also the magnitude for a significant update
+    val = gfk.dot(dk)  # float
+    return val < -1e-9
+
+
+def _shuffle_dataset(N, M, generator):
     """
-    Sigmoid function
+    Shuffle dataset indices, dataset not required
 
     Parameters
     ----------
-    z : numpy.ndarray
+    N : int
+        dataset size.
+    k : int
+        epochs counter.
+    M : int
+        current mini-batch size.
 
     Returns
     -------
-    numpy.float64
+    minibatches : list of numpy.ndarray of numpy.int32
     """
 
-    return 1 / (1 + np.exp(-z))
+    batch = np.arange(N)  # dataset indices
+
+    # _rng = np.random.default_rng(k)  # set different seed every epoch
+    generator.shuffle(batch)                # shuffle indices
+
+    # array_split is expensive, consider another strategy
+    minibatches = np.array_split(batch, N / M)  # create the minibatches
+
+    return minibatches
 
 
-def logistic(w, X, y, lam):
-    """
-    Log-loss with l2 regularization
+def _stopping(fk, gfk, nit, maxiter, criterion):
+    """Stopping criterion
 
     Parameters
     ----------
-    w : numpy.ndarray
-        size p
-    X : scipy.sparse.csr_matrix
-        size Nxp
-    y : numpy.ndarray
-        size N
-    lam : int
+    fk : float
+        Objective function value.
+    gfk : array_like
+        Function gradient value.
+    nit : int
+        Current number of epochs.
+    maxiter : int
+        Maximum number of epochs.
+    criterion : int
+        Rule to use.
 
     Returns
     -------
-    numpy.float64
+    stop : boolean
     """
 
-    samples = y.size  # number of samples
-    z = y * X.dot(w)
+    tol = 1e-3
+    stop = False
 
-    # loss function
-    loss = np.sum(np.log(1 + np.exp(-z))) / samples
+    if criterion == 0:
+        stop = nit < maxiter
 
-    # regularization term
-    regul = 0.5 * la.norm(w) ** 2
+    elif criterion == 1:
+        stop = (la.norm(gfk) > tol) and (nit < maxiter)
 
-    return loss + lam * regul
+    elif criterion == 2:
+        # return (np.linalg.norm(grad_k, np.inf) > tol) and (nit < max_iter)
+        stop = (la.norm(gfk) > tol * (1 + fk)) and (nit < maxiter)
 
-
-def logistic_der(w, X, y, lam):
-    """
-    Log-loss with l2 regularization derivative
-
-    Parameters
-    ----------
-    w : numpy.ndarray
-        size p
-    X : scipy.sparse.csr_matrix
-        size Nxp
-    y : numpy.ndarray
-        size N
-    lam : int
-
-    Returns
-    -------
-    numpy.ndarray of shape w.size
-    """
-
-    samples = y.size  # number of samples
-    z = y * X.dot(w)
-
-    # loss function derivative
-    loss_der = X.T.dot(-y * sigmoid(-z)) / samples
-
-    # regularization term derivative
-    regul_der = w
-
-    return loss_der + lam * regul_der
-
-
-def f_and_df_log(w, X, y, lam):
-    """
-    Log-loss with l2 regularization and its derivative
-
-    Parameters
-    ----------
-    w : numpy.ndarray
-        size p
-    X : scipy.sparse.csr_matrix
-        size Nxp
-    y : numpy.ndarray
-        size N
-    lam : int
-
-    Returns
-    -------
-    numpy.float64, numpy.ndarray of shape w.size
-    """
-
-    samples = y.size  # number of samples
-    z = y * X.dot(w)  # once for twice
-
-    # loss function and regularization term
-    loss = np.sum(np.log(1 + np.exp(-z))) / samples
-    regul = 0.5 * np.linalg.norm(w)**2
-
-    # loss function and regularization term derivatives
-    loss_der = X.T.dot(-y * sigmoid(-z)) / samples
-    regul_der = w
-
-    return (loss + lam * regul,          # objective function
-            loss_der + lam * regul_der)  # jacobian
-
-
-def logistic_hess(w, X, y, lam):
-    """
-    Log-loss with l2 regularization hessian
-
-    Parameters
-    ----------
-    w : numpy.ndarray
-        size p
-    X : scipy.sparse.csr_matrix
-        size Nxp
-    y : numpy.ndarray
-        size N
-    lam : int
-
-    Returns
-    -------
-    numpy.ndarray of shape (w.size, w.size)
-    """
-
-    samples = y.size  # number of samples
-    z = y * X.dot(w)  # once for twice
-
-    # diagnonal matrix NxN
-    D = csr_matrix(np.diag(sigmoid(z) * sigmoid(-z)))
-
-    # loss function hessian
-    loss_hess = X.T.dot(D).dot(X) / samples
-
-    # regularization term hessian
-    regul_hess = np.eye(w.size)
-
-    return loss_hess.toarray() + lam * regul_hess
-
-
-# %% Multiple linear regression
-# TODO: handle CSR
-
-def linear(w, X, y, lam):
-    """ Quadratic-loss with l2 regularization """
-
-    samples = y.size  # number of samples
-
-    # loss function
-    # loss = 0.5 * np.linalg.norm(np.dot(X, w) - y)**2 / samples
-    XXw = np.dot(np.matmul(X.T, X), w)  # vector
-    yX = X.dot(y)                   # vector
-    loss = 0.5 * (np.dot(w, XXw) - 2 * np.dot(yX, w) + np.linalg.norm(y)**2) / samples
-
-    # regularizer term
-    regul = 0.5 * np.linalg.norm(w)**2
-
-    return loss + lam * regul
-
-
-def linear_der(w, X, y, lam):
-    """ Quadratic-loss with l2 regularization derivative """
-
-    samples = y.size  # number of samples
-
-    # loss function derivative
-    XXw = np.dot(np.matmul(X.T, X), w)  # vector
-    yX = np.dot(y, X)                   # vector
-    loss_der = (XXw - yX) / samples
-
-    # regularizer term derivative
-    regul_der = w
-
-    return loss_der + lam * regul_der
-
-
-def f_and_df_linear(w, X, y, lam):
-    """ Quadratic-loss with l2 regularization and its derivative """
-
-    samples = y.size  # number of samples
-
-    XXw = np.dot(np.matmul(X.T, X), w)  # once for twice
-    yX = X.dot(y)                   # once for twice
-
-    # loss function and regularizer term
-    loss = 0.5 * (np.dot(w, XXw) - 2 * np.dot(yX, w) + np.linalg.norm(y)**2) / samples
-    regul = 0.5 * np.linalg.norm(w) ** 2
-
-    # loss function and regularizer term derivatives
-    loss_der = (XXw - yX) / samples
-    regul_der = w
-
-    return (loss + lam * regul,          # objective function
-            loss_der + lam * regul_der)  # jacobian
-
-
-def linear_hess(w, X, y, lam):
-    """ Quadratic-loss with l2 regularization hessian """
-
-    samples = y.size  # number of samples
-
-    # loss function hessian
-    loss_hess = np.matmul(X.T, X) / samples
-
-    # regularizer term hessian
-    regul_hess = np.eye(w.size)
-
-    return loss_hess + lam * regul_hess
+    return stop

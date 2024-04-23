@@ -215,7 +215,25 @@ def load_a2a(disp=False):  # ok
     X_test, y_test = load_svmlight_file(path_test)
 
     # add constant column
-    X_train_prep = add_intercept(X_train)
+    X_train_prep = add_intercept(X_train)[:, :120]
+    X_test_prep = add_intercept(X_test)[:, :120]
+
+    if disp:
+        train_sklearn_log(X_train_prep, y_train, X_test_prep, y_test)
+
+    return X_train_prep, y_train, X_test_prep, y_test
+
+
+@memory.cache
+def load_a4a(disp=False):
+    path_train = "datasets/LIBSVM/a4a.txt"
+    X_train, y_train = load_svmlight_file(path_train)
+
+    path_test = "datasets/LIBSVM/a4a.t"
+    X_test, y_test = load_svmlight_file(path_test)
+
+    # add constant column
+    X_train_prep = add_intercept(X_train)[:, :120]
     X_test_prep = add_intercept(X_test)[:, :120]
 
     if disp:
@@ -302,24 +320,6 @@ def load_w6a():  # ok
     return X_train_prep, y_train, X_test_prep, y_test
 
 
-def load_a3a():
-    path_train = "datasets/LIBSVM/a3a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-
-    path_test = "datasets/LIBSVM/a3a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-
-    # add constant column
-    # X_train_prep = np.hstack((np.ones((X_train_arr.shape[0],1)), X_train_arr))
-    # X_test_prep = np.hstack((np.ones((X_test_arr.shape[0],1)), X_test_arr))
-
-    # print(f"X_train = {X_train_prep.shape}, y_train = {y_train.shape}")
-    # print(f"X_test = {X_test_prep.shape}, y_test = {y_test.shape}")
-    # print(f"Class distribution: {dataset_distrib(y_train)}")
-    # return X_train_prep, y_train, X_test_prep, y_test
-    return X_train, y_train, X_test, y_test
-
-
 def load_a5a():  # ok
     path_train = "datasets/LIBSVM/a5a.txt"
     X_train, y_train = load_svmlight_file(path_train)
@@ -327,28 +327,6 @@ def load_a5a():  # ok
     # X_train_arr = X_train.toarray()
 
     path_test = "datasets/LIBSVM/a5a.t"
-    X_test, y_test = load_svmlight_file(path_test)
-    # transform to array from CSR sparse matrix
-    # X_test_arr = X_test.toarray()
-
-    # add constant column
-    # X_train_prep = np.hstack((np.ones((X_train_arr.shape[0],1)), X_train_arr))
-    # X_test_prep = np.hstack((np.ones((X_test_arr.shape[0],1)), X_test_arr))
-
-    # print(f"X_train = {X_train_prep.shape}, y_train = {y_train.shape}")
-    # print(f"X_test = {X_test_prep.shape}, y_test = {y_test.shape}")
-    # print(f"Class distribution: {dataset_distrib(y_train)}")
-    # return X_train_prep, y_train, X_test_prep, y_test
-    return X_train, y_train, X_test, y_test
-
-
-def load_a4a():
-    path_train = "datasets/LIBSVM/a4a.txt"
-    X_train, y_train = load_svmlight_file(path_train)
-    # transform to array from CSR sparse matrix
-    # X_train_arr = X_train.toarray()
-
-    path_test = "datasets/LIBSVM/a4a.t"
     X_test, y_test = load_svmlight_file(path_test)
     # transform to array from CSR sparse matrix
     # X_test_arr = X_test.toarray()

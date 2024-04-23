@@ -47,7 +47,7 @@ def fit_model(params, solver, C, dataset, plot=False):
     model = LogisticRegression(solver, C)
 
     if plot:
-        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=300,
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
                   damp_armijo=delta_a, damp_momentum=delta_m)
 
     else:
@@ -70,7 +70,7 @@ def fit_model_cv(params, solver, C, dataset, plot=False):
     model = LogisticRegression(solver, C)
 
     if plot:
-        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=300,
+        model.fit(dataset, batch_size, alpha, beta, stop=0, max_epochs=200,
                   damp_armijo=delta_a, damp_momentum=delta_m)
 
     else:
@@ -208,6 +208,6 @@ def run_solvers(solver, C, dataset, batches, alphas=(1,0.1,0.01),
     end_time = time.time()
     elapsed_time = end_time - start_time
 
-    print(f"Run-time (seconds): {elapsed_time:.6f}")
+    print(f"Grid search run-time (seconds): {elapsed_time:.6f}")
 
     return solvers_output

@@ -129,61 +129,71 @@ def metrics_list(y_true, y_pred):
 
 # %% Plotting
 
-def plot_loss_time(ax, models, scalexy):
+# def plot_loss_time(ax, models, scalexy, multiple=True):
+#     end = models[0].opt_result.time_per_epoch.shape[0]
+#     indices = np.arange(0, end, 3)
+
+#     models_deep = copy.deepcopy(models)
+#     for model in models_deep:
+#         seq = model.opt_result.time_per_epoch
+#         for i in range(10):
+#             if seq[i] <= 1e-3:
+#                 seq[i] = 1e-3
+
+#     for i in range(R):
+#         time_seq = models_deep[i].opt_result.time_per_epoch[indices]
+#         fun_seq = models_deep[i].opt_result.fun_per_epoch[indices]
+#         ax.plot(time_seq, fun_seq, linestyle=lines[i])
+
+
+# def plot_loss_epochs(ax, models, scalexy, multiple=True):
+#     start = 1  # only in np.range
+#     end = models[0].opt_result.fun_per_epoch.shape[0]
+
+#     for i in range(R):
+#         fun_seq = models[i].opt_result.fun_per_epoch
+#         ax.plot(np.arange(start, end + 1), fun_seq, linestyle=lines[i])
+
+
+def plot_loss(ax, models, scalexy, multiple=True, time_or_epoch=True):
     # models: list of LogisticRegression
 
     labels = []
     for model in models:
         res = model.opt_result
-        labels.append(model.solver + f"({res.step_size}, {res.minibatch_size})")
-
-    end = models[0].opt_result.time_per_epoch.shape[0]
-    indices = np.arange(0, end, 3)
-
-    models_deep = copy.deepcopy(models)
-    for model in models_deep:
-        seq = model.opt_result.time_per_epoch
-        for i in range(10):
-            if seq[i] <= 1e-3:
-                seq[i] = 1e-3
+        labels.append(model.solver + f"({res.step_size:.2f}, {res.minibatch_size})")
 
     R = len(models)
-    for i in range(R//2):
-        ax.plot(models_deep[i].opt_result.time_per_epoch[indices],
-                models_deep[i].opt_result.fun_per_epoch[indices],
-                linestyle="dashed")
+    if multiple:
+        lines = ["dashed"] * (R//2) + ["solid"] * (R - R//2)
+    else:
+        lines = ["solid"] * R
 
-    for i in range(R//2, R):
-        ax.plot(models_deep[i].opt_result.time_per_epoch[indices],
-                models_deep[i].opt_result.fun_per_epoch[indices],
-                linestyle="solid")
+    # ---------------- #
+    if time_or_epoch:  # f(w) against epochs
+        start = 1  # due to logarithmic scale issues
+        end = models[0].opt_result.fun_per_epoch.shape[0]
 
-    ax.set_xscale(scalexy[0])
-    ax.set_yscale(scalexy[1])
+        for i in range(R):
+            fun_seq = models[i].opt_result.fun_per_epoch
+            ax.plot(np.arange(start, end + 1), fun_seq, linestyle=lines[i])
 
-    ax.grid(True, which="both", axis="both")
-    ax.legend(labels, fontsize="xx-small")
+    else:  # f(w) against time per epoch
+        end = models[0].opt_result.time_per_epoch.shape[0]
+        indices = np.arange(0, end, 3)  # time every 3 epochs
 
+        models_deep = copy.deepcopy(models)
+        for model in models_deep:
+            seq = model.opt_result.time_per_epoch
+            for i in range(10):
+                if seq[i] <= 1e-3:
+                    seq[i] = 1e-3
 
-def plot_loss_epochs(ax, models, scalexy):
-    # models: list of LogisticRegression
-
-    labels = []
-    for model in models:
-        res = model.opt_result
-        labels.append(model.solver + f"({res.step_size}, {res.minibatch_size})")
-
-    start = 1  # only in np.range
-    end = models[0].opt_result.fun_per_epoch.shape[0]
-
-    R = len(models)
-    for i in range(R//2):
-        ax.plot(np.arange(start, end + 1), models[i].opt_result.fun_per_epoch,
-                linestyle="dashed")
-
-    for i in range(R//2, R):
-        ax.plot(np.arange(start, end + 1), models[i].opt_result.fun_per_epoch,
-                linestyle="solid")
+        for i in range(R):
+            time_seq = models_deep[i].opt_result.time_per_epoch[indices]
+            fun_seq = models_deep[i].opt_result.fun_per_epoch[indices]
+            ax.plot(time_seq, fun_seq, linestyle=lines[i])
+    # ---------------- #
 
     ax.set_xscale(scalexy[0])
     ax.set_yscale(scalexy[1])
@@ -206,22 +216,24 @@ def diagnostic(models, scalexy=("log", "log", "log", "log")):
                             figsize=(6.4*2, 4.8*1.5))
 
     for i, ax in enumerate(axs.flat):
-        if i in (0,1,2,3):  # first row
+        if i < 4:  # first row
             # 1) f(w) against epochs
             # plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
-            plot_loss_epochs(ax, models_choose[i % 4], scalexy_epochs)
+            # plot_loss_epochs(ax, models_choose[i % 4], scalexy_epochs)
+            plot_loss(ax, models_choose[i % 4], scalexy_epochs, time_or_epoch=True)
             ax.set_xticks([1, 10, 100])
             ax.set_xticklabels([0, 10, 100])
 
-        elif i in (4,5,6,7):  # second row
+        else:  # second row
             # 2) f(w) against runtime per epoch
             # plot_loss_time(ax, optim_data(models_choose[i % 4]), scalexy_runtime)
-            plot_loss_time(ax, models_choose[i % 4], scalexy_runtime)
+            # plot_loss_time(ax, models_choose[i % 4], scalexy_runtime)
+            plot_loss(ax, models_choose[i % 4], scalexy_runtime, time_or_epoch=False)
             ax.set_xticks([0.001, 0.01, 0.1, 1])
             ax.set_xticklabels([0, 0.01, 0.1, 1])
 
     xlabel1 = "Epochs"
-    xlabel2 = "Time (seconds)"
+    xlabel2 = "Run-time (seconds)"
     for i in range(4):
         axs[0, i].set_xlabel(xlabel1)
         axs[1, i].set_xlabel(xlabel2)
@@ -230,6 +242,37 @@ def diagnostic(models, scalexy=("log", "log", "log", "log")):
     axs[0, 0].set_ylabel(ylabel1)
     axs[1, 0].set_ylabel(ylabel1)
 
+
+def single_diagnostic(models, scalexy=("log", "log", "log", "log")):
+    # models: list of LogisticRegression
+
+    scalexy_epochs, scalexy_runtime = scalexy[:2], scalexy[2:]
+
+    fig, axs = plt.subplots(1, 2, layout="constrained", sharey="row")
+
+    for i, ax in enumerate(axs.flat):
+        if i == 0:  # first
+            # 1) f(w) against epochs
+            # plot_loss_epochs(ax, models, scalexy_epochs, False)
+            plot_loss(ax, models, scalexy_epochs, False, True)
+            ax.set_xticks([1, 10, 100])
+            ax.set_xticklabels([0, 10, 100])
+
+        elif i == 1:  # second
+            # 2) f(w) against runtime per epoch
+            # plot_loss_time(ax, models, scalexy_runtime, False)
+            plot_loss(ax, models, scalexy_runtime, False, False)
+            ax.set_xticks([0.001, 0.01, 0.1, 1])
+            ax.set_xticklabels([0, 0.01, 0.1, 1])
+
+    xlabel1 = "Epochs"
+    xlabel2 = "Run-time (seconds)"
+    axs[0].set_xlabel(xlabel1)
+    axs[1].set_xlabel(xlabel2)
+
+    ylabel1 = r"$f(w)$"
+    axs[0].set_ylabel(ylabel1)
+    axs[1].set_ylabel(ylabel1)
 
 # def plot_accuracy(models, ticks):
 #     solvers_dict = {}
