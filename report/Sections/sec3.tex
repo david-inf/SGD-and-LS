@@ -1,23 +1,5 @@
 % !TeX spellcheck = en_GB
 
-%\begin{table}
-%\centering
-%\caption{Benchmark datasets}
-%\label{tab:datasets}
-%\begin{tabular}{lSSSc}
-%\toprule
-%Name & {Train} & {Test} & {Features} & {Distribution} \\
-%\midrule
-%w1a & 2477 & 47272 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
-%w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ \\
-%Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ \\
-%a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ \\
-%Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ \\
-%German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ \\
-%\bottomrule
-%\end{tabular}
-%\end{table}
-
 \cleardoublepage
 % ***************************************************** %
 \section{Experiments and results discussion}\label{sc:exp}
@@ -75,7 +57,7 @@ where $\delta_a$ is the damping for the Armijo line search and $\delta_m$ for th
 
 As you can see, the upper-bound for the step-size is limited to \num{1}, this because, as the grid search pointed out then, the algorithms perform better with a smaller step-size. Therefore, on each epoch the line search will spend time reducing the initial learning rate, while the basic versions, \texttt{SGD-Fixed} and \text{SGDM}, will end up far from the solution.
 
-The grid search chooses the best combination for a certain solver based on the greatest \emph{test accuracy} and lowest \emph{objective function} value. The results can be seen in tables from~\vref{tab:w1a-table} to~\ref{tab:german-tab} ordered descending by accuracy on the test dataset and ascending by objective function on reached solution. The other displayed values are the number of epochs and the run-time, the solution norm and the gradient norm.
+The grid search chooses the best combination for a certain solver based on the greatest \emph{test accuracy} and lowest \emph{objective function} value. The results can be seen in tables from~\vref{tab:w1a-table} to~\ref{tab:a4a-tab} ordered descending by accuracy on the test dataset and ascending by objective function on reached solution. The other displayed values are the number of epochs and the run-time, the solution norm and the gradient norm.
 
 For benchmarking purposes the optimization problem is solved also using the \texttt{Full-batch Gradient Descent} and three solvers from \texttt{SciPy} which are \texttt{L-BFGS}, \texttt{Conjugate Gradient} and \texttt{Newton-CG}.%\par\smallskip
 
@@ -106,7 +88,7 @@ As expected the accuracy is greatly influenced by the class distribution of each
 \subsection{Performance of the objective function}
 
 Now, as done by the authors of both articles, we want to show how the value of the objective function decreases with each epoch and also during time. For this purpose, another \emph{grid search} is performed, again the fixed hyper-parameters are
-%We set $k^\ast=200$ and run the algorithms with the best hyper-parameters from the grid search, but varying the learning rate in grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}.
+%We set $k^\ast=200$ and run the algorithms with the best hyper-parameters from the grid search, but varying the learning rate in grid \numlist{1; 0.1; 0.01}. Results can be seen in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-a4a}.
 \[
 \begin{array}{lll}
 \toprule
@@ -140,7 +122,7 @@ M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
 \]
 where the mini-batch size $M$ as in the previous grid search is composed by at least two values.
 
-The algorithm finds the best values for each $\alpha_0$, then the objective function for every epoch and for the time took by each epoch is plotted in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-german}; for each plot, both axis are set to logarithmic scale with base 10.
+The algorithm finds the best values for each $\alpha_0$, then the objective function for every epoch and for the time took by each epoch is plotted in figures from~\vref{fig:w1a-w3a} to~\ref{fig:mush-a4a}; for each plot, both axis are set to logarithmic scale with base 10.
 
 Regarding the $f(w)$ against run-time plot, we saw that between certain epochs, the run-time can be the same or slightly different, so the $f(w)$ values were taken every 4 epochs, also to avoid problems due to the run-time sequence beginning at \num{0.0}, the starting value was set to \num{e-3}.\par\smallskip
 
@@ -150,7 +132,7 @@ Regarding the $f(w)$ against run-time plot, we saw that between certain epochs, 
 
 %Per quanto riguarda invece il tempo necessario alla decrescita della funzione obiettivo, tutti gli algoritmi mostrano coerenza, andando di pari passo. % boh ricedere, magari non lo scrivo questo
 
-Although the first two datasets are unbalanced, the performance of the objective function tends to the minimum without significant fluctuations. In figure~\ref{subfig:german-diagnostic} the \texttt{SGD-Armijo} shows important oscillations, that may also be due to small dataset size.
+Although the first two datasets are unbalanced, the performance of the objective function tends to the minimum without significant fluctuations. In figure~\ref{subfig:a4a-diagnostic} the \texttt{SGD-Armijo} shows important oscillations, that may also be due to small dataset size.
 
 %Sembrerebbe che almeno con \texttt{SGD-Armijo} un leggero sbilanciamento dei dati abbia un effetto più importante, dando problemi sulla decrescita del valore della funzione obiettivo. Per quanto la Armijo line search porti subito vicino all'ottimo, fa fatica a restare nell'intorno e terminare, a differenza di quando viene impiegato il termine di momentum. Magari una diversa condizione di arresto che guarda la riduzione relativa della funzione obiettivo (come nei solvers di \texttt{SciPy}) oppure che considera la scala della funzione obiettivo o anche soltanto una tolleranza meno stringente potrebbe far arrestare l'algoritmo prima di esibire un comportamento divergente.
 
@@ -207,12 +189,12 @@ w3a & 4912 & 44837 & 300 & -1:$0.97$\,\,\,1:$0.03$ &
 \numlist[list-pair-separator={, }]{64;128} \\
 Phishing & 8844 & 2211 & 68 & -1:$0.45$\,\,\,1:$0.55$ &
 \numlist[list-pair-separator={, }]{64;128} \\
-a2a & 2265 & 30296 & 119 & -1:$0.75$\,\,\,1:$0.25$ &
+a2a & 2265 & 30296 & 120 & -1:$0.75$\,\,\,1:$0.25$ &
 \numlist[list-pair-separator={, }]{32;64} \\
 Mushrooms & 6499 & 1625 & 112 & -1:$0.48$\,\,\,1:$0.52$ &
 \numlist[list-pair-separator={, }]{64;128} \\
-German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ &
-\numlist[list-pair-separator={, }]{16;32} \\
+a4a & 4781 & 27780 & 120 & -1:$0.75$\,\,\,1:$0.25$ &
+\numlist[list-pair-separator={, }]{64;128} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -228,16 +210,16 @@ German & 800 & 200 & 24 & -1:$0.70$\,\,\,1:$0.30$ &
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Armijo & 600 & 3.435221 & 0.455603 & 0.536138 & 0.362781 & 0.971400 \\
 Newton-CG & 6 & NaN & 0.667394 & 0.464614 & 0.000046 & 0.970236 \\
 CG & 7 & NaN & 0.667395 & 0.464614 & 0.000009 & 0.970236 \\
 L-BFGS-B & 7 & NaN & 0.667406 & 0.464614 & 0.000023 & 0.970236 \\
-BatchGD-Fixed & 12 & 0.013565 & 0.667389 & 0.464614 & 0.000564 & 0.970236 \\
-SGD-Decreasing & 27 & 0.091147 & 0.667400 & 0.464614 & 0.000792 & 0.970236 \\
-SGD-Fixed & 27 & 0.168522 & 0.667311 & 0.464615 & 0.000852 & 0.970236 \\
-SGDM & 167 & 0.886036 & 0.667388 & 0.464615 & 0.000965 & 0.970236 \\
-MSL-SGDM-R & 600 & 3.118105 & 0.665659 & 0.464693 & 0.009144 & 0.970236 \\
-MSL-SGDM-C & 600 & 3.084805 & 0.665656 & 0.464693 & 0.009149 & 0.970236 \\
+BatchGD-Fixed & 12 & 0.000000 & 0.667389 & 0.464614 & 0.000564 & 0.970236 \\
+SGD-Decreasing & 14 & 0.247084 & 0.667605 & 0.464614 & 0.000890 & 0.970236 \\
+MSL-SGDM-C & 44 & 1.395432 & 0.667133 & 0.464615 & 0.000852 & 0.970236 \\
+SGD-Armijo & 42 & 0.681649 & 0.667250 & 0.464615 & 0.000857 & 0.970236 \\
+SGD-Fixed & 27 & 0.274237 & 0.667293 & 0.464615 & 0.000879 & 0.970236 \\
+SGDM & 108 & 1.893043 & 0.666975 & 0.464615 & 0.000973 & 0.970236 \\
+MSL-SGDM-R & 183 & 2.560873 & 0.667560 & 0.464615 & 0.000961 & 0.970236 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -251,16 +233,16 @@ MSL-SGDM-C & 600 & 3.084805 & 0.665656 & 0.464693 & 0.009149 & 0.970236 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Armijo & 600 & 9.134311 & 0.478986 & 0.500431 & 0.268456 & 0.971006 \\
 Newton-CG & 6 & NaN & 0.666640 & 0.462742 & 0.000011 & 0.970203 \\
 CG & 7 & NaN & 0.666648 & 0.462742 & 0.000022 & 0.970203 \\
 L-BFGS-B & 7 & NaN & 0.666658 & 0.462742 & 0.000033 & 0.970203 \\
-BatchGD-Fixed & 12 & 0.010109 & 0.666635 & 0.462742 & 0.000564 & 0.970203 \\
-SGD-Fixed & 42 & 0.391928 & 0.666572 & 0.462743 & 0.000850 & 0.970203 \\
-SGD-Decreasing & 19 & 0.081816 & 0.666731 & 0.462743 & 0.000876 & 0.970203 \\
-SGDM & 45 & 0.327101 & 0.666594 & 0.462743 & 0.000895 & 0.970203 \\
-MSL-SGDM-C & 600 & 3.637216 & 0.667576 & 0.462787 & 0.006924 & 0.970203 \\
-MSL-SGDM-R & 600 & 3.466294 & 0.667576 & 0.462787 & 0.006924 & 0.970203 \\
+BatchGD-Fixed & 12 & 0.010175 & 0.666635 & 0.462742 & 0.000564 & 0.970203 \\
+SGD-Armijo & 21 & 0.511814 & 0.666633 & 0.462743 & 0.000776 & 0.970203 \\
+SGD-Fixed & 27 & 0.200940 & 0.666559 & 0.462743 & 0.000826 & 0.970203 \\
+MSL-SGDM-C & 26 & 1.167226 & 0.666495 & 0.462743 & 0.000836 & 0.970203 \\
+SGDM & 61 & 1.060787 & 0.666868 & 0.462743 & 0.000861 & 0.970203 \\
+SGD-Decreasing & 15 & 0.274445 & 0.666746 & 0.462743 & 0.000858 & 0.970203 \\
+MSL-SGDM-R & 172 & 3.342345 & 0.666902 & 0.462743 & 0.000983 & 0.970203 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -274,16 +256,16 @@ MSL-SGDM-R & 600 & 3.466294 & 0.667576 & 0.462787 & 0.006924 & 0.970203 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Armijo & 600 & 14.571106 & 0.144155 & 0.687736 & 0.066541 & 0.865219 \\
-MSL-SGDM-C & 600 & 18.953165 & 0.150617 & 0.686392 & 0.048846 & 0.709181 \\
-MSL-SGDM-R & 600 & 28.793977 & 0.152190 & 0.685660 & 0.032621 & 0.568521 \\
+SGD-Fixed & 600 & 12.347327 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
+SGD-Armijo & 600 & 33.733315 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
+MSL-SGDM-C & 600 & 17.273405 & 0.145904 & 0.686425 & 0.049105 & 0.699683 \\
 Newton-CG & 5 & NaN & 0.164188 & 0.685065 & 0.000000 & 0.567616 \\
 L-BFGS-B & 5 & NaN & 0.164196 & 0.685065 & 0.000008 & 0.567616 \\
 CG & 6 & NaN & 0.164214 & 0.685065 & 0.000023 & 0.567616 \\
-SGD-Decreasing & 6 & 0.090359 & 0.164270 & 0.685065 & 0.000508 & 0.567616 \\
-SGDM & 22 & 0.653315 & 0.163872 & 0.685065 & 0.000575 & 0.567616 \\
-BatchGD-Fixed & 11 & 0.047205 & 0.164001 & 0.685065 & 0.000534 & 0.567616 \\
-SGD-Fixed & 13 & 0.168722 & 0.163727 & 0.685065 & 0.000927 & 0.567616 \\
+BatchGD-Fixed & 11 & 0.010458 & 0.164001 & 0.685065 & 0.000534 & 0.567616 \\
+SGD-Decreasing & 39 & 1.326721 & 0.163747 & 0.685065 & 0.000565 & 0.567616 \\
+MSL-SGDM-R & 48 & 2.321138 & 0.164120 & 0.685065 & 0.000578 & 0.567616 \\
+SGDM & 49 & 1.643801 & 0.163887 & 0.685065 & 0.000649 & 0.567616 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -297,16 +279,16 @@ SGD-Fixed & 13 & 0.168722 & 0.163727 & 0.685065 & 0.000927 & 0.567616 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Armijo & 600 & 9.145561 & 0.344862 & 0.603503 & 0.397378 & 0.825191 \\
-BatchGD-Fixed & 600 & 0.223871 & 0.355752 & 0.594416 & 0.363976 & 0.822386 \\
-MSL-SGDM-C & 600 & 13.950318 & 0.406144 & 0.585491 & 0.290117 & 0.810569 \\
-SGD-Fixed & 600 & 3.470429 & 0.425177 & 0.602741 & 0.356183 & 0.807136 \\
-MSL-SGDM-R & 600 & 13.066587 & 0.413366 & 0.577575 & 0.228297 & 0.790236 \\
-SGDM & 600 & 4.151845 & 0.438444 & 0.564030 & 0.002628 & 0.760298 \\
+BatchGD-Fixed & 600 & 0.123884 & 0.355752 & 0.594416 & 0.363976 & 0.822386 \\
+MSL-SGDM-C & 600 & 7.841012 & 0.395984 & 0.577631 & 0.225478 & 0.781291 \\
+SGD-Armijo & 600 & 7.428617 & 0.416947 & 0.570790 & 0.143227 & 0.766075 \\
+SGD-Fixed & 600 & 4.373940 & 0.413794 & 0.569481 & 0.133874 & 0.765184 \\
+MSL-SGDM-R & 600 & 16.452862 & 0.410532 & 0.566502 & 0.094155 & 0.762015 \\
+SGDM & 600 & 4.706773 & 0.428972 & 0.564436 & 0.038564 & 0.760430 \\
 Newton-CG & 5 & NaN & 0.438972 & 0.564027 & 0.000004 & 0.760265 \\
 CG & 12 & NaN & 0.438961 & 0.564027 & 0.000015 & 0.760265 \\
 L-BFGS-B & 8 & NaN & 0.438969 & 0.564027 & 0.000012 & 0.760265 \\
-SGD-Decreasing & 59 & 0.325202 & 0.438522 & 0.564028 & 0.000726 & 0.760265 \\
+SGD-Decreasing & 31 & 0.241433 & 0.439216 & 0.564027 & 0.000946 & 0.760265 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -320,39 +302,39 @@ SGD-Decreasing & 59 & 0.325202 & 0.438522 & 0.564028 & 0.000726 & 0.760265 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Armijo & 600 & 21.815584 & 0.644938 & 0.535765 & 0.233549 & 0.953231 \\
-MSL-SGDM-C & 600 & 11.928245 & 0.652698 & 0.529380 & 0.249789 & 0.942769 \\
-MSL-SGDM-R & 600 & 11.775004 & 0.642551 & 0.527069 & 0.232121 & 0.940308 \\
-SGD-Fixed & 600 & 3.646531 & 0.646431 & 0.525499 & 0.199874 & 0.926154 \\
-SGDM & 600 & 6.972188 & 0.658660 & 0.557069 & 0.479065 & 0.924308 \\
-SGD-Decreasing & 26 & 0.227495 & 0.635898 & 0.517727 & 0.000779 & 0.893538 \\
+MSL-SGDM-C & 600 & 13.385148 & 0.631125 & 0.541510 & 0.366329 & 0.953846 \\
+SGD-Armijo & 600 & 28.873891 & 0.638957 & 0.530812 & 0.245386 & 0.951385 \\
+SGD-Fixed & 600 & 6.737674 & 0.638411 & 0.536690 & 0.322894 & 0.951385 \\
+SGDM & 600 & 14.750759 & 0.632318 & 0.523624 & 0.185501 & 0.940308 \\
+MSL-SGDM-R & 600 & 28.049047 & 0.636756 & 0.522395 & 0.159555 & 0.926154 \\
+SGD-Decreasing & 42 & 1.011515 & 0.635971 & 0.517727 & 0.000829 & 0.893538 \\
 Newton-CG & 7 & NaN & 0.635933 & 0.517726 & 0.000003 & 0.892923 \\
 CG & 11 & NaN & 0.635939 & 0.517726 & 0.000024 & 0.892923 \\
 L-BFGS-B & 10 & NaN & 0.635930 & 0.517726 & 0.000017 & 0.892923 \\
-BatchGD-Fixed & 26 & 0.040477 & 0.635906 & 0.517727 & 0.000757 & 0.892923 \\
+BatchGD-Fixed & 22 & 0.020589 & 0.635907 & 0.517727 & 0.000715 & 0.892923 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}
 \sisetup{round-mode=places}
-\caption{German dataset}
-\label{tab:german-tab}
+\caption{a4a dataset}
+\label{tab:a4a-tab}
 \centering
 \begin{tabular}{lS[drop-zero-decimal]S[round-precision=4]S[round-precision=6]S[round-precision=6]S[exponent-mode=scientific]S[round-precision=6]}
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-MSL-SGDM-C & 600 & 9.514724 & 0.365021 & 0.629212 & 0.364526 & 0.755000 \\
-SGD-Armijo & 600 & 10.922734 & 0.423356 & 0.632348 & 0.362572 & 0.750000 \\
-SGDM & 600 & 3.940129 & 0.313661 & 0.616375 & 0.313714 & 0.745000 \\
-MSL-SGDM-R & 600 & 10.601474 & 0.373225 & 0.599779 & 0.073177 & 0.730000 \\
-SGD-Decreasing & 600 & 2.215385 & 0.348660 & 0.607993 & 0.113583 & 0.720000 \\
-BatchGD-Fixed & 600 & 0.153498 & 0.365312 & 0.616517 & 0.152605 & 0.720000 \\
-Newton-CG & 5 & NaN & 0.358504 & 0.597303 & 0.000010 & 0.710000 \\
-CG & 12 & NaN & 0.358506 & 0.597303 & 0.000004 & 0.710000 \\
-L-BFGS-B & 7 & NaN & 0.358506 & 0.597303 & 0.000014 & 0.710000 \\
-SGD-Fixed & 58 & 0.257061 & 0.358265 & 0.597303 & 0.000675 & 0.710000 \\
+BatchGD-Fixed & 600 & 0.207155 & 0.376931 & 0.579971 & 0.300459 & 0.809575 \\
+SGDM & 600 & 10.351251 & 0.394249 & 0.566575 & 0.177813 & 0.772858 \\
+SGD-Armijo & 600 & 15.605809 & 0.380212 & 0.574724 & 0.187551 & 0.761915 \\
+Newton-CG & 5 & NaN & 0.450068 & 0.558973 & 0.000003 & 0.760727 \\
+L-BFGS-B & 8 & NaN & 0.450067 & 0.558973 & 0.000011 & 0.760727 \\
+CG & 12 & NaN & 0.450062 & 0.558973 & 0.000020 & 0.760727 \\
+SGD-Decreasing & 17 & 0.294269 & 0.449935 & 0.558973 & 0.000593 & 0.760727 \\
+SGD-Fixed & 55 & 0.315108 & 0.449949 & 0.558974 & 0.000467 & 0.760727 \\
+MSL-SGDM-C & 41 & 1.066085 & 0.450326 & 0.558974 & 0.000633 & 0.760727 \\
+MSL-SGDM-R & 399 & 6.742109 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -386,11 +368,11 @@ SGD-Fixed & 58 & 0.257061 & 0.358265 & 0.597303 & 0.000675 & 0.710000 \\
 % mushrooms
 \subfloat[][\emph{Mushrooms dataset}\label{subfig:mush-diagnostic}]%
 {\includegraphics[width=\textwidth]{mush-diagnostic}} \\
-% german
-\subfloat[][\emph{German dataset}\label{subfig:german-diagnostic}]%
-{\includegraphics[width=\textwidth]{german-diagnostic}}
-\caption[]{Mushrooms and German datasets}
-\label{fig:mush-german}
+% a4a
+\subfloat[][\emph{a4a dataset}\label{subfig:a4a-diagnostic}]%
+{\includegraphics[width=\textwidth]{a4a-diagnostic}}
+\caption[]{Mushrooms and a4a datasets}
+\label{fig:mush-a4a}
 \end{figure}
 
 %\cleardoublepage

@@ -8,6 +8,7 @@ from scipy.optimize import OptimizeResult#, fsolve
 from scipy.optimize import line_search  # strong wolfe conditions
 
 from solvers_utils import _check_errors, _check_descent, _shuffle_dataset, _stopping
+from load_datasets import dataset_distrib
 
 # %% One function for all solvers
 
@@ -82,6 +83,10 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
 
         # split dataset randomly
         minibatches = _shuffle_dataset(y.size, batch_size, _rng)
+        # if k < 2:
+            # for batch in minibatches:
+                # print(dataset_distrib(y[batch]))
+            # print("----")
         # init iterations
         zt = wk.copy()          # starting weights
         dt = np.zeros_like(zt)  # init direction

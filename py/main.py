@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # import pandas as pd
 import numpy as np
 
-from load_datasets import load_mg, load_mushrooms, load_phishing, load_w1a, load_a2a, load_w3a, load_a4a
+from load_datasets import load_mg, load_mushrooms, load_phishing, load_w1a, load_a2a, load_w3a, load_a4a, load_diabetes
 from models import LogisticRegression, LinearRegression
 from ml_utils import (optim_data, optim_bench, models_summary, single_diagnostic,
                       diagnostic)
@@ -14,7 +14,7 @@ from grid_search import run_solvers, run_bench, grid_search, cross_val
 
 # %% Diabetes
 
-data = load_a2a()
+data = load_phishing()
 
 C = 0.5
 # MDiab = 64
@@ -22,6 +22,15 @@ C = 0.5
 
 benchDiab = run_bench(data, 0.5)
 benchDiab_data = optim_bench(benchDiab)
+
+# %%
+
+# a2a rompe particolarmente i coglioni perché con una dimensione del minibatch anche di 64
+# si ritrova ogni minibatch distribuito diversamente dal dataset intero, anche molto
+# meno della classe maggiore e più della classe minore
+# come può esattamente influire?? che trova i pesi per questa distribuzione
+# e poi deve praticamente ripartire da capo perché sta lontano dall'ottimo
+sgdfix1 = LogisticRegression("SGD-Fixed", 1).fit(data, 128, 0.1)
 
 # %% BatchDG
 
@@ -39,8 +48,11 @@ batch2 = LogisticRegression("SGD-Fixed", 0).fit(data, data[1].size, 0.5)
 
 # %% debug line search
 
+# run_armijo1 = LogisticRegression("SGD-Armijo", C)
+# run_armijo1.fit(data)
+
 armijo1 = LogisticRegression("SGD-Armijo", C)
-armijo1.fit(load_w1a(), 64, 1)
+armijo1.fit(data, 64, 1)
 # print(armijo1)
 
 armijo2 = LogisticRegression("SGD-Armijo", C).fit(load_w1a(), 32, 1)
@@ -75,7 +87,7 @@ sgdfixed_opt2, _ = grid_search("SGD-Fixed", 0.5, load_phishing(), (64, 128), (0.
 
 # %% Run 3 solvers
 
-M_grid = (64, 128)
+M_grid = (32, 64)
 delta_a_grid = (0.3, 0.5, 0.7)
 delta_m_grid = (0.3, 0.5, 0.7)
 
