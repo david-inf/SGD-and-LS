@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 from scipy.optimize import minimize
 
-from solvers import minibatch_gd
+from solvers import minibatch_gd, batch_gd
 from functions import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
 from functions import linear, linear_der, f_and_df_linear, linear_hess
 from ml_utils import metrics_list
@@ -81,22 +81,28 @@ class LogisticRegression():
 
         if not w0:
             w0 = (0.5 + 0.5) * np.random.default_rng(42).random(X_train.shape[1] - 1) - 0.5
-            w0 = np.insert(w0, 0, 0)  # null bias
+            w0 = np.insert(w0, 0, 0.)  # null bias
 
-        if self.solver in ("L-BFGS-B", "CG"):
-            model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
-                             method=self.solver, jac=True, bounds=None)
+        if batch_size == y_train.size:
+            self.solver = "BatchGD-Fixed"
+            model = batch_gd(logistic, w0, (X_train, y_train, self.C), self.solver,
+                             logistic_der, step_size, max_epochs, stop)
 
-        elif self.solver == "Newton-CG":
-            model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
-                             method=self.solver, jac=True, hess=logistic_hess,
-                             bounds=None)
-
-        elif self.solver in sgd_variants:
-            model = minibatch_gd(logistic, w0, (X_train, y_train, self.C),
-                                 self.solver, logistic_der, f_and_df_log,
-                                 batch_size, step_size, momentum, max_epochs,
-                                 stop, damp_armijo, gamma_armijo, damp_momentum)
+        else:
+            if self.solver in ("L-BFGS-B", "CG"):
+                model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
+                                 method=self.solver, jac=True, bounds=None)
+    
+            elif self.solver == "Newton-CG":
+                model = minimize(f_and_df_log, w0, args=(X_train, y_train, self.C),
+                                 method=self.solver, jac=True, hess=logistic_hess,
+                                 bounds=None)
+    
+            elif self.solver in sgd_variants:
+                model = minibatch_gd(logistic, w0, (X_train, y_train, self.C),
+                                     self.solver, logistic_der, f_and_df_log,
+                                     batch_size, step_size, momentum, max_epochs,
+                                     stop, damp_armijo, gamma_armijo, damp_momentum)
 
         if not model.success:
             print(model.message)
@@ -140,12 +146,12 @@ class LogisticRegression():
 
     def __str__(self):
 
-        if not self.opt_result:
+        if self.opt_result is None:
             return "Optimization went wrong"
 
         return (f"Solver: {self.solver}" +
                 # f"\nTrain score: {self.metrics_train[0]}" +
-                f"\nTest score: {self.metrics_test[0]}" +
+                f"\nTest score: {self.metrics_test[0]:.6f}" +
                 f"\nObjective function: {self.fun:.6f}" +
                 f"\nGrad norm: {self.grad:.6f}" +
                 f"\nSol norm: {np.linalg.norm(self.coef_):.6f}" +

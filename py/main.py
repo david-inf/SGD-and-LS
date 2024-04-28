@@ -1,10 +1,10 @@
 
-#%% Packages
 # import time
 # import numpy as np
 # import sys
 import matplotlib.pyplot as plt
 # import pandas as pd
+import numpy as np
 
 from load_datasets import load_mg, load_mushrooms, load_phishing, load_w1a, load_a2a, load_w3a, load_a4a
 from models import LogisticRegression, LinearRegression
@@ -14,7 +14,7 @@ from grid_search import run_solvers, run_bench, grid_search, cross_val
 
 # %% Diabetes
 
-data = load_a4a()
+data = load_a2a()
 
 C = 0.5
 # MDiab = 64
@@ -23,18 +23,34 @@ C = 0.5
 benchDiab = run_bench(data, 0.5)
 benchDiab_data = optim_bench(benchDiab)
 
+# %% BatchDG
+
+batch1 = LogisticRegression("SGD-Fixed", 1)
+batch1.fit(data, data[1].size, 0.1)
+
+_batch_nit = batch1.opt_result.nit
+plt.plot(np.arange(_batch_nit), batch1.opt_result.sk_per_epoch[:_batch_nit])
+plt.yscale("log")
+plt.show()
+
+# %% BatchGD w/out regularization
+
+batch2 = LogisticRegression("SGD-Fixed", 0).fit(data, data[1].size, 0.5)
+
 # %% debug line search
 
-armijo1 = LogisticRegression("SGD-Armijo", C).fit(load_w1a(), 64, 1)
+armijo1 = LogisticRegression("SGD-Armijo", C)
+armijo1.fit(load_w1a(), 64, 1)
 # print(armijo1)
 
 armijo2 = LogisticRegression("SGD-Armijo", C).fit(load_w1a(), 32, 1)
 
 # %%
 
-mslc1 = LogisticRegression("MSL-SGDM-C", C)
-mslc1.fit(data, 64, 1, 0.9)
-print(mslc1)
+mslc1 = LogisticRegression("MSL-SGDM-C", C).fit(data, 64, 1, 0.9)
+
+mslr1 = LogisticRegression("MSL-SGDM-R", C).fit(data, 64, 1, 0.9)
+# print(mslc1)
 
 # %%
 
@@ -77,16 +93,22 @@ mslc_w1a = run_solvers("MSL-SGDM-C", C, data, M_grid, delta_a=delta_a_grid, delt
 # MSL-SGDM-R
 mslr_w1a = run_solvers("MSL-SGDM-R", C, data, M_grid, delta_a=delta_a_grid)
 
+data1 = optim_data(sgdfixed_w1a + sgddecre_w1a + sgdm_w1a + sgdarmijo_w1a + mslc_w1a + mslr_w1a)
+
 # %% Adam
 
 # adam_w1a = LogisticRegression("Adam", C)
 # adam_w1a.fit(load_w1a(), 32, 0.001)
 
-adam_opt = grid_search("Adam", C, load_w1a(), (64,), (0.01, 0.001, 0.0001))
+adam_opt = grid_search("Adam", C, load_a2a(), (64,), (0.01, 0.001, 0.0001))
 
 # %% plot solvers
 
 diagnostic([sgdfixed_w1a, sgddecre_w1a, sgdm_w1a, sgdarmijo_w1a, mslc_w1a, mslr_w1a])
+
+plt.plot(sgdarmijo_w1a[0].opt_result.fun_per_epoch)
+plt.yscale("log")
+plt.show()
 
 single_diagnostic(mslr_w1a)
 

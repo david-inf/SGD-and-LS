@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import time
-# import sys
+import sys
 import numpy as np
+import numpy.linalg as la
 from scipy.optimize import OptimizeResult#, fsolve
 from scipy.optimize import line_search  # strong wolfe conditions
 
@@ -10,8 +11,6 @@ from solvers_utils import _check_errors, _check_descent, _shuffle_dataset, _stop
 
 # %% One function for all solvers
 
-# def minibatch_gd(w0, fk_args, M, alpha0, beta0, max_epochs, solver, stop,
-#                   delta_a, gamma, delta_m, fun, jac, f_and_df, **options):
 def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, beta0,
                  maxepochs, stop, delta_a, gamma, delta_m, options=None):
     """
@@ -64,19 +63,21 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
 
     X, y, lam = fk_args  # full data, full respose, regul coeff
 
-    fun_seq = np.empty(maxepochs + 1)  # full fun per epoch sequence
-    time_seq = np.empty_like(fun_seq)  # time per epoch sequence
+    fun_seq = np.zeros(maxepochs + 1)  # full fun per epoch sequence
+    time_seq = np.zeros_like(fun_seq)  # time per epoch sequence
 
-    wk = np.asarray(w0).flatten()      # starting solution
+    wk = np.asarray(w0).flatten()      # starting solution, copies w0
     fk, gfk = f_and_df(wk, *fk_args)   # full fun and grad w.r.t. w0
 
     fun_seq[0] = fk                    # add full fun evaluation
     time_seq[0] = 0.                   # count from 0
-    start = time.time()                # start time counter
+    _start = time.time()                # start time counter
     warnflag = 0                       # solver status issues
 
-    _rng = np.random.default_rng(42)  # random generator
+    _rng = np.random.default_rng(42)  # random generator for shuffling dataset
     k = 0  # epochs counter
+    _iter_ls = 0   # line search iterations counter
+    _iter_msl = 0  # momentum corrections/restarts counter
     while _stopping(fk, gfk, k, maxepochs, criterion=stop):
 
         # split dataset randomly
@@ -88,8 +89,8 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
         alphat = alpha0 / (k + 1.) if solver == "SGD-Decreasing" else alpha0
 
         # Adam initialization
-        mt = np.zeros_like(zt)
-        vt = np.zeros_like(zt)
+        # mt = np.zeros_like(zt)
+        # vt = np.zeros_like(zt)
 
         for t, minibatch in enumerate(minibatches):
             # t : iteration number
@@ -102,22 +103,24 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
             # --------- # select direction
 
             if solver in ("SGD-Fixed", "SGD-Decreasing", "SGDM", "SGD-Armijo"):
+                # when momentum term is added, direction may not be descent
+                # due to unrelated mini-batches
                 dt = -((1. - beta0) * gft + beta0 * dt)
 
             elif solver in ("MSL-SGDM-C", "MSL-SGDM-R"):
                 try:
-                    dt = _stochastic_momentum(solver, k, t, beta0, gft, dt, delta_m)
+                    dt, _q_msl = _stochastic_momentum(solver, k, t, beta0, gft, dt, delta_m)
+                    _iter_msl += _q_msl
                 except _MomentumCorrectionError as mce:
                     warnflag = 1
                     print(f"Momentum correction break at k={k} and t={t}\n", mce)
                     print("-----")
 
-            elif solver in ("Adam", "Adamax", "MSL-Adam"):
-                mt, vt, dt = _adams(solver, mt, vt, gft, t)
+            # elif solver in ("Adam", "Adamax", "MSL-Adam"):
+            #     mt, vt, dt = _adams(solver, mt, vt, gft, t)
 
-            # print(f"grad*dir = {np.dot(grad_t, d_t):.6f}")
-            # double check on direction
-            # if not _check_descent(gft, dt):
+            # check on direction
+            # if not gft.dot(dt) < 0:
             #     raise _SearchDirectionError("Violated descent direction "
             #                                 f"at k={k}, t={t}, "
             #                                 f"g*d={gft.dot(dt):.6f}")
@@ -126,14 +129,15 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
 
             if solver in ("SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R", "MSL-Adam"):
                 try:
-                    alphat = _stochastic_armijo(
+                    alphat, _q_ls = _stochastic_armijo(
                         y.size, k, t, alphat, alpha0, zt, dt, gft, delta_a, gamma,
                         fun, ft_args)
+                    _iter_ls += _q_ls
                 except _SearchDirectionError as sde:
                     print(sde)
                     print("-----")
                 except _LineSearchError as lse:
-                    print("Line search break at k={k} and t={t}.\n", lse)
+                    print(f"Line search break at k={k} and t={t}.\n", lse)
                     print("-----")
 
                 # alpha_t = line_search(fun, jac, zt, dt, gft, *ft_args)[0]
@@ -148,15 +152,66 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
         fk, gfk = f_and_df(wk, *fk_args)   # full fun and grad w.r.t. w_k
 
         fun_seq[k] = fk                    # add full fun evaluation
-        time_seq[k] = time.time() - start  # time per epoch
+        time_seq[k] = time.time() - _start  # time per epoch
 
     msg, warnflag = _check_errors(warnflag, k, maxepochs, gfk, fk, wk)
 
-    result = OptimizeResult(fun=fk, x=wk, jac=gfk, status=warnflag,
+    result = OptimizeResult(fun=fk, x=wk, jac=gfk, status=warnflag, solver=solver,
                             success=(warnflag in (0, 2)), message=msg, nit=k,
-                            solver=solver, minibatch_size=batch_size,
+                            minibatch_size=batch_size, ls_per_epoch = _iter_ls / k,
+                            msl_per_epoch = _iter_msl / k,
                             runtime=time_seq[k], time_per_epoch=time_seq,
                             step_size=alpha0, momentum=beta0, fun_per_epoch=fun_seq)
+
+    return result
+
+
+
+def batch_gd(fun, w0, fk_args, solver, jac, alpha0, maxepochs, stop):
+
+    fun_seq = np.empty(maxepochs + 1)  # full fun per epoch sequence
+    time_seq = np.empty_like(fun_seq)  # time per epoch sequence
+    sk_seq = np.empty(maxepochs)
+
+    wk = np.asarray(w0).flatten()      # starting solution, copies w0
+    fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)   # full fun and grad w.r.t. w0
+
+    fun_seq[0] = fk                    # add full fun evaluation
+    time_seq[0] = 0.                   # count from 0
+    start = time.time()                # start time counter
+    warnflag = 0                       # solver status issues
+
+    k = 0  # epochs counter
+    while _stopping(fk, gfk, k, maxepochs, stop):
+
+        gfk = jac(wk, *fk_args)
+        dk = -gfk
+
+        # check on direction
+        # if not gft.dot(dt) < 0:
+        #     raise _SearchDirectionError("Violated descent direction "
+        #                                 f"at k={k}, t={t}, "
+        #                                 f"g*d={gft.dot(dt):.6f}")
+
+        sk = alpha0 * dk
+        wk += sk  # update iterations weights
+        fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)  # full fun and grad w.r.t. w_k
+
+        k += 1
+
+        fun_seq[k] = fk                    # add full fun evaluation
+        time_seq[k] = time.time() - start  # time per epoch
+        sk_seq[k-1] = la.norm(sk)
+
+    msg, warnflag = _check_errors(warnflag, k, maxepochs, gfk, fk, wk)
+
+    result = OptimizeResult(fun=fk, x=wk, jac=gfk, status=warnflag, solver=solver,
+                            success=(warnflag in (0, 2)), message=msg, nit=k,
+                            minibatch_size=fk_args[1].size, ls_per_epoch = 0,
+                            msl_per_epoch = 0,
+                            runtime=time_seq[k], time_per_epoch=np.nan,
+                            step_size=alpha0, momentum=0., fun_per_epoch=fun_seq,
+                            sk_per_epoch=sk_seq)
 
     return result
 
@@ -237,7 +292,7 @@ def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-4, delta=0.5, alpha
 
     # check Armijo condition
     if phi1 <= phi0 + c1*alpha1*derphi0:
-        return alpha1
+        return alpha1, 0
 
     improve_length = 3  # number of iterations to check
     phi_seq = np.empty(improve_length)
@@ -245,15 +300,17 @@ def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-4, delta=0.5, alpha
     q = 0  # step-size rejections counter
     while _check_step(alpha1):
 
+        q += 1
+
         if q >= maxiter:
             msg = "Maximum number of line search iterations has been exceeded. q={q}"
             raise _LineSearchError(msg)
 
-        phi_seq[q % improve_length] = phi1  # add function on next point
+        phi_seq[(q - 1) % improve_length] = phi1  # add function on next point
 
         # check if the line search is improving
         # phi(alpha0) > phi(alpha1) > phi(alpha2) > phi(alpha3)
-        if (not phi_seq[0] > phi_seq[-1]) and (q % improve_length == improve_length - 1):
+        if (not phi_seq[0] > phi_seq[-1]) and ((q - 1) % improve_length == improve_length - 1):
             msg = f"Line search not improving. Stop at q={q}, alpha={alpha1:.6f}" \
                   f"\ng*d={derphi0:.6f}, phi(0)={phi0:.6f}" \
                   f"\nphi_seq={phi_seq}"
@@ -264,12 +321,10 @@ def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-4, delta=0.5, alpha
 
         # check Armijo condition
         if phi1 <= phi0 + c1*alpha1*derphi0:
-            return alpha1
-
-        q += 1
+            return alpha1, q
 
     # Failed to find a suitable step length
-    return None
+    return None, q
 
 
 def _stochastic_armijo(N, k, t, alpha_old, alpha0, zt, dt, gft, delta, c1,
@@ -320,17 +375,18 @@ def _stochastic_armijo(N, k, t, alpha_old, alpha0, zt, dt, gft, delta, c1,
         alpha_init = 1.  # set to maximum step-size
 
     old_fval = fun(zt, *args)
-    alpha_opt = _line_search_armijo(fun, zt, dt, gft, old_fval, args, c1, delta, alpha0)
+    alpha_opt, q = _line_search_armijo(fun, zt, dt, gft, old_fval, args, c1, delta, alpha0)
     if alpha_opt is None:
         msg = "SLS failed to find a suitable learning rate, alpha outside range." \
               f"\ng*d={gft.dot(dt):.6f}, phi(0)={old_fval:.6f}"
         raise _LineSearchError(msg)
 
-    return alpha_opt
+    return alpha_opt, q
 
 
 def _check_step(alpha):
-    alpha_min = 0.
+    # alpha_min = 0.
+    alpha_min = 1e-14
     alpha_max = 1.
 
     return alpha_min < alpha <= alpha_max
@@ -373,6 +429,8 @@ def _momentum_correction(beta0, gft, dt, delta):
     q = 0  # momentum term rejections counter
     while _check_momentum(beta1):
 
+        q += 1
+
         if q >= max_iter:
             raise _MomentumCorrectionError("Maximum number of momentum corrections " +
                                            f"iterations has been exceeded. q={q}")
@@ -385,12 +443,12 @@ def _momentum_correction(beta0, gft, dt, delta):
         d1 = phi(beta1)  # update direction
 
         if _check_descent(gft, d1):
-            return d1
+            return d1, q
 
-        q += 1
+        # q += 1
 
     # Failed to find a suitable momentum term
-    return None
+    return None, q
 
 
 def _momentum_restart(beta0, gft, dt):
@@ -414,12 +472,13 @@ def _momentum_restart(beta0, gft, dt):
         current iteration direction
     """
 
+    # direction to check
     d1 = -((1. - beta0) * gft + beta0 * dt)
 
     # perhaps a check on the restarted direction is needed
-    d2 = d1 if _check_descent(gft, d1) else -(1. - beta0) * gft
+    d2, q = (d1, 0) if _check_descent(gft, d1) else (-(1. - beta0) * gft, 1)
 
-    return d2
+    return d2, q
 
 
 def _stochastic_momentum(solver, k, t, beta0, gft, dt, delta):
@@ -451,24 +510,21 @@ def _stochastic_momentum(solver, k, t, beta0, gft, dt, delta):
     """
 
     if solver == "MSL-SGDM-C":
-        dt = _momentum_correction(beta0, gft, dt, delta)
+        dt, q = _momentum_correction(beta0, gft, dt, delta)
         if dt is None:
             msg = "MSL failed to find a suitable momentum term, beta outside range." \
                   f"\ng*d={gft.dot(dt)}"
             raise _MomentumCorrectionError(msg)
 
     elif solver == "MSL-SGDM-R":
-        dt = _momentum_restart(beta0, gft, dt)
+        dt, q = _momentum_restart(beta0, gft, dt)
 
-    # raise _MomentumCorrectionError("Momentum term outside range. "
-    #                                f"{beta1:.6f}, q={q}, "
-    #                                f"g*d={gft.dot(d1):.6f}")
-
-    return dt
+    return dt, q
 
 
 def _check_momentum(beta):
-    beta_min = 0.
+    # beta_min = 0.
+    beta_min = 1e-14
     beta_max = 1.
 
     return beta_min < beta < beta_max

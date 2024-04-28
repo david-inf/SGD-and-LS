@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import numpy.linalg as la
 import pandas as pd
 import matplotlib.pyplot as plt
 import copy
@@ -17,7 +18,8 @@ def optim_data(models):
             "Minibatch": [model.opt_result.minibatch_size for model in models],
             "Alpha0": [model.opt_result.step_size for model in models],
             "Beta0": [model.opt_result.momentum for model in models],
-            "Solution": [model.coef_ for model in models],
+            # "Solution": [model.coef_ for model in models],
+            "Sol norm": [la.norm(model.coef_) for model in models],
             "l2-Loss": [model.fun for model in models],
             "Grad norm": [model.grad for model in models],
             "Run-time": [model.opt_result.runtime for model in models],
@@ -28,7 +30,9 @@ def optim_data(models):
             "Bal train score": [model.metrics_train[1] for model in models],
             "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": [model.opt_result.fun_per_epoch for model in models],
-            "Time/Epochs": [model.opt_result.time_per_epoch for model in models]
+            "Time/Epochs": [model.opt_result.time_per_epoch for model in models],
+            "LS/Epochs": [model.opt_result.ls_per_epoch for model in models],
+            "MSL/Epochs": [model.opt_result.msl_per_epoch for model in models]
         }
     )
 
@@ -45,7 +49,8 @@ def optim_bench(models):
             "Minibatch": np.nan,
             "Alpha0": np.nan,
             "Beta0": np.nan,
-            "Solution": [model.coef_ for model in models],
+            # "Solution": [model.coef_ for model in models],
+            "Sol norm": [la.norm(model.coef_) for model in models],
             "l2-Loss": [model.fun for model in models],
             "Grad norm": [model.grad for model in models],
             "Run-time": np.nan,
@@ -56,7 +61,9 @@ def optim_bench(models):
             "Bal train score": [model.metrics_train[1] for model in models],
             "Bal test score": [model.metrics_test[1] for model in models],
             "Fun/Epochs": np.nan,
-            "Time/Epochs": np.nan
+            "Time/Epochs": np.nan,
+            "LS/Epochs": np.nan,
+            "MSL/Epochs": np.nan
         }
     )
 
@@ -69,10 +76,10 @@ def models_summary(custom, bench):
     # models_data["Distance (L-BFGS)"] = models_data["Solution"].apply(
     #     lambda x: np.linalg.norm(x - bench.loc[0]["Solution"]))
 
-    models_data["Sol norm"] = models_data["Solution"].apply(
-        lambda x: np.linalg.norm(x))
+    # models_data["Sol norm"] = models_data["Solution"].apply(
+    #     lambda x: np.linalg.norm(x))
 
-    return models_data.drop(columns={"Solution", "Fun/Epochs", "Time/Epochs"})
+    return models_data.drop(columns={"Fun/Epochs", "Time/Epochs"})
 
 
 # %% Classification metrics

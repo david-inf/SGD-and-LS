@@ -31,7 +31,7 @@ def _check_descent(gfk, dk):
     # 0. is the mathematical formulation
     # need to check also the magnitude for a significant update
     val = gfk.dot(dk)  # float
-    return val < -1e-9
+    return val < -1e-8
 
 
 def _shuffle_dataset(N, M, generator):
@@ -54,8 +54,7 @@ def _shuffle_dataset(N, M, generator):
 
     batch = np.arange(N)  # dataset indices
 
-    # _rng = np.random.default_rng(k)  # set different seed every epoch
-    generator.shuffle(batch)                # shuffle indices
+    generator.shuffle(batch)  # shuffle indices
 
     # array_split is expensive, consider another strategy
     minibatches = np.array_split(batch, N / M)  # create the minibatches

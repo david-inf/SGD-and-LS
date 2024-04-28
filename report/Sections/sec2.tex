@@ -281,3 +281,18 @@ The authors suggest to set the momentum term to $\beta_0=0.9$.
 %\caption{Step-size schedules for the \texttt{SGD-Decreasing} algorithm}
 %\label{fig:decre-step}
 %\end{figure}
+
+
+
+
+
+\begin{align*}
+\func(w,b) &=
+\frac{1}{N}\sum_{i=1}^N\log\biggl(1+\exp\Bigl(-y^{(i)}\bigl(w^Tx^{(i)}+b\bigr)\Bigr)\biggr)+
+\lambda\frac{1}{2}\norma{w}^2 \\
+\nabla\func(w,b) &= \frac{1}{N}Xr+\lambda w \\
+\nabla^2\func(w,b) &= \frac{1}{N}XDX^T+\lambda I_{(p+1)}
+\end{align*}
+
+
+

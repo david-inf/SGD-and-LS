@@ -19,7 +19,7 @@ def sigmoid(z):
     numpy.float64
     """
 
-    return 1 / (1 + np.exp(-z))
+    return 1. / (1. + np.exp(-z))
 
 
 def logistic(w, X, y, lam):
@@ -41,14 +41,15 @@ def logistic(w, X, y, lam):
     numpy.float64
     """
 
-    samples = y.size  # number of samples
-    z = y * X.dot(w)
+    z = y * X.dot(w)  # size N
 
     # loss function
-    loss = np.sum(np.log(1 + np.exp(-z))) / samples
+    loss = np.mean(np.log(1. + np.exp(-z)))
 
     # regularization term
-    regul = 0.5 * la.norm(w) ** 2
+    regul = 0.5 * la.norm(w)**2
+    # # regularization term, exclude intercept
+    # regul = 0.5 * la.norm(w[1:])**2
 
     return loss + lam * regul
 
@@ -73,49 +74,61 @@ def logistic_der(w, X, y, lam):
     """
 
     samples = y.size  # number of samples
-    z = y * X.dot(w)
+    z = y * X.dot(w)  # size N
 
     # loss function derivative
     loss_der = X.T.dot(-y * sigmoid(-z)) / samples
 
     # regularization term derivative
     regul_der = w
+    # # regularization term derivative, set null intercept
+    # regul_der = np.hstack((0, w[1:]))
 
     return loss_der + lam * regul_der
 
 
 def f_and_df_log(w, X, y, lam):
-    """
-    Log-loss with l2 regularization and its derivative
 
-    Parameters
-    ----------
-    w : numpy.ndarray
-        size p
-    X : scipy.sparse.csr_matrix
-        size Nxp
-    y : numpy.ndarray
-        size N
-    lam : int
+    return (logistic(w, X, y, lam),
+            logistic_der(w, X, y, lam))
 
-    Returns
-    -------
-    numpy.float64, numpy.ndarray of shape w.size
-    """
 
-    samples = y.size  # number of samples
-    z = y * X.dot(w)  # once for twice
+# def f_and_df_log(w, X, y, lam):
+#     """
+#     Log-loss with l2 regularization and its derivative
 
-    # loss function and regularization term
-    loss = np.sum(np.log(1 + np.exp(-z))) / samples
-    regul = 0.5 * np.linalg.norm(w)**2
+#     Parameters
+#     ----------
+#     w : numpy.ndarray
+#         size p
+#     X : scipy.sparse.csr_matrix
+#         size Nxp
+#     y : numpy.ndarray
+#         size N
+#     lam : int
 
-    # loss function and regularization term derivatives
-    loss_der = X.T.dot(-y * sigmoid(-z)) / samples
-    regul_der = w
+#     Returns
+#     -------
+#     numpy.float64, numpy.ndarray of shape w.size
+#     """
 
-    return (loss + lam * regul,          # objective function
-            loss_der + lam * regul_der)  # jacobian
+#     samples = y.size  # number of samples
+#     z = y * X.dot(w)  # once for twice
+
+#     # loss function and regularization term
+#     loss = np.sum(np.log(1 + np.exp(-z))) / samples
+#     regul = 0.5 * la.norm(w)**2
+#     # # exclude intercept
+#     # regul = 0.5 * np.linalg.norm(w[1:])**2
+
+#     # loss function and regularization term derivatives
+#     loss_der = X.T.dot(-y * sigmoid(-z)) / samples
+#     regul_der = w
+#     # # exclude intercept
+#     # regul_der = np.hstack((0, w[1:]))
+
+#     return (loss + lam * regul,          # objective function
+#             loss_der + lam * regul_der)  # jacobian
 
 
 def logistic_hess(w, X, y, lam):
@@ -148,6 +161,8 @@ def logistic_hess(w, X, y, lam):
 
     # regularization term hessian
     regul_hess = np.eye(w.size)
+    # # exclude intercept
+    # regul_hess[0,0] = 0
 
     return loss_hess.toarray() + lam * regul_hess
 
