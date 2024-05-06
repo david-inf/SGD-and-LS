@@ -71,13 +71,8 @@ def optim_bench(models):
 
 
 def models_summary(custom, bench):
+
     models_data = pd.concat([bench, custom], ignore_index=True)
-
-    # models_data["Distance (L-BFGS)"] = models_data["Solution"].apply(
-    #     lambda x: np.linalg.norm(x - bench.loc[0]["Solution"]))
-
-    # models_data["Sol norm"] = models_data["Solution"].apply(
-    #     lambda x: np.linalg.norm(x))
 
     return models_data.drop(columns={"Fun/Epochs", "Time/Epochs"})
 
@@ -225,16 +220,12 @@ def diagnostic(models, scalexy=("log", "log", "log", "log")):
     for i, ax in enumerate(axs.flat):
         if i < 4:  # first row
             # 1) f(w) against epochs
-            # plot_loss_epochs(ax, optim_data(models_choose[i % 4]), scalexy_epochs)
-            # plot_loss_epochs(ax, models_choose[i % 4], scalexy_epochs)
             plot_loss(ax, models_choose[i % 4], scalexy_epochs, time_or_epoch=True)
             ax.set_xticks([1, 10, 100])
             ax.set_xticklabels([0, 10, 100])
 
         else:  # second row
             # 2) f(w) against runtime per epoch
-            # plot_loss_time(ax, optim_data(models_choose[i % 4]), scalexy_runtime)
-            # plot_loss_time(ax, models_choose[i % 4], scalexy_runtime)
             plot_loss(ax, models_choose[i % 4], scalexy_runtime, time_or_epoch=False)
             ax.set_xticks([0.001, 0.01, 0.1, 1])
             ax.set_xticklabels([0, 0.01, 0.1, 1])
