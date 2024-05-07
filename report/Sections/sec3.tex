@@ -19,7 +19,7 @@ Then a \emph{hyper-parameters tuning} is performed. We set fixed values for the 
 \begin{array}{lll}
 \toprule
 \lambda=0.5 & \epsilon=\num{e-3} & \beta_0=0.9 \\
-\gamma=\num{e-3} & k^\ast=600 & q^\ast=100 \\
+\gamma=\num{e-5} & k^\ast=600 & q^\ast=100 \\
 \bottomrule
 \end{array}
 \]
@@ -42,11 +42,11 @@ The mini-batch size grid depends on the dataset being considered. As said, the r
 %\end{tabular}\par\noindent
 %\end{center}
 \[
-\begin{array}{lll}
+\begin{array}{llp{0.4\textwidth}}
 \toprule
-\alpha_0 & \text{\texttt{SGD-Fixed}}, \text{\texttt{SGDM}} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005; 0.001} \\
-\alpha_0 & \text{\texttt{SGD-Decreasing}} & \numlist{1; 0.8; 0.5; 0.1; 0.05; 0.01; 0.005} \\
-\alpha_0 & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{1; 0.5; 0.1; 0.05; 0.01; 0.005} \\
+\alpha_0 & \text{\texttt{SGD-Fixed}}, \text{\texttt{SGDM}} & \numlist{0.005;0.008;0.014;0.025;0.042;0.071;0.12;0.204;0.347;0.589;1} \\
+\alpha_0 & \text{\texttt{SGD-Decreasing}} & \numlist{0.01;0.016;0.025;0.04;0.063;0.1;0.158;0.251;0.398;0.631;1.0} \\
+\alpha_0 & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.01;0.022;0.046;0.1;0.215;0.464;1.0} \\
 M & \text{\texttt{SGD-}}, \text{\texttt{SGDM-}} & \text{depends on dataset} \\
 \delta_a & \text{\texttt{SGD-Armijo}}, \text{\texttt{MSL-SGDM-C/R}} & \numlist{0.3;0.5;0.7} \\
 \delta_m & \text{\texttt{MSL-SGDM-C}} & \numlist{0.3; 0.5; 0.7} \\
@@ -79,7 +79,7 @@ Regarding the grid search implementation, the \texttt{Joblib} module was used to
 First thing to say, the regularization term has a great influence on the final model, as you can see in the solution norm column the values are not that high, %however lowering the $\lambda$ coefficient would have led to a smaller solution norm, so the null model, possibly when the stochastic line search is used.
 lowering the $\lambda$ coefficient would lead to a lower objective function value, should be seen the change in the solution norm.
 
-Speaking of the algorithms that use the Armijo line search, first of all one notices that their execution time is obviously longer than the others. More important, in each dataset you can see that the $\epsilon$ tolerance value is never reached though the limit of 600 epochs, especially the \texttt{SGD-Armijo} algorithm. However, in machine learning a very low tolerance is not necessarily required. Nonetheless the SLS solvers prove to achieve a higher accuracy, particularly the \texttt{SGD-Armijo}.
+%Speaking of the algorithms that use the Armijo line search, first of all one notices that their execution time is obviously longer than the others. More important, in each dataset you can see that the $\epsilon$ tolerance value is never reached though the limit of 600 epochs, especially the \texttt{SGD-Armijo} algorithm. However, in machine learning a very low tolerance is not necessarily required. Nonetheless the SLS solvers prove to achieve a higher accuracy, particularly the \texttt{SGD-Armijo}.
 
 The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, most of all has the lower run-time among the SGD solvers, followed by the \texttt{SGD-Decreasing}. Same for the \texttt{scipy.optimize} solvers that can reach the smallest gradient norm. The \texttt{Mushrooms} dataset is an exception, where these solvers converge to the lowest solution norm with the lowest accuracy.
 
@@ -93,7 +93,7 @@ Now, as done by the authors of both articles, we want to show how the value of t
 \begin{array}{lll}
 \toprule
 \lambda=0.5 & \epsilon=\num{e-3} & \beta_0=0.9 \\
-\gamma=\num{e-3} & k^\ast=200 & q^\ast=100 \\
+\gamma=\num{e-5} & k^\ast=200 & q^\ast=100 \\
 \bottomrule
 \end{array}
 \]
@@ -213,13 +213,13 @@ Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\nor
 Newton-CG & 6 & NaN & 0.667394 & 0.464614 & 0.000046 & 0.970236 \\
 CG & 7 & NaN & 0.667395 & 0.464614 & 0.000009 & 0.970236 \\
 L-BFGS-B & 7 & NaN & 0.667406 & 0.464614 & 0.000023 & 0.970236 \\
-BatchGD-Fixed & 12 & 0.003190 & 0.667389 & 0.464614 & 0.000564 & 0.970236 \\
-SGD-Decreasing & 14 & 0.092939 & 0.667605 & 0.464614 & 0.000890 & 0.970236 \\
-MSL-SGDM-C & 44 & 0.477343 & 0.667133 & 0.464615 & 0.000852 & 0.970236 \\
-SGD-Armijo & 42 & 0.206547 & 0.667250 & 0.464615 & 0.000857 & 0.970236 \\
-SGD-Fixed & 27 & 0.167634 & 0.667293 & 0.464615 & 0.000879 & 0.970236 \\
-SGDM & 108 & 0.682587 & 0.666975 & 0.464615 & 0.000973 & 0.970236 \\
-MSL-SGDM-R & 183 & 1.026015 & 0.667560 & 0.464615 & 0.000961 & 0.970236 \\
+BatchGD-Fixed & 12 & 0.005133 & 0.667389 & 0.464614 & 0.000564 & 0.970236 \\
+SGD-Decreasing & 14 & 0.091935 & 0.667605 & 0.464614 & 0.000890 & 0.970236 \\
+MSL-SGDM-C & 44 & 0.400831 & 0.667133 & 0.464615 & 0.000852 & 0.970236 \\
+SGD-Armijo & 42 & 0.190436 & 0.667250 & 0.464615 & 0.000857 & 0.970236 \\
+SGD-Fixed & 27 & 0.165601 & 0.667293 & 0.464615 & 0.000879 & 0.970236 \\
+SGDM & 108 & 0.607353 & 0.666975 & 0.464615 & 0.000973 & 0.970236 \\
+MSL-SGDM-R & 183 & 0.815971 & 0.667560 & 0.464615 & 0.000961 & 0.970236 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -236,13 +236,13 @@ Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\nor
 Newton-CG & 6 & NaN & 0.666640 & 0.462742 & 0.000011 & 0.970203 \\
 CG & 7 & NaN & 0.666648 & 0.462742 & 0.000022 & 0.970203 \\
 L-BFGS-B & 7 & NaN & 0.666658 & 0.462742 & 0.000033 & 0.970203 \\
-BatchGD-Fixed & 12 & 0.006012 & 0.666635 & 0.462742 & 0.000564 & 0.970203 \\
-SGD-Armijo & 21 & 0.112785 & 0.666633 & 0.462743 & 0.000776 & 0.970203 \\
-SGD-Fixed & 27 & 0.176194 & 0.666559 & 0.462743 & 0.000826 & 0.970203 \\
-MSL-SGDM-C & 26 & 0.309201 & 0.666495 & 0.462743 & 0.000836 & 0.970203 \\
-SGDM & 61 & 0.413175 & 0.666868 & 0.462743 & 0.000861 & 0.970203 \\
-SGD-Decreasing & 15 & 0.103377 & 0.666746 & 0.462743 & 0.000858 & 0.970203 \\
-MSL-SGDM-R & 172 & 1.065542 & 0.666902 & 0.462743 & 0.000983 & 0.970203 \\
+BatchGD-Fixed & 12 & 0.019464 & 0.666635 & 0.462742 & 0.000564 & 0.970203 \\
+SGD-Armijo & 21 & 0.095211 & 0.666633 & 0.462743 & 0.000776 & 0.970203 \\
+SGD-Fixed & 27 & 0.171004 & 0.666559 & 0.462743 & 0.000826 & 0.970203 \\
+MSL-SGDM-C & 26 & 0.248677 & 0.666495 & 0.462743 & 0.000836 & 0.970203 \\
+SGDM & 61 & 0.391405 & 0.666868 & 0.462743 & 0.000861 & 0.970203 \\
+SGD-Decreasing & 15 & 0.092034 & 0.666746 & 0.462743 & 0.000858 & 0.970203 \\
+MSL-SGDM-R & 172 & 0.847420 & 0.666902 & 0.462743 & 0.000983 & 0.970203 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -256,16 +256,16 @@ MSL-SGDM-R & 172 & 1.065542 & 0.666902 & 0.462743 & 0.000983 & 0.970203 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-SGD-Fixed & 600 & 7.060655 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
-SGD-Armijo & 600 & 11.571209 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
-MSL-SGDM-C & 600 & 6.608982 & 0.145904 & 0.686425 & 0.049105 & 0.699683 \\
+SGD-Fixed & 600 & 6.476415 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
+SGD-Armijo & 600 & 9.369721 & 0.149831 & 0.687962 & 0.070602 & 0.903664 \\
+MSL-SGDM-C & 600 & 5.374951 & 0.145904 & 0.686425 & 0.049105 & 0.699683 \\
 Newton-CG & 5 & NaN & 0.164188 & 0.685065 & 0.000000 & 0.567616 \\
 L-BFGS-B & 5 & NaN & 0.164196 & 0.685065 & 0.000008 & 0.567616 \\
 CG & 6 & NaN & 0.164214 & 0.685065 & 0.000023 & 0.567616 \\
-BatchGD-Fixed & 11 & 0.009980 & 0.164001 & 0.685065 & 0.000534 & 0.567616 \\
-SGD-Decreasing & 39 & 0.451144 & 0.163747 & 0.685065 & 0.000565 & 0.567616 \\
-MSL-SGDM-R & 48 & 0.938381 & 0.164120 & 0.685065 & 0.000578 & 0.567616 \\
-SGDM & 49 & 0.562213 & 0.163887 & 0.685065 & 0.000649 & 0.567616 \\
+BatchGD-Fixed & 11 & 0.019530 & 0.164001 & 0.685065 & 0.000534 & 0.567616 \\
+SGD-Decreasing & 39 & 0.429672 & 0.163747 & 0.685065 & 0.000565 & 0.567616 \\
+MSL-SGDM-R & 48 & 0.749913 & 0.164120 & 0.685065 & 0.000578 & 0.567616 \\
+SGDM & 49 & 0.527406 & 0.163887 & 0.685065 & 0.000649 & 0.567616 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -279,16 +279,16 @@ SGDM & 49 & 0.562213 & 0.163887 & 0.685065 & 0.000649 & 0.567616 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-BatchGD-Fixed & 600 & 0.122682 & 0.355752 & 0.594416 & 0.363976 & 0.822386 \\
-MSL-SGDM-C & 600 & 3.022305 & 0.395984 & 0.577631 & 0.225478 & 0.781291 \\
-SGD-Armijo & 600 & 2.877337 & 0.416947 & 0.570790 & 0.143227 & 0.766075 \\
-SGD-Fixed & 600 & 1.749930 & 0.413794 & 0.569481 & 0.133874 & 0.765184 \\
-MSL-SGDM-R & 600 & 5.701328 & 0.410532 & 0.566502 & 0.094155 & 0.762015 \\
-SGDM & 600 & 1.681567 & 0.428972 & 0.564436 & 0.038564 & 0.760430 \\
+BatchGD-Fixed & 600 & 0.109826 & 0.355752 & 0.594416 & 0.363976 & 0.822386 \\
+MSL-SGDM-C & 600 & 2.484311 & 0.395984 & 0.577631 & 0.225478 & 0.781291 \\
+SGD-Armijo & 600 & 2.343167 & 0.416947 & 0.570790 & 0.143227 & 0.766075 \\
+SGD-Fixed & 600 & 1.613354 & 0.413794 & 0.569481 & 0.133874 & 0.765184 \\
+MSL-SGDM-R & 600 & 4.562606 & 0.410532 & 0.566502 & 0.094155 & 0.762015 \\
+SGDM & 600 & 1.578208 & 0.428972 & 0.564436 & 0.038564 & 0.760430 \\
 Newton-CG & 5 & NaN & 0.438972 & 0.564027 & 0.000004 & 0.760265 \\
 CG & 12 & NaN & 0.438961 & 0.564027 & 0.000015 & 0.760265 \\
 L-BFGS-B & 8 & NaN & 0.438969 & 0.564027 & 0.000012 & 0.760265 \\
-SGD-Decreasing & 31 & 0.092125 & 0.439216 & 0.564027 & 0.000946 & 0.760265 \\
+SGD-Decreasing & 31 & 0.093739 & 0.439216 & 0.564027 & 0.000946 & 0.760265 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -302,16 +302,16 @@ SGD-Decreasing & 31 & 0.092125 & 0.439216 & 0.564027 & 0.000946 & 0.760265 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-MSL-SGDM-C & 600 & 5.189384 & 0.631125 & 0.541510 & 0.366329 & 0.953846 \\
-SGD-Armijo & 600 & 8.898729 & 0.638957 & 0.530812 & 0.245386 & 0.951385 \\
-SGD-Fixed & 600 & 4.940511 & 0.638411 & 0.536690 & 0.322894 & 0.951385 \\
-SGDM & 600 & 4.985761 & 0.632318 & 0.523624 & 0.185501 & 0.940308 \\
-MSL-SGDM-R & 600 & 8.766748 & 0.636756 & 0.522395 & 0.159555 & 0.926154 \\
-SGD-Decreasing & 42 & 0.365326 & 0.635971 & 0.517727 & 0.000829 & 0.893538 \\
+MSL-SGDM-C & 600 & 4.260314 & 0.631125 & 0.541510 & 0.366329 & 0.953846 \\
+SGD-Armijo & 600 & 7.188611 & 0.638957 & 0.530812 & 0.245386 & 0.951385 \\
+SGD-Fixed & 600 & 4.607141 & 0.638411 & 0.536690 & 0.322894 & 0.951385 \\
+SGDM & 600 & 4.637757 & 0.632318 & 0.523624 & 0.185501 & 0.940308 \\
+MSL-SGDM-R & 600 & 6.959403 & 0.636756 & 0.522395 & 0.159555 & 0.926154 \\
+SGD-Decreasing & 42 & 0.319527 & 0.635971 & 0.517727 & 0.000829 & 0.893538 \\
 Newton-CG & 7 & NaN & 0.635933 & 0.517726 & 0.000003 & 0.892923 \\
 CG & 11 & NaN & 0.635939 & 0.517726 & 0.000024 & 0.892923 \\
 L-BFGS-B & 10 & NaN & 0.635930 & 0.517726 & 0.000017 & 0.892923 \\
-BatchGD-Fixed & 22 & 0.022156 & 0.635907 & 0.517727 & 0.000715 & 0.892923 \\
+BatchGD-Fixed & 22 & 0.020154 & 0.635907 & 0.517727 & 0.000715 & 0.892923 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -325,16 +325,16 @@ BatchGD-Fixed & 22 & 0.022156 & 0.635907 & 0.517727 & 0.000715 & 0.892923 \\
 \toprule
 Solver & {Epochs} & {Run-time} & {$\norma{w^\ast}$} & {$\func(w^\ast)$} & {$\norma{\nabla f(w^\ast)}$} & {Test score} \\
 \midrule
-BatchGD-Fixed & 600 & 0.201138 & 0.376931 & 0.579971 & 0.300459 & 0.809575 \\
-SGDM & 600 & 3.708738 & 0.394249 & 0.566575 & 0.177813 & 0.772858 \\
-SGD-Armijo & 600 & 6.059511 & 0.380212 & 0.574724 & 0.187551 & 0.761915 \\
+BatchGD-Fixed & 600 & 0.190763 & 0.376931 & 0.579971 & 0.300459 & 0.809575 \\
+SGDM & 600 & 3.501157 & 0.394249 & 0.566575 & 0.177813 & 0.772858 \\
+SGD-Armijo & 600 & 5.049077 & 0.380212 & 0.574724 & 0.187551 & 0.761915 \\
 Newton-CG & 5 & NaN & 0.450068 & 0.558973 & 0.000003 & 0.760727 \\
 L-BFGS-B & 8 & NaN & 0.450067 & 0.558973 & 0.000011 & 0.760727 \\
 CG & 12 & NaN & 0.450062 & 0.558973 & 0.000020 & 0.760727 \\
-SGD-Decreasing & 17 & 0.103084 & 0.449935 & 0.558973 & 0.000593 & 0.760727 \\
-SGD-Fixed & 55 & 0.175879 & 0.449949 & 0.558974 & 0.000467 & 0.760727 \\
-MSL-SGDM-C & 41 & 0.376923 & 0.450326 & 0.558974 & 0.000633 & 0.760727 \\
-MSL-SGDM-R & 399 & 2.165714 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
+SGD-Decreasing & 17 & 0.100828 & 0.449935 & 0.558973 & 0.000593 & 0.760727 \\
+SGD-Fixed & 55 & 0.165063 & 0.449949 & 0.558974 & 0.000467 & 0.760727 \\
+MSL-SGDM-C & 41 & 0.345649 & 0.450326 & 0.558974 & 0.000633 & 0.760727 \\
+MSL-SGDM-R & 399 & 1.779574 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -342,10 +342,10 @@ MSL-SGDM-R & 399 & 2.165714 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
 \begin{figure}
 \centering
 % w1a
-\subfloat[][\emph{w1a dataset}\label{subfig:w1a-diagnostic}]%
+\subfloat[][\emph{w1a dataset, \emph{-1:$0.97$ 1:$0.03$}}\label{subfig:w1a-diagnostic}]%
 {\includegraphics[width=\textwidth]{w1a-diagnostic}} \\
 % w3a
-\subfloat[][\emph{w3a dataset}\label{subfig:w3a-diagnostic}]%
+\subfloat[][\emph{w3a dataset, \emph{-1:$0.97$ 1:$0.03$}}\label{subfig:w3a-diagnostic}]%
 {\includegraphics[width=\textwidth]{w3a-diagnostic}} \\
 \caption[]{w1a and w3a datasets}
 \label{fig:w1a-w3a}
@@ -354,10 +354,10 @@ MSL-SGDM-R & 399 & 2.165714 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
 \begin{figure}
 \centering
 % Phishing
-\subfloat[][\emph{Phishing dataset}\label{subfig:phish-diagnostic}]%
+\subfloat[][\emph{Phishing dataset, \emph{-1:$0.45$ 1:$0.55$}}\label{subfig:phish-diagnostic}]%
 {\includegraphics[width=\textwidth]{phish-diagnostic}} \\
 % a2a
-\subfloat[][\emph{a2a dataset}\label{subfig:a2a-diagnostic}]%
+\subfloat[][\emph{a2a dataset, \emph{-1:$0.75$ 1:$0.25$}}\label{subfig:a2a-diagnostic}]%
 {\includegraphics[width=\textwidth]{a2a-diagnostic}}
 \caption[]{Phishing and a2a datasets}
 \label{fig:phish-a2a}
@@ -366,10 +366,10 @@ MSL-SGDM-R & 399 & 2.165714 & 0.450646 & 0.558974 & 0.000962 & 0.760727 \\
 \begin{figure}
 \centering
 % mushrooms
-\subfloat[][\emph{Mushrooms dataset}\label{subfig:mush-diagnostic}]%
+\subfloat[][\emph{Mushrooms dataset, \emph{-1:$0.48$ 1:$0.52$}}\label{subfig:mush-diagnostic}]%
 {\includegraphics[width=\textwidth]{mush-diagnostic}} \\
 % a4a
-\subfloat[][\emph{a4a dataset}\label{subfig:a4a-diagnostic}]%
+\subfloat[][\emph{a4a dataset, \emph{-1:$0.75$ 1:$0.25$}}\label{subfig:a4a-diagnostic}]%
 {\includegraphics[width=\textwidth]{a4a-diagnostic}}
 \caption[]{Mushrooms and a4a datasets}
 \label{fig:mush-a4a}

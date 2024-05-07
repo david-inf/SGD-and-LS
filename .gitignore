@@ -168,8 +168,11 @@ cython_debug/
 
 # Altro
 py/tmp/
+py/datasets/
+py/main.ipynb
 *.t
 *.txt
+
 
 
 #######
