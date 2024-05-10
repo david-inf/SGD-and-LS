@@ -82,7 +82,7 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
     while _stopping(fk, gfk, k, maxepochs, criterion=stop):
 
         # split dataset randomly
-        minibatches = _shuffle_dataset(y.size, batch_size, _rng)
+        minibatches = _shuffle_dataset(y, batch_size, _rng)
         # if k < 2:
             # for batch in minibatches:
                 # print(dataset_distrib(y[batch]))

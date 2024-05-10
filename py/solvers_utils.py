@@ -34,14 +34,14 @@ def _check_descent(gfk, dk):
     return val < -1e-8
 
 
-def _shuffle_dataset(N, M, generator):
+def _shuffle_dataset(y, M, generator):
     """
     Shuffle dataset indices, dataset not required
 
     Parameters
     ----------
-    N : int
-        dataset size.
+    y : array_like
+        Response variable.
     k : int
         epochs counter.
     M : int
@@ -52,7 +52,12 @@ def _shuffle_dataset(N, M, generator):
     minibatches : list of numpy.ndarray of numpy.int32
     """
 
+    N = y.size
     batch = np.arange(N)  # dataset indices
+
+    # values, counts = np.unique(y, return_counts=True)
+    # pos_distr = counts(np.where(values == 1)[0][0]) / N
+    # neg_distr = counts(np.where(values == -1)[0][0]) / N
 
     generator.shuffle(batch)  # shuffle indices
 

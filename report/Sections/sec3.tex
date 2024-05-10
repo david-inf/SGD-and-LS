@@ -77,13 +77,21 @@ Regarding the grid search implementation, the \texttt{Joblib} module was used to
 %Thanks to the $\ell_2\text{-regularization}$ the algorithm searches for near the null model
 
 First thing to say, the regularization term has a great influence on the final model, as you can see in the solution norm column the values are not that high, %however lowering the $\lambda$ coefficient would have led to a smaller solution norm, so the null model, possibly when the stochastic line search is used.
-lowering the $\lambda$ coefficient would lead to a lower objective function value, should be seen the change in the solution norm.
+lowering the $\lambda$ coefficient would lead to a lower objective function value, so a higher solution norm.
 
 %Speaking of the algorithms that use the Armijo line search, first of all one notices that their execution time is obviously longer than the others. More important, in each dataset you can see that the $\epsilon$ tolerance value is never reached though the limit of 600 epochs, especially the \texttt{SGD-Armijo} algorithm. However, in machine learning a very low tolerance is not necessarily required. Nonetheless the SLS solvers prove to achieve a higher accuracy, particularly the \texttt{SGD-Armijo}.
 
-The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, most of all has the lower run-time among the SGD solvers, followed by the \texttt{SGD-Decreasing}. Same for the \texttt{scipy.optimize} solvers that can reach the smallest gradient norm. The \texttt{Mushrooms} dataset is an exception, where these solvers converge to the lowest solution norm with the lowest accuracy.
+The full-batch method for these dataset sizes is still a valid choice and could reach also a lower tolerance value, same for the \texttt{scipy.optimize} solvers that reach the smallest gradient norm.% The \texttt{Mushrooms} dataset is an exception, where these solvers converge to the lowest solution norm with the lowest accuracy.
 
 As expected the accuracy is greatly influenced by the class distribution of each datasets, for which different metrics that deal with unbalanced datasets could be used. Between al solvers the test score is very similar, as the $f(w^\ast)$ except in some cases for the \texttt{SGD-Armijo} solver that ended on a different solution with even higher accuracy.
+
+%For the first two datasets, all solvers reach the $\epsilon\text{-tolerance}}$. Particularly in a2a and mushrooms most solvers can't reach the fixed tolerance, that can be due to the mini-batch splitting on every epoch.
+
+%In w1a and w3a solvers aren't affected by this because the datasets are highly unbalanced so on every split, each mini-batch is likely to have the full dataset distribution; in the others less unbalanced each split is likely to be different from the others
+
+We can see that all algorithms perform well on the first two dataset, while on a2a can't reach the specified tolerance value. That can be due to the mini-batch size, because in a4a there is an improvement, while the test score remains the same. Another issue with a small mini-batch size is that the class distribution can be different from that of the full dataset.
+
+We can also see that when the algorithms don't reach the optimum, end on a lower solution norm than that of the \texttt{scipy} solvers but with higher test score.
 
 \subsection{Performance of the objective function}
 
@@ -132,17 +140,23 @@ Regarding the $f(w)$ against run-time plot, we saw that between certain epochs, 
 
 %Per quanto riguarda invece il tempo necessario alla decrescita della funzione obiettivo, tutti gli algoritmi mostrano coerenza, andando di pari passo. % boh ricedere, magari non lo scrivo questo
 
-Although the first two datasets are unbalanced, the performance of the objective function tends to the minimum without significant fluctuations. In figure~\ref{subfig:a4a-diagnostic} the \texttt{SGD-Armijo} shows important oscillations, that may also be due to small dataset size.
+Although the first two datasets are unbalanced, the performance of the objective function tends to the minimum without significant fluctuations, this can be due to the class distribution of the mini-batches that is similar to that of the full dataset. Same in the phishing dataset the convergence is quite smooth.
+
+When it comes to less unbalanced dataset, the starting learning rate $\alpha_0=1$ leads to fluctuations, the line search tries to reduce this phenomenon, this happens when the basic version fluctuates too. The momentum term can further reduce this behaviour. We see that the algorithm can reach the minimum but struggles to stay around and converge.
+
+%In figure~\ref{subfig:a4a-diagnostic} the \texttt{SGD-Armijo} shows important oscillations, that may also be due to small dataset size.
 
 %Sembrerebbe che almeno con \texttt{SGD-Armijo} un leggero sbilanciamento dei dati abbia un effetto più importante, dando problemi sulla decrescita del valore della funzione obiettivo. Per quanto la Armijo line search porti subito vicino all'ottimo, fa fatica a restare nell'intorno e terminare, a differenza di quando viene impiegato il termine di momentum. Magari una diversa condizione di arresto che guarda la riduzione relativa della funzione obiettivo (come nei solvers di \texttt{SciPy}) oppure che considera la scala della funzione obiettivo o anche soltanto una tolleranza meno stringente potrebbe far arrestare l'algoritmo prima di esibire un comportamento divergente.
 
-Generally seems that the line search methods can reach a neighbourhood of the solution after few epochs, while the others' performance strongly depends on $\alpha_0$. Regarding the run-time there are slightly more evident differences, one could then be more concerned with this, but priority is on accuracy.
+%Generally seems that the line search methods can reach a neighbourhood of the solution after few epochs, while the others' performance strongly depends on $\alpha_0$. Regarding the run-time there are slightly more evident differences, one could then be more concerned with this, but priority is on accuracy.
 
-In figure~\ref{fig:phish-a2a} we note that the \texttt{SGD-Armijo} reaches a low objective function value quickly but struggles to stay around and terminate, unlike the momentum versions that may take more epochs but oscillate less. Perhaps a different line search like a Wolfe-type may reduce this behaviour.
+%In figure~\ref{fig:phish-a2a} we note that the \texttt{SGD-Armijo} reaches a low objective function value quickly but struggles to stay around and terminate, unlike the momentum versions that may take more epochs but oscillate less. Perhaps a different line search like a Wolfe-type may reduce this behaviour.
 
-As pointed out by the authors, an important conclusion is that the methods with line search have a low sensitivity to the initial learning rate, thus having a similar performance. In contrast to the basic versions where significant differences in the trend can be seen, for example in figure~\ref{subfig:mush-diagnostic} the \texttt{SGD-Fixed} and \texttt{SGDM} have very different behaviours for the each value in the $\alpha_0$ grid, note that the momentum term tries to correct this abnormal behaviour.
+%As pointed out by the authors, an important conclusion is that the methods with line search have a low sensitivity to the initial learning rate, thus having a similar performance. In contrast to the basic versions where significant differences in the trend can be seen, for example in figure~\ref{subfig:mush-diagnostic} the \texttt{SGD-Fixed} and \texttt{SGDM} have very different behaviours for the each value in the $\alpha_0$ grid, note that the momentum term tries to correct this abnormal behaviour.
 
-Among the basic versions, the \texttt{SGD-Decreasing} seems to be the least affected by different initial learning rates. However if $\alpha_0$ is too small, the algorithm takes smaller steps and requires more epochs to reach a solution. Same thing with \texttt{SGD-Fixed}, seems that in range $\alpha_0\in[0.01,0.1]$ the time required to get in a neighbourhood of $w^\ast$ increases significantly, so adapting the step-size is a good solution.
+%Among the basic versions, the \texttt{SGD-Decreasing} seems to be the least affected by different initial learning rates. However if $\alpha_0$ is too small, the algorithm takes smaller steps and requires more epochs to reach a solution. Same thing with \texttt{SGD-Fixed}, seems that in range $\alpha_0\in[0.01,0.1]$ the time required to get in a neighbourhood of $w^\ast$ increases significantly, so adapting the step-size is a good solution.
+
+Algorithm \texttt{MSL-SGDM-R}, quite often has the same convergence as the basic momentum version, this means that the direction~\eqref{eq:sgdm-step} is rejected. As a consequence \texttt{MSL-SGDM-C} will take momentum correction iterations.
 
 %\cleardoublepage
 
