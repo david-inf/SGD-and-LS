@@ -172,14 +172,50 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
 
 
 
+
+
+# %% Full-batch
+
 def batch_gd(fun, w0, fk_args, solver, jac, alpha0, maxepochs, stop):
+    """
+    Parameters
+    ----------
+    fun : callable
+        Objective function.
+    w0 : array_like
+        Initial guess.
+    fk_args : tuple
+        Objective function arguments to be added.
+    solver : string
+        Solver to be used.
+    jac : callable
+        Objective function gradient.
+    alpha0 : float
+        Initial learning rate.
+    maxepochs : int
+        Maximum number of epochs.
+    stop : int
+        Stopping criterion to be used.
+
+    Raises
+    ------
+    _SearchDirectionError
+        DESCRIPTION.
+
+    Returns
+    -------
+    result : OptimizeResult
+        DESCRIPTION.
+
+    """
 
     fun_seq = np.empty(maxepochs + 1)  # full fun per epoch sequence
     time_seq = np.empty_like(fun_seq)  # time per epoch sequence
-    sk_seq = np.empty(maxepochs)
+    # in order to check if the step is actually decreasing
+    sk_seq = np.empty(maxepochs)       # norm(learning rate * direction)
 
-    wk = np.asarray(w0).flatten()      # starting solution, copies w0
-    fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)   # full fun and grad w.r.t. w0
+    wk = np.asarray(w0).flatten()                   # initial guess, copies w0
+    fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)  # full fun and grad w.r.t. w0
 
     fun_seq[0] = fk                    # add full fun evaluation
     time_seq[0] = 0.                   # count from 0
@@ -189,8 +225,8 @@ def batch_gd(fun, w0, fk_args, solver, jac, alpha0, maxepochs, stop):
     k = 0  # epochs counter
     while _stopping(fk, gfk, k, maxepochs, stop):
 
-        gfk = jac(wk, *fk_args)
-        dk = -gfk
+        gfk = jac(wk, *fk_args)  # current epoch gradient
+        dk = -gfk                # current epoch direction
 
         # check on direction
         # if not gft.dot(dt) < 0:
@@ -198,15 +234,15 @@ def batch_gd(fun, w0, fk_args, solver, jac, alpha0, maxepochs, stop):
         #                                 f"at k={k}, t={t}, "
         #                                 f"g*d={gft.dot(dt):.6f}")
 
-        sk = alpha0 * dk
-        wk += sk  # update iterations weights
+        sk = alpha0 * dk         # current epoch step
+        wk += sk                 # model update
         fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)  # full fun and grad w.r.t. w_k
 
         k += 1
 
         fun_seq[k] = fk                    # add full fun evaluation
         time_seq[k] = time.time() - start  # time per epoch
-        sk_seq[k-1] = la.norm(sk)
+        sk_seq[k-1] = la.norm(sk)          # step taken by the algorithm
 
     msg, warnflag = _check_errors(warnflag, k, maxepochs, gfk, fk, wk)
 

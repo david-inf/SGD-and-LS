@@ -74,6 +74,8 @@ class LogisticRegression():
                         "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R",
                         "Adam", "MSL-Adam")
 
+        sgd_more_variants = ("Adam", "Adamax", "MSL-Adam")
+
         X_train = dataset[0]  # scipy.sparse.csr_matrix
         y_train = dataset[1]  # numpy.ndarray
         X_test = dataset[2]   # scipy.sparse.csr_matrix

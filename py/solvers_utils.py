@@ -52,7 +52,7 @@ def _shuffle_dataset(y, M, generator):
     minibatches : list of numpy.ndarray of numpy.int32
     """
 
-    N = y.size
+    N = y.size            # dataset size
     batch = np.arange(N)  # dataset indices
 
     # values, counts = np.unique(y, return_counts=True)
