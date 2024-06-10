@@ -23,6 +23,20 @@ C = 0.5
 benchDiab = run_bench(data, 0.5)
 benchDiab_data = optim_bench(benchDiab)
 
+# %% full-batch
+
+sgd_batch = LogisticRegression("BatchGD-Fixed")
+sgd_batch.fit(data, l_rate=0.1)
+
+sgdd_batch = LogisticRegression("BatchGD-Decreasing")
+sgdd_batch.fit(data, l_rate=1)
+
+sgdm_batch = LogisticRegression("BatchGDM")
+sgdm_batch.fit(data, l_rate=0.1)
+
+armijo_batch = LogisticRegression("BatchGD-Armijo")
+armijo_batch.fit(data, l_rate=1)
+
 # %%
 
 # a2a rompe particolarmente i coglioni perché con una dimensione del minibatch anche di 64

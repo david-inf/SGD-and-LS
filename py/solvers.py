@@ -177,8 +177,8 @@ def minibatch_gd(fun, w0, fk_args, solver, jac, f_and_df, batch_size, alpha0, be
 # %% Full-batch
 
 # TODO: decreasing learning rate - ok
-# TODO: add momentum term - ok
-# TODO: add line search
+# TODO: add momentum term to direction - ok
+# TODO: add armijo line search
 
 def batch_gd(fun, w0, fk_args, solver, jac, alpha0, beta0, maxepochs, stop):
     """
@@ -215,49 +215,55 @@ def batch_gd(fun, w0, fk_args, solver, jac, alpha0, beta0, maxepochs, stop):
 
     """
 
-    ## initialization
+    ## allocate sequences
     fun_seq = np.empty(maxepochs + 1)  # full fun per epoch sequence
     time_seq = np.empty_like(fun_seq)  # time per epoch sequence
     # in order to check if the step is actually decreasing
     sk_seq = np.empty(maxepochs)       # norm(learning rate * direction)
 
+    ## initialization
     wk = np.asarray(w0).flatten()                   # initial guess, copies w0
     fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)  # full fun and grad w.r.t. w0
+    dk = np.zeros_like(wk)                          # starting direction for momentum
 
     fun_seq[0] = fk                    # add full fun evaluation
     time_seq[0] = 0.                   # count from 0
-    start = time.time()                # start time counter
+    _start = time.time()                # start time counter
     warnflag = 0                       # solver status issues
 
     k = 0  # epochs counter
-    dk = np.zeros_like(wk)  # starting direction for momentum
     while _stopping(fk, gfk, k, maxepochs, stop):
 
-        ## select learning rate
-        alpha = alpha0 / (k + 1.) if solver == "BatchGD-Decreasing" else alpha0
+        ## select starting learning rate
+        ak = alpha0 / (k + 1.) if solver == "BatchGD-Decreasing" else alpha0
 
         ## compute direction
         gfk = jac(wk, *fk_args)  # current epoch gradient
-        # dk = -gfk
         dk = -((1. - beta0) * gfk + beta0 * dk)
 
-        ## check on direction
-        # if not gft.dot(dt) < 0:
-        #     raise _SearchDirectionError("Violated descent direction "
-        #                                 f"at k={k}, t={t}, "
-        #                                 f"g*d={gft.dot(dt):.6f}")
+        ## armijo line search
+        if solver == "BatchGD-Armijo":
+
+            ## check on direction
+            if not gfk.dot(dk) < 0:
+                _dir_msg = f"Violated descent direction at k={k}, g*d={gfk.dot(dk):.6f}"
+                raise _SearchDirectionError(_dir_msg)
+
+            ## compute optimal learning rate
+            ak, _ = _line_search_armijo(fun, wk, dk, gfk, fk, args=fk_args, alpha0=ak)
 
         ## make weights step
-        sk = alpha * dk          # current epoch step
-        wk += sk                 # model update
+        sk = ak * dk  # current epoch step
+        wk += sk      # model update
+
         fk, gfk = fun(wk, *fk_args), jac(wk, *fk_args)  # full fun and grad w.r.t. w_k
 
         k += 1
 
         ## update stuffs
-        fun_seq[k] = fk                    # add full fun evaluation
-        time_seq[k] = time.time() - start  # time per epoch
-        sk_seq[k-1] = la.norm(sk)          # step taken by the algorithm
+        fun_seq[k] = fk                     # add full fun evaluation
+        time_seq[k] = time.time() - _start  # time per epoch
+        sk_seq[k-1] = la.norm(sk)           # step taken by the algorithm
 
     msg, warnflag = _check_errors(warnflag, k, maxepochs, gfk, fk, wk)
 
@@ -299,7 +305,8 @@ def _reset_alpha(N, alpha_old, alpha0, M, t):
     return alpha_old
 
 
-def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-4, delta=0.5, alpha0=1.):
+def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-5, delta=0.5,
+                        alpha0=1.):
     """Minimize over alpha, the function ``fun(xk+alpha*dk)``.
 
     Parameters
@@ -329,7 +336,7 @@ def _line_search_armijo(fun, xk, dk, gfk, fk, args=(), c1=1e-4, delta=0.5, alpha
 
     Returns
     -------
-    alpha
+    alpha (optimal learning rate), q (iterations computed)
 
     """
 

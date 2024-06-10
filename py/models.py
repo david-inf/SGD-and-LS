@@ -52,6 +52,7 @@ class LogisticRegression():
             Momentum term. The default is 0.
         stop : int, optional
             Stopping criterion. The default is 1, when reaches optimal solution.
+            Other options are: 0 (run algorithm for specified epochs)
         max_epochs : int, optional
             Maximum number of epochs. The default is 600.
         damp_armijo : float, optional
@@ -66,7 +67,8 @@ class LogisticRegression():
         LogisticRegression
         """
 
-        batch_variants = ("BatchGD-Fixed", "BatchGD-Decreasing", "BatchGDM")
+        batch_variants = ("BatchGD-Fixed", "BatchGD-Decreasing", "BatchGDM",
+                          "BatchGD-Armijo")
 
         sgd_variants = ("SGD-Fixed", "SGD-Decreasing", "SGDM",
                         "SGD-Armijo", "MSL-SGDM-C", "MSL-SGDM-R",
