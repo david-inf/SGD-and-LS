@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Machine Learning models utils functions
+
+"""
 
 import numpy as np
 import numpy.linalg as la

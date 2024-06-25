@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from load_datasets import load_mg, load_mushrooms, load_phishing, load_w1a, load_a2a, load_w3a, load_a4a, load_diabetes
-from models import LogisticRegression, LinearRegression
+from ml_models import LogisticRegression, LinearRegression
 from ml_utils import (optim_data, optim_bench, models_summary, single_diagnostic,
                       diagnostic)
 from grid_search import run_solvers, run_bench, grid_search, cross_val

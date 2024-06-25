@@ -1,4 +1,18 @@
 # -*- coding: utf-8 -*-
+"""
+Stochasti Gradient Descent algorithms module
+
+- Minibatch Gradient Descent
+    - Fixed and Decreasing learning rate (SGD-Fixed, SGD-Decreasing)
+    - Momentum term (SGDM)
+    - Armijo Line Search (SGD-Armijo)
+    - Momentum correction and Restart (MSL-SGDM-C/R)
+- Batch Gradient Descent
+    - Fixed and Decreasing learning rate (BatchGD-Fixed, BatchGD-Decreasing)
+    - Momentum term (BatchGDM)
+    - Armijo Line Search (BatchGD-Armijo)
+
+"""
 
 import time
 import sys
@@ -7,7 +21,8 @@ import numpy.linalg as la
 from scipy.optimize import OptimizeResult#, fsolve
 from scipy.optimize import line_search  # strong wolfe conditions
 
-from solvers_utils import _check_errors, _check_descent, _shuffle_dataset, _stopping
+from sgd_solvers.solvers_utils import _check_errors, _check_descent, _shuffle_dataset, _stopping
+
 from load_datasets import dataset_distrib
 
 # %% One function for all solvers

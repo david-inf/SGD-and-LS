@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+Machine Learning models module
+
+- Logistic Regression
+- Linear Regression
+
+"""
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from scipy.optimize import minimize
 
-from solvers import minibatch_gd, batch_gd
-from functions import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
-from functions import linear, linear_der, f_and_df_linear, linear_hess
+from sgd_solvers import minibatch_gd, batch_gd
+
+from ml_models.functions import sigmoid, logistic, logistic_der, f_and_df_log, logistic_hess
+from ml_models.functions import linear, linear_der, f_and_df_linear, linear_hess
+
 from ml_utils import metrics_list
 
 

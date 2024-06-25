@@ -5,7 +5,7 @@ import numpy as np
 from itertools import product
 from joblib import Parallel, delayed
 
-from models import LogisticRegression
+from ml_models import LogisticRegression
 
 # %% cross-validation
 
